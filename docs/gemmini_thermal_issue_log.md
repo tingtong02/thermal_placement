@@ -261,17 +261,20 @@ scripts/run_gemmini_rtl_generation.sh
 1. 安装 / 构建一套最小 RISC-V toolchain
 2. 或改走更底层的“直接加载已有 ELF / memory image”路线
 
-## 10. 后续构建建议默认开多核
+## 10. 后续构建建议默认开多核，但最多 128
 
 ### 原因
 
 - RTL 生成、Verilator 编译、后续综合/实现都能显著受益于多核
+- 当前机器 `nproc` 可返回远超必要的核数，直接无限使用会造成内存、IO 和调度压力
 
 ### 当前处理
 
-现有脚本已统一支持：
+环境脚本已统一限制：
 
-- `MAKE_JOBS="${MAKE_JOBS:-$(nproc)}"`
+- `TP_MAX_JOBS` 默认值为 `128`
+- `MAKE_JOBS` 未设置时取 `nproc`，但会被钳制到 `TP_MAX_JOBS`
+- 用户显式设置 `MAKE_JOBS>128` 时，也会被钳制到 `128`
 
 涉及脚本：
 
@@ -282,7 +285,152 @@ scripts/run_gemmini_rtl_generation.sh
 ### 推荐用法
 
 ```bash
-export MAKE_JOBS=$(nproc)
+source tools/env_gemmini_thermal.sh
+echo "$MAKE_JOBS"
 ```
 
 再执行各阶段脚本。
+
+## 11. 项目本地 bare-metal toolchain 解包后，交叉 GCC 找不到正确的 `as/ld`
+
+### 现象
+
+- `riscv64-unknown-elf-gcc -c` 初始会调用宿主 `as`
+- 或者为了让它找到 RISC-V `as`，把 `$RISCV/lib/riscv64-unknown-elf/bin` 放到全局 PATH 后，宿主 `gcc` 又会误用 RISC-V `as`
+- `riscv-isa-sim/configure` 报：`C compiler cannot create executables`
+
+### 根因
+
+- Debian 包里的 `gcc-riscv64-unknown-elf` 是按 `/usr` 布局构建的
+- 项目本地解包到 `tools/riscv` 后，GCC 程序搜索路径需要重定位
+- `COMPILER_PATH` 如果放在全局环境里，会同时影响宿主 `gcc`
+
+### 解决方法
+
+- 只在 [riscv64-unknown-elf-gcc](/home/lisihang/thermal_placement/tools/bin/riscv64-unknown-elf-gcc) 和 [riscv64-unknown-elf-g++](/home/lisihang/thermal_placement/tools/bin/riscv64-unknown-elf-g++) 包装器里设置：
+  `COMPILER_PATH=$TP_ROOT/tools/riscv/lib/riscv64-unknown-elf/bin`
+- 不再把 generic `as/ld` 所在目录放入全局 PATH
+
+### 验证
+
+- 宿主 `gcc` 使用 `/usr/bin/as`
+- 交叉 `riscv64-unknown-elf-gcc -c` 使用 `tools/riscv/lib/riscv64-unknown-elf/bin/as`
+
+## 12. `libgloss` 自举依赖和 multilib 组合会导致本地构建失败
+
+### 现象
+
+- `libgloss/configure` 报 `cannot find -lgloss`
+- 放置空 `libgloss.a` 后，又遇到 picolibc 默认 `crt0.o` 缺少 `__stack`、`__data_start` 等 linker symbol
+- 默认 multilib 构建进入 `rv32e/rv32ea` 后，`crt0.S` 因使用 `x16-x31` 报 illegal operands
+
+### 根因
+
+- 当前交叉 GCC 默认 specs 会带 `-lgloss`，但 `libgloss` 还没构建
+- picolibc 默认启动文件不适合 `libgloss` configure 的普通链接探测
+- Gemmini 当前目标是 RV64，不需要构建全量 RV32E multilib
+
+### 解决方法
+
+- configure 前先放置临时空 `libgloss.a`
+- configure 阶段使用：
+
+```bash
+CC='riscv64-unknown-elf-gcc -nostartfiles' \
+../configure --prefix="$RISCV/riscv64-unknown-elf" \
+  --host=riscv64-unknown-elf \
+  --disable-multilib
+```
+
+- 安装后将 `libgloss.a` 指向真实 `libgloss_htif.a`
+
+### 验证
+
+- `tools/riscv/riscv64-unknown-elf/lib/libgloss_htif.a` 存在
+- `riscv64-unknown-elf-gcc -specs=htif.specs hello.c -o hello.elf` 成功生成 RV64 ELF
+
+## 13. `htif_nano.specs` 不适合当前最小本地前缀，优先使用 `htif.specs`
+
+### 现象
+
+- `riscv64-unknown-elf-gcc -specs=htif_nano.specs ...` 报缺少 `nano.specs`
+- 将 `nano.specs` 指向 `picolibc.specs` 后，又会遇到 `picolibc.ld` 搜索问题
+
+### 根因
+
+- 当前本地工具链由 Ubuntu/Debian `gcc-riscv64-unknown-elf`、`binutils-riscv64-unknown-elf`、`picolibc-riscv64-unknown-elf` 解包组合而来
+- 它不是完整 newlib/newlib-nano 布局
+- `htif_nano.specs` 假设存在 newlib nano specs
+
+### 当前处理
+
+- 对当前 Gemmini workload 构建，`gemmini-rocc-tests/bareMetalC` 本身使用 `-nostdlib -nostartfiles -T test.ld`，不依赖 `htif_nano.specs`
+- 对通用 HTIF smoke test，使用 `htif.specs` 而不是 `htif_nano.specs`
+
+### 验证
+
+```bash
+riscv64-unknown-elf-gcc -specs=htif.specs /tmp/hello_htif.c -o /tmp/hello_htif.elf
+```
+
+结果：生成静态 RV64 ELF，包含 `.htif` section。
+
+## 14. `gemmini-rocc-tests` 顶层 Makefile 不支持直接构建单个 bareMetalC target
+
+### 现象
+
+执行：
+
+```bash
+scripts/build_gemmini_workloads.sh mvin_mvout
+```
+
+初始失败：`No rule to make target 'mvin_mvout-baremetal'`
+
+### 根因
+
+- `gemmini-rocc-tests/build/Makefile` 顶层只暴露目录级 target
+- `mvin_mvout-baremetal` 这类规则定义在 `build/bareMetalC` 子目录对应 Makefile 中
+
+### 解决方法
+
+更新 [build_gemmini_workloads.sh](/home/lisihang/thermal_placement/scripts/build_gemmini_workloads.sh)：
+
+- 无参数时仍走顶层 `make BAREMETAL_ONLY=1`
+- 有单个或多个 workload 参数时，进入 `build/bareMetalC` 调子目录 Makefile
+
+### 验证
+
+```bash
+scripts/build_gemmini_workloads.sh mvin_mvout
+```
+
+结果：生成 [mvin_mvout-baremetal](/home/lisihang/thermal_placement/sim/binaries/GemminiRocketConfig/mvin_mvout-baremetal)。
+
+## 15. Verilator debug simulator 可能缓存空 `RISCV` 路径
+
+### 现象
+
+- 初次 debug simulator 构建失败：
+  `fatal error: fesvr/memif.h: No such file or directory`
+- 编译命令里出现 `-I/include`，而不是 `-I$RISCV/include`
+
+### 根因
+
+- 之前在 `RISCV` 未设置或路径不完整时生成过 `VTestDriver.mk`
+- 后续直接 `make debug` 会复用旧生成目录
+
+### 解决方法
+
+先清掉 debug simulator 生成目录，再重新构建：
+
+```bash
+source tools/env_gemmini_thermal.sh
+make -C third_party/chipyard/sims/verilator CONFIG=GemminiRocketConfig clean-sim-debug
+make -C third_party/chipyard/sims/verilator CONFIG=GemminiRocketConfig -j "$MAKE_JOBS" debug
+```
+
+### 验证
+
+- 新编译命令包含 `-I/home/lisihang/thermal_placement/tools/riscv/include`
+- `simulator-chipyard.harness-GemminiRocketConfig-debug` 构建成功

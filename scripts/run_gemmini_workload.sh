@@ -34,7 +34,9 @@ if [ ! -f "$binary_path" ]; then
   exit 1
 fi
 
-cp -f "$binary_path" "$BINARY_ROOT/"
+if [ "$(readlink -f "$binary_path")" != "$(readlink -f "$BINARY_ROOT/$binary_name")" ]; then
+  cp -f "$binary_path" "$BINARY_ROOT/"
+fi
 binary_path="$BINARY_ROOT/$binary_name"
 
 if [ "$BUILD_DEBUG_SIM" = "1" ] || [ ! -x "$SIM_DIR/simulator-chipyard.harness-$CONFIG-debug" ]; then

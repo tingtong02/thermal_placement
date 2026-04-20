@@ -42,6 +42,27 @@ export COURSIER_CACHE="$TP_CACHE_ROOT/coursier"
 export COURSIER_CONFIG_DIR="$TP_CACHE_ROOT/coursier"
 export SBT_OPTS="${SBT_OPTS:-} -Dsbt.global.base=$SBT_GLOBAL_BASE -Dsbt.boot.directory=$SBT_BOOT_DIR -Dsbt.ivy.home=$SBT_IVY_HOME -Dsbt.coursier.home=$COURSIER_CACHE -Dsbt.supershell=false"
 
+export TP_MAX_JOBS="${TP_MAX_JOBS:-128}"
+if ! [[ "$TP_MAX_JOBS" =~ ^[0-9]+$ ]] || [ "$TP_MAX_JOBS" -lt 1 ]; then
+  export TP_MAX_JOBS=128
+fi
+if [ "$TP_MAX_JOBS" -gt 128 ]; then
+  export TP_MAX_JOBS=128
+fi
+
+detected_jobs="$(nproc 2>/dev/null || echo 1)"
+if ! [[ "$detected_jobs" =~ ^[0-9]+$ ]] || [ "$detected_jobs" -lt 1 ]; then
+  detected_jobs=1
+fi
+if [ -z "${MAKE_JOBS:-}" ]; then
+  export MAKE_JOBS="$detected_jobs"
+elif ! [[ "$MAKE_JOBS" =~ ^[0-9]+$ ]] || [ "$MAKE_JOBS" -lt 1 ]; then
+  export MAKE_JOBS=1
+fi
+if [ "$MAKE_JOBS" -gt "$TP_MAX_JOBS" ]; then
+  export MAKE_JOBS="$TP_MAX_JOBS"
+fi
+
 for riscv_candidate in \
   "$RISCV" \
   "$TP_ROOT/tools/riscv" \

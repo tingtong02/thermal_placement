@@ -51,10 +51,25 @@ echo "==> building Gemmini bare-metal workloads with MAKE_JOBS=$MAKE_JOBS"
       ../configure
     )
   fi
-  (
-    cd build
-    make -j "$MAKE_JOBS" "${targets[@]}"
-  )
+  if [ "$#" -eq 0 ]; then
+    (
+      cd build
+      make -j "$MAKE_JOBS" "${targets[@]}"
+    )
+  else
+    mkdir -p build/bareMetalC
+    (
+      cd build/bareMetalC
+      make -j "$MAKE_JOBS" \
+        -f "$TEST_ROOT/bareMetalC/Makefile" \
+        abs_top_srcdir="$TEST_ROOT" \
+        src_dir="$TEST_ROOT/bareMetalC" \
+        XLEN=64 \
+        PREFIX=examples-bareMetalC \
+        BAREMETAL_ONLY=1 \
+        "${targets[@]:1}"
+    )
+  fi
 )
 
 echo "==> exporting workload binaries to $INSTALL_ROOT"

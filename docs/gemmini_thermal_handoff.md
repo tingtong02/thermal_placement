@@ -12,7 +12,9 @@
 - 已生成 Gemmini 模块分桶清单和初版层级映射：
   - [gemmini_module_inventory.md](/home/lisihang/thermal_placement/reports/notes/gemmini_module_inventory.md)
   - [hierarchy_map.yaml](/home/lisihang/thermal_placement/configs/gemmini/hierarchy_map.yaml)
-- 已补齐 Phase B 所需的 workload 构建与仿真脚本，但首个 workload/VCD 尚未实际跑通。
+- 已在项目目录 [tools/riscv](/home/lisihang/thermal_placement/tools/riscv) 补齐最小 RISC-V bare-metal toolchain、`fesvr`、`spike`、`spike-dasm`、`libgloss_htif`。
+- 已成功构建 `mvin_mvout-baremetal`，并成功构建 `GemminiRocketConfig` 的 Verilator debug simulator。
+- 仿真入口已能启动到 UART / DRAMSim 初始化；完整 workload 波形仍需要后续按更合适的 runtime / max-cycle 策略继续跑完。
 
 ## 2. 当前生成的 Gemmini 配置
 
@@ -135,7 +137,7 @@ Gemmini 模块清点脚本已完成首轮分类，结果在 [gemmini_module_inve
 
 并行参数：
 
-- `MAKE_JOBS`，默认 `nproc`
+- `MAKE_JOBS`，由环境脚本限制为最多 `128`
 
 ### 5.2 模块层级清点
 
@@ -158,7 +160,7 @@ Gemmini 模块清点脚本已完成首轮分类，结果在 [gemmini_module_inve
 
 并行参数：
 
-- `MAKE_JOBS`，默认 `nproc`
+- `MAKE_JOBS`，由环境脚本限制为最多 `128`
 
 ### 5.4 运行 workload + 导出波形
 
@@ -172,41 +174,40 @@ Gemmini 模块清点脚本已完成首轮分类，结果在 [gemmini_module_inve
 
 并行参数：
 
-- `MAKE_JOBS`，默认 `nproc`
+- `MAKE_JOBS`，由环境脚本限制为最多 `128`
 
-## 6. 当前阻塞点
+## 6. 当前环境状态
 
-当前阻塞不在 RTL 生成，而在 Phase B 的 workload 构建/仿真链：
+当前 RTL 生成、workload 构建、debug simulator 构建已经具备本地闭环：
 
-1. `gemmini-rocc-tests` 需要 `riscv64-unknown-elf-gcc`
-2. Chipyard `sims/verilator` 在 debug simulator 构建时要求 `RISCV` 前缀可用
+- `RISCV=/home/lisihang/thermal_placement/tools/riscv`
+- `riscv64-unknown-elf-gcc` 通过 [tools/bin](/home/lisihang/thermal_placement/tools/bin) 包装器调用本地真实编译器
+- `libfesvr.a`、`spike`、`spike-dasm` 已安装到本地 prefix
+- `libgloss_htif.a` 已安装，`htif.specs` smoke test 通过
+- [mvin_mvout-baremetal](/home/lisihang/thermal_placement/sim/binaries/GemminiRocketConfig/mvin_mvout-baremetal) 已构建成功
+- `simulator-chipyard.harness-GemminiRocketConfig-debug` 已构建成功
 
-已经确认当前机器上：
+仍需注意：
 
-- `verilator` 可用
-- `firtool` 可用
-- `sbt` 可用
-- 但未发现可直接使用的 `riscv64-unknown-elf-gcc`
-
-因此首个 `mvin_mvout` workload 的 VCD 还没真正产出。
+- `htif_nano.specs` 不适合当前最小 picolibc/newlib 混合前缀，通用 smoke test 使用 `htif.specs`
+- 带 VCD 的 `mvin_mvout` debug run 较重，当前只确认启动到 UART / DRAMSim 初始化，完整波形需继续优化运行参数
 
 ## 7. 后续建议执行顺序
 
 建议后续按以下顺序继续：
 
-1. 确认是否已有可用 `RISCV` toolchain prefix
-2. 构建一个最小 bare-metal 测试，例如 `mvin_mvout`
-3. 构建 debug simulator 并跑出第一条 VCD
-4. 写 `extract_vcd_activity.py`
-5. 从 bucket 级活动率过渡到 block power
-6. 进入 macro grouping 和 OpenROAD/HotSpot
+1. 选择更小或更短的 workload / max-cycle 策略，跑出第一条可控 VCD/FST
+2. 写 `extract_vcd_activity.py`
+3. 从 bucket 级活动率过渡到 block power
+4. 进入 macro grouping 和 OpenROAD/HotSpot
 
 ## 8. 并行与多核使用建议
 
-根据当前仓库里的脚本，后续建议统一通过 `MAKE_JOBS` 控制并行度：
+根据当前仓库里的脚本，后续统一通过 `MAKE_JOBS` 控制并行度，且最多使用 128：
 
 ```bash
-export MAKE_JOBS=$(nproc)
+source tools/env_gemmini_thermal.sh
+echo "$MAKE_JOBS"
 ```
 
 然后运行：
