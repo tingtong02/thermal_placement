@@ -1,0 +1,9 @@
+workload,region,signal_count,toggle_count,avg_normalized_activity,time_steps,last_time_ps
+thermal_smoke,accumulator,0,0,0.0,2084,1000000
+thermal_smoke,controller,521,769,0.0001100818563395605,2084,1000000
+thermal_smoke,gemmini_other,0,0,0.0,2084,1000000
+thermal_smoke,load_store_dma,30,0,0.0,2084,1000000
+thermal_smoke,non_gemmini_context,2133,20200,0.00024033821841237867,2084,1000000
+thermal_smoke,pe_array,3394,22124,0.0001880295119125756,2084,1000000
+thermal_smoke,scratchpad,0,0,0.0,2084,1000000
+thermal_smoke,tl_soc_glue,4533,48142,0.00024779370268141593,2084,1000000

@@ -64,7 +64,7 @@ if [ "$MAKE_JOBS" -gt "$TP_MAX_JOBS" ]; then
 fi
 
 for riscv_candidate in \
-  "$RISCV" \
+  "${RISCV:-}" \
   "$TP_ROOT/tools/riscv" \
   "$CHIPYARD_HOME/toolchains/riscv-tools/install" \
   "$CHIPYARD_HOME/toolchains/riscv-tools/riscv"

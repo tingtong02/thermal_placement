@@ -434,3 +434,146 @@ make -C third_party/chipyard/sims/verilator CONFIG=GemminiRocketConfig -j "$MAKE
 
 - 新编译命令包含 `-I/home/lisihang/thermal_placement/tools/riscv/include`
 - `simulator-chipyard.harness-GemminiRocketConfig-debug` 构建成功
+
+## 16. `set -u` 下 source 环境脚本会因 `RISCV` 未定义失败
+
+### 现象
+
+从干净 shell 直接执行：
+
+```bash
+scripts/run_thermal_smoke_flow.sh
+```
+
+失败：
+
+```text
+/home/lisihang/thermal_placement/tools/env_gemmini_thermal.sh: line 66: RISCV: unbound variable
+```
+
+### 根因
+
+- `run_thermal_smoke_flow.sh` 使用 `set -euo pipefail`
+- [env_gemmini_thermal.sh](/home/lisihang/thermal_placement/tools/env_gemmini_thermal.sh) 中 RISC-V prefix 候选列表直接引用了 `$RISCV`
+- 在 `set -u` 环境下，未定义变量会立即触发 shell 错误
+
+### 解决方法
+
+将候选列表里的 `$RISCV` 改成 `${RISCV:-}`：
+
+```bash
+for riscv_candidate in \
+  "${RISCV:-}" \
+  "$TP_ROOT/tools/riscv" \
+  ...
+```
+
+### 验证
+
+从干净 shell 直接执行：
+
+```bash
+scripts/run_thermal_smoke_flow.sh
+```
+
+不再因 `RISCV` 未定义退出，并能自动发现 [tools/riscv](/home/lisihang/thermal_placement/tools/riscv)。
+
+## 17. Verilator debug + VCD 的 smoke 超时参数不能过紧
+
+### 现象
+
+最初使用：
+
+- `SMOKE_MAX_CYCLES=10000`
+- `SMOKE_TIMEOUT_SECS=20`
+
+运行 [run_thermal_smoke_flow.sh](/home/lisihang/thermal_placement/scripts/run_thermal_smoke_flow.sh) 时，外层 `timeout` 返回 `124`，且没有生成 `thermal_smoke.vcd`：
+
+```text
+smoke VCD was not generated: /home/lisihang/thermal_placement/sim/waves/GemminiRocketConfig/thermal_smoke.vcd
+```
+
+### 根因
+
+- `GemminiRocketConfig` debug simulator 带 VCD 时开销较大
+- 外层 `timeout` 杀进程时，VCD/stdout/stderr 可能还没有完成落盘
+- 当前 smoke 目标是验证工具链端到端连通性，不需要 10000 cycle
+
+### 解决方法
+
+将 smoke 默认参数改为：
+
+```bash
+SMOKE_MAX_CYCLES=1000
+SMOKE_TIMEOUT_SECS=60
+```
+
+并在 VCD 未生成时额外打印：
+
+- simulator status
+- stdout log path
+- stderr log path
+
+### 验证
+
+执行：
+
+```bash
+scripts/run_thermal_smoke_flow.sh
+```
+
+结果：
+
+- Verilator debug simulator 生成 [thermal_smoke.vcd](/home/lisihang/thermal_placement/sim/waves/GemminiRocketConfig/thermal_smoke.vcd)
+- [extract_vcd_activity.py](/home/lisihang/thermal_placement/scripts/extract_vcd_activity.py) 解析到 `32687` 个信号
+- 生成 [thermal_smoke_region_activity.csv](/home/lisihang/thermal_placement/sim/activity/thermal_smoke_region_activity.csv)
+- HotSpot 生成 [thermal_smoke.ttrace](/home/lisihang/thermal_placement/thermal/steady/thermal_smoke.ttrace)
+
+当前 `sim_status=1` 是 `+max-cycles=1000` 触发 TestDriver timeout 的预期结果；对 smoke flow 来说，判断标准是 VCD、activity CSV 和 HotSpot 输出是否成功生成。
+
+## 18. Smoke flow 中 0-activity 区域也需要保留到 HotSpot 输入
+
+### 现象
+
+第一版 smoke 活动提取可以生成 region CSV，但只输出当前 VCD 中实际匹配到信号的区域。随后 [export_smoke_hotspot_inputs.py](/home/lisihang/thermal_placement/scripts/export_smoke_hotspot_inputs.py) 又过滤了 `signal_count=0` 的行。
+
+结果是 `.flp` / `.ptrace` 中只有：
+
+- `controller`
+- `load_store_dma`
+- `non_gemmini_context`
+- `pe_array`
+- `tl_soc_glue`
+
+缺少 `accumulator`、`scratchpad`、`gemmini_other` 等核心 bucket。
+
+### 根因
+
+- 当前 `thermal_smoke.c` 只是最小 bare-metal 程序，没有发 Gemmini 指令
+- 很短的 VCD 中不一定能命中所有 Gemmini 子模块信号
+- 如果 HotSpot 输入列随 workload 改变，后续比较不同 workload 时会增加额外对齐成本
+
+### 解决方法
+
+- [extract_vcd_activity.py](/home/lisihang/thermal_placement/scripts/extract_vcd_activity.py) 现在会预先初始化 hierarchy map 中的所有 category
+- [export_smoke_hotspot_inputs.py](/home/lisihang/thermal_placement/scripts/export_smoke_hotspot_inputs.py) 不再过滤 `signal_count=0` 的区域
+- 0-activity 区域仍保留 `base-power`，默认 `0.05`
+
+### 验证
+
+重新执行：
+
+```bash
+scripts/run_thermal_smoke_flow.sh
+```
+
+当前 [thermal_smoke.flp](/home/lisihang/thermal_placement/thermal/floorplans/thermal_smoke.flp)、[thermal_smoke.ptrace](/home/lisihang/thermal_placement/thermal/power/thermal_smoke.ptrace)、[thermal_smoke.ttrace](/home/lisihang/thermal_placement/thermal/steady/thermal_smoke.ttrace) 都包含 8 个稳定 bucket：
+
+- `accumulator`
+- `controller`
+- `gemmini_other`
+- `load_store_dma`
+- `non_gemmini_context`
+- `pe_array`
+- `scratchpad`
+- `tl_soc_glue`

@@ -1,0 +1,11 @@
+thermal smoke flow completed
+config: GemminiRocketConfig
+make_jobs: 128
+sim_status: 1
+binary: /home/lisihang/thermal_placement/sim/binaries/GemminiRocketConfig/thermal_smoke-baremetal
+vcd: /home/lisihang/thermal_placement/sim/waves/GemminiRocketConfig/thermal_smoke.vcd
+signal_activity: /home/lisihang/thermal_placement/sim/activity/thermal_smoke_signal_activity.csv
+region_activity: /home/lisihang/thermal_placement/sim/activity/thermal_smoke_region_activity.csv
+floorplan: /home/lisihang/thermal_placement/thermal/floorplans/thermal_smoke.flp
+ptrace: /home/lisihang/thermal_placement/thermal/power/thermal_smoke.ptrace
+ttrace: /home/lisihang/thermal_placement/thermal/steady/thermal_smoke.ttrace

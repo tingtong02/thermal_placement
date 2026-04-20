@@ -14,7 +14,8 @@
   - [hierarchy_map.yaml](/home/lisihang/thermal_placement/configs/gemmini/hierarchy_map.yaml)
 - 已在项目目录 [tools/riscv](/home/lisihang/thermal_placement/tools/riscv) 补齐最小 RISC-V bare-metal toolchain、`fesvr`、`spike`、`spike-dasm`、`libgloss_htif`。
 - 已成功构建 `mvin_mvout-baremetal`，并成功构建 `GemminiRocketConfig` 的 Verilator debug simulator。
-- 仿真入口已能启动到 UART / DRAMSim 初始化；完整 workload 波形仍需要后续按更合适的 runtime / max-cycle 策略继续跑完。
+- 已新增并跑通最小 smoke 流程：bare-metal 编译、Verilator debug 仿真、VCD 导出、VCD 活动率提取、HotSpot steady-state 调用。
+- `mvin_mvout` 这类真实 Gemmini workload 的长波形仍需要后续按更合适的 runtime / max-cycle 策略继续优化。
 
 ## 2. 当前生成的 Gemmini 配置
 
@@ -176,9 +177,63 @@ Gemmini 模块清点脚本已完成首轮分类，结果在 [gemmini_module_inve
 
 - `MAKE_JOBS`，由环境脚本限制为最多 `128`
 
+### 5.5 最小端到端 smoke flow
+
+- [thermal_smoke.c](/home/lisihang/thermal_placement/workloads/thermal_smoke/thermal_smoke.c)
+- [build_thermal_smoke_binary.sh](/home/lisihang/thermal_placement/scripts/build_thermal_smoke_binary.sh)
+- [run_thermal_smoke_flow.sh](/home/lisihang/thermal_placement/scripts/run_thermal_smoke_flow.sh)
+- [extract_vcd_activity.py](/home/lisihang/thermal_placement/scripts/extract_vcd_activity.py)
+- [export_smoke_hotspot_inputs.py](/home/lisihang/thermal_placement/scripts/export_smoke_hotspot_inputs.py)
+
+用途：
+
+- 构建一个最小 RISC-V bare-metal 程序
+- 用 `GemminiRocketConfig` debug simulator 跑固定 cycle 数
+- 生成 VCD
+- 从 VCD 中提取信号 toggle/activity
+- 按 [hierarchy_map.yaml](/home/lisihang/thermal_placement/configs/gemmini/hierarchy_map.yaml) 聚合到热分析 bucket
+- 生成最小 HotSpot `.flp` / `.ptrace`
+- 调用 HotSpot 生成 steady-state `.ttrace`
+
+默认参数：
+
+- `CONFIG=GemminiRocketConfig`
+- `SMOKE_MAX_CYCLES=1000`
+- `SMOKE_TIMEOUT_SECS=60`
+- `RUN_TAG=thermal_smoke`
+- `MAKE_JOBS` 仍由 [env_gemmini_thermal.sh](/home/lisihang/thermal_placement/tools/env_gemmini_thermal.sh) 限制为最多 `128`
+
+一键验证命令：
+
+```bash
+scripts/run_thermal_smoke_flow.sh
+```
+
+当前已验证输出：
+
+- [thermal_smoke-baremetal](/home/lisihang/thermal_placement/sim/binaries/GemminiRocketConfig/thermal_smoke-baremetal)
+- [thermal_smoke.vcd](/home/lisihang/thermal_placement/sim/waves/GemminiRocketConfig/thermal_smoke.vcd)
+- [thermal_smoke_signal_activity.csv](/home/lisihang/thermal_placement/sim/activity/thermal_smoke_signal_activity.csv)
+- [thermal_smoke_region_activity.csv](/home/lisihang/thermal_placement/sim/activity/thermal_smoke_region_activity.csv)
+- [thermal_smoke.flp](/home/lisihang/thermal_placement/thermal/floorplans/thermal_smoke.flp)
+- [thermal_smoke.ptrace](/home/lisihang/thermal_placement/thermal/power/thermal_smoke.ptrace)
+- [thermal_smoke.ttrace](/home/lisihang/thermal_placement/thermal/steady/thermal_smoke.ttrace)
+- [thermal_smoke_summary.txt](/home/lisihang/thermal_placement/reports/smoke/thermal_smoke_summary.txt)
+
+本轮结果摘要：
+
+- `make_jobs: 128`
+- `sim_status: 1`
+- `parsed_signals: 32687`
+- `time_steps: 2084`
+- `last_time_ps: 1000000`
+- HotSpot smoke 输入保留 8 个 bucket：`accumulator`、`controller`、`gemmini_other`、`load_store_dma`、`non_gemmini_context`、`pe_array`、`scratchpad`、`tl_soc_glue`
+
+说明：这里的 `sim_status=1` 来自 Verilator TestDriver 在 `+max-cycles=1000` 后主动触发 timeout/fatal。只要 VCD、activity CSV、HotSpot 输出存在，就表示 smoke 工具链验证通过。
+
 ## 6. 当前环境状态
 
-当前 RTL 生成、workload 构建、debug simulator 构建已经具备本地闭环：
+当前 RTL 生成、workload 构建、debug simulator 构建、最小 VCD 活动率提取和 HotSpot 调用已经具备本地闭环：
 
 - `RISCV=/home/lisihang/thermal_placement/tools/riscv`
 - `riscv64-unknown-elf-gcc` 通过 [tools/bin](/home/lisihang/thermal_placement/tools/bin) 包装器调用本地真实编译器
@@ -186,20 +241,22 @@ Gemmini 模块清点脚本已完成首轮分类，结果在 [gemmini_module_inve
 - `libgloss_htif.a` 已安装，`htif.specs` smoke test 通过
 - [mvin_mvout-baremetal](/home/lisihang/thermal_placement/sim/binaries/GemminiRocketConfig/mvin_mvout-baremetal) 已构建成功
 - `simulator-chipyard.harness-GemminiRocketConfig-debug` 已构建成功
+- [run_thermal_smoke_flow.sh](/home/lisihang/thermal_placement/scripts/run_thermal_smoke_flow.sh) 已从干净 shell 跑通
 
 仍需注意：
 
 - `htif_nano.specs` 不适合当前最小 picolibc/newlib 混合前缀，通用 smoke test 使用 `htif.specs`
+- 当前 smoke 的 HotSpot 输入是为了验证工具调用和文件格式连通性，功耗数值使用简单 toggle proxy，不代表最终物理功耗模型
 - 带 VCD 的 `mvin_mvout` debug run 较重，当前只确认启动到 UART / DRAMSim 初始化，完整波形需继续优化运行参数
 
 ## 7. 后续建议执行顺序
 
 建议后续按以下顺序继续：
 
-1. 选择更小或更短的 workload / max-cycle 策略，跑出第一条可控 VCD/FST
-2. 写 `extract_vcd_activity.py`
-3. 从 bucket 级活动率过渡到 block power
-4. 进入 macro grouping 和 OpenROAD/HotSpot
+1. 将 smoke 程序替换为最小 Gemmini 指令 workload，仍保持短 cycle 和小 VCD
+2. 改进 [hierarchy_map.yaml](/home/lisihang/thermal_placement/configs/gemmini/hierarchy_map.yaml)，让 `scratchpad` / `accumulator` 在 VCD 路径中更精确命中
+3. 从 bucket 级活动率过渡到 block power，替换当前简单 toggle proxy
+4. 进入 macro grouping 和 OpenROAD/HotSpot 的更真实 floorplan
 
 ## 8. 并行与多核使用建议
 
