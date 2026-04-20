@@ -1,0 +1,14 @@
+# Local toolchains and third-party source payloads.
+third_party/
+tools/*
+!tools/env_gemmini_thermal.sh
+
+# Python bytecode/cache.
+__pycache__/
+*.py[cod]
+
+# Local temporary/intermediate scratch directories.
+.tmp/
+.cache/
+tmp/
+obj_dir/
