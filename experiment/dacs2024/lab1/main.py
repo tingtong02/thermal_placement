@@ -76,7 +76,7 @@ def get_syn_options() -> dict:
     """
     syn_configs = {
         'genus_bin': GENUS_BIN,
-        'max_threads': 1,
+        'max_threads': int(os.environ.get('TP_CADENCE_GENUS_CPUS', '8')),
         'steps': ['syn', 'report'],
         
         ###########################################################################
@@ -84,7 +84,7 @@ def get_syn_options() -> dict:
         ###########################################################################
 
         # target timing: float
-        'clk_period_ns': 0.0,
+        'clk_period_ns': float(os.environ.get('TP_DACS_CLK_PERIOD_NS', '10.0')),
 
         # generic logical synthesis effort: [low/medium/high]
         'syn_generic_effort': 'medium',
@@ -114,7 +114,9 @@ def get_pnr_options() -> dict:
     """
     pnr_configs = {
         'innovus_bin': INNOVUS_BIN,
-        'max_threads': 1,
+        'max_threads': int(os.environ.get('TP_CADENCE_INNOVUS_CPUS', '8')),
+        'route_max_threads': int(os.environ.get('TP_DACS_ROUTE_CPUS', '1')),
+        'route_si_aware': os.environ.get('TP_DACS_ROUTE_SI_AWARE', 'false').lower() in ('1', 'true', 'yes', 'on'),
         'steps': [
             'init',
             'floorplan',

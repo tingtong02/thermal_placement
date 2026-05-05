@@ -15,9 +15,18 @@ class GenusAreaReportParser(GenusReportParser):
     def __init__(self, report_path: str) -> None:
         super().__init__(report_path)
 
-    def analyze_child_module(self, line) -> dict:
+    def analyze_area_line(self, line) -> dict:
         data = line.split()
-        instance, module, cell_count, cell_area, net_area, total_area = data
+        if len(data) == 6:
+            instance, module, cell_count, cell_area, net_area, total_area = data
+            if module == 'NA':
+                module = instance
+        elif len(data) == 5:
+            instance, cell_count, cell_area, net_area, total_area = data
+            module = instance
+        else:
+            raise ValueError(f"Unsupported Genus area report line: {line!r}")
+
         return {
             'instance': instance,
             'module': module,
@@ -26,18 +35,12 @@ class GenusAreaReportParser(GenusReportParser):
             'net_area': float(net_area),
             'total_area': float(total_area),
         }
+
+    def analyze_child_module(self, line) -> dict:
+        return self.analyze_area_line(line)
     
     def analyze_root_module(self, line) -> str:
-        data = line.split()
-        instance, cell_count, cell_area, net_area, total_area = data
-        return {
-            'instance': instance,
-            'module': instance,
-            'cell_count': int(cell_count),
-            'cell_area': float(cell_area),
-            'net_area': float(net_area),
-            'total_area': float(total_area),
-        }
+        return self.analyze_area_line(line)
     
     def run_impl(self):
         area_reports = []
@@ -53,6 +56,9 @@ class GenusAreaReportParser(GenusReportParser):
                     if not line:
                         break
                     
+                    if not line.strip():
+                        continue
+
                     if parent_instance is None:
                         area_report = self.analyze_root_module(line)
                         parent_instance = area_report['instance']

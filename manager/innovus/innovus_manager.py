@@ -600,6 +600,7 @@ optDesign -postCTS -hold
 # -------------------------------------------------------------
 # NanoRoute Mode setting
 # -------------------------------------------------------------
+setMultiCpuUsage -localCpu %d
 setAnalysisMode -analysisType onChipVariation
 
 # FIXME: many routing configuration still missing!
@@ -608,8 +609,12 @@ setNanoRouteMode -quiet -drouteEndIteration 20
 setNanoRouteMode -quiet -drouteFixAntenna true
 setNanoRouteMode -quiet -drouteUseMultiCutViaEffort medium
 setNanoRouteMode -quiet -drouteMinSlackForWireOptimization 0.1
-setDelayCalMode -engine default -siAware true
-"""
+setDelayCalMode -engine %s -siAware %s
+""" % (
+    self.configs.get('route_max_threads', self.configs.get('max_threads', 8)),
+    self.configs.get('route_delay_engine', 'default'),
+    'true' if self.configs.get('route_si_aware', True) else 'false',
+)
 
         codes += """
 # -------------------------------------------------------------
