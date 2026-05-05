@@ -120,6 +120,7 @@ class Asap7Library(StdcellLibrary):
         return {
         # floorplan
         'place_site': 'asap7sc7p5t',
+        'assign_io_pins': True,
 
         # powerplan
         'pwr_port': 'VDD',

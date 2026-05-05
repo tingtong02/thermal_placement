@@ -2,11 +2,34 @@ from env import *
 
 import json
 import random
+from datetime import datetime
 
 from design.adder.add_config import PPAdderConfig
 from design.adder.add_baseline import get_Sklansky_adder, get_KoggeStone_adder, get_BrentKung_adder
 from tech.asap7 import Asap7Library
 from flow.genus_innovus import GenusInnovusFlow
+
+
+def get_clk_period_ns() -> float:
+    return float(os.environ.get('TP_DACS_CLK_PERIOD_NS', '10.0'))
+
+
+def get_run_tag(adder_type: str, input_bit: int, adder_hash: str) -> str:
+    explicit_tag = os.environ.get('TP_DACS_RUN_TAG')
+    if explicit_tag:
+        return explicit_tag
+
+    clk_period_ns = get_clk_period_ns()
+    if clk_period_ns > 0:
+        freq_tag = f"{int(round(1000.0 / clk_period_ns))}mhz"
+    else:
+        freq_tag = 'untimed'
+
+    timestamp = os.environ.get('TP_DACS_RUN_TIMESTAMP')
+    if not timestamp:
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+
+    return f"ppadder_{adder_type}_{input_bit}b_asap7sc7p5t28_{freq_tag}_{timestamp}_{adder_hash[:8]}"
 
 
 def get_design_config(adder_type='sklansky', input_bit=64) -> dict:
@@ -28,7 +51,8 @@ def get_design_config(adder_type='sklansky', input_bit=64) -> dict:
     ###########################################################################
     # adder = modify_adder_design(adder)
 
-    save_dir = os.path.join(RESULT_DIR, adder.hash)
+    run_tag = get_run_tag(adder_type, input_bit, adder.hash)
+    save_dir = os.path.join(RESULT_DIR, run_tag)
     adder.dump_data(save_dir)
 
     design_config = {
@@ -84,7 +108,7 @@ def get_syn_options() -> dict:
         ###########################################################################
 
         # target timing: float
-        'clk_period_ns': float(os.environ.get('TP_DACS_CLK_PERIOD_NS', '10.0')),
+        'clk_period_ns': get_clk_period_ns(),
 
         # generic logical synthesis effort: [low/medium/high]
         'syn_generic_effort': 'medium',
@@ -117,6 +141,7 @@ def get_pnr_options() -> dict:
         'max_threads': int(os.environ.get('TP_CADENCE_INNOVUS_CPUS', '8')),
         'route_max_threads': int(os.environ.get('TP_DACS_ROUTE_CPUS', '1')),
         'route_si_aware': os.environ.get('TP_DACS_ROUTE_SI_AWARE', 'false').lower() in ('1', 'true', 'yes', 'on'),
+        'assign_io_pins': os.environ.get('TP_DACS_ASSIGN_IO_PINS', 'true').lower() in ('1', 'true', 'yes', 'on'),
         'steps': [
             'init',
             'floorplan',

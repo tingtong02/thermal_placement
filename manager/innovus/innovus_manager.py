@@ -288,13 +288,17 @@ floorPlan -site %s -su 1 %f 1 1 1 1
     self.configs.get('place_site'),
     self.configs.get('place_utilization', 0.4),
 )
-        """
-            Place the IO pins.
-            For simplicity, we place these pins during placement, and do layer assignment.
-        """
-        codes += """
+        if self.configs.get('assign_io_pins', True):
+            codes += """
 # -------------------------------------------------------------
-# Place the block port
+# Assign top-level IO pins
+# -------------------------------------------------------------
+assignIoPins -autoBusGroup
+"""
+        else:
+            codes += """
+# -------------------------------------------------------------
+# Allow global placement to place IO pins
 # -------------------------------------------------------------
 setPlaceMode -place_global_place_io_pins true
 """
