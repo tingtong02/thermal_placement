@@ -1,10 +1,15 @@
-# Cadence Genus(TM) Synthesis Solution, Version 20.12-s150_1, built Oct 14 2021 10:38:13
+# Genus command notes for Thermal Placement Phase 2 startup.
+# Local tool: /opt/eda/Cadence_DDI_23.14/bin/genus, version 23.14-s090_1.
+# Main Python entry:
+#   source tools/env_gemmini_thermal.sh
+#   python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --preflight
+# Target clock: 200 MHz, 5.0 ns.
 
-# Date: Tue Oct 15 11:40:30 2024
-# Host: qingteng (x86_64 w/Linux 3.10.0-1160.76.1.el7.x86_64) (2cores*4cpus*2physical cpus*AMD Ryzen 7 5800X 8-Core Processor 512KB)
-# OS:   CentOS Linux release 7.9.2009 (Core)
-
-syn_generic -h
-man syn_generic
-exitr
+help read_hdl
+help elaborate
+help syn_generic
+help syn_map
+help syn_opt
+help write_hdl
+help write_sdc
 exit
