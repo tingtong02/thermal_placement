@@ -60,7 +60,7 @@ def build_config() -> dict:
     verilog_files = rtl_files + tech["fake_sram_stub_files"]
     tag = run_tag()
     rundir = RESULT_ROOT / tag
-    return {
+    config = {
         "config_name": CONFIG_NAME,
         "shape_name": SHAPE_NAME,
         "top_module": TOP_MODULE,
@@ -90,6 +90,17 @@ def build_config() -> dict:
         "place_detail_wire_length_opt_effort": os.environ.get("TP_STAGE2_PLACE_DETAIL_WIRE_EFFORT", "medium"),
         **tech,
     }
+    if "TP_STAGE2_STRIPE_WIDTH" in os.environ:
+        config["stripe_width"] = float(os.environ["TP_STAGE2_STRIPE_WIDTH"])
+    if "TP_STAGE2_STRIPE_SPACING" in os.environ:
+        config["stripe_spacing"] = float(os.environ["TP_STAGE2_STRIPE_SPACING"])
+    if "TP_STAGE2_STRIPE_DISTANCE" in os.environ:
+        config["stripe_distance"] = float(os.environ["TP_STAGE2_STRIPE_DISTANCE"])
+    if "TP_STAGE2_SROUTE_MIN_LAYER" in os.environ:
+        config["sroute_min_layer"] = os.environ["TP_STAGE2_SROUTE_MIN_LAYER"]
+    if "TP_STAGE2_SROUTE_MAX_LAYER" in os.environ:
+        config["sroute_max_layer"] = os.environ["TP_STAGE2_SROUTE_MAX_LAYER"]
+    return config
 
 
 def preflight(config: dict) -> tuple[bool, list[str]]:
@@ -384,6 +395,11 @@ def build_pnr_smoke_config(config: dict) -> dict:
     smoke["place_global_timing_effort"] = os.environ.get("TP_STAGE2_PLACE_TIMING_EFFORT", "low")
     smoke["place_global_cong_effort"] = os.environ.get("TP_STAGE2_PLACE_CONG_EFFORT", "low")
     smoke["place_detail_wire_length_opt_effort"] = os.environ.get("TP_STAGE2_PLACE_DETAIL_WIRE_EFFORT", "none")
+    smoke["stripe_width"] = float(os.environ.get("TP_STAGE2_STRIPE_WIDTH", str(smoke.get("stripe_width", 0.04))))
+    smoke["stripe_spacing"] = float(os.environ.get("TP_STAGE2_STRIPE_SPACING", str(smoke.get("stripe_spacing", 0.40))))
+    smoke["stripe_distance"] = float(os.environ.get("TP_STAGE2_STRIPE_DISTANCE", "20.0"))
+    smoke["sroute_min_layer"] = os.environ.get("TP_STAGE2_SROUTE_MIN_LAYER", smoke.get("sroute_min_layer", "M1"))
+    smoke["sroute_max_layer"] = os.environ.get("TP_STAGE2_SROUTE_MAX_LAYER", smoke.get("sroute_max_layer", "M8"))
     return smoke
 
 
