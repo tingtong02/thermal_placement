@@ -168,7 +168,7 @@ saveDesign %s
 
         if runmode == 'script_only':
             self.write_to_file(self.generate_mmmc_code(), self.mmmc_script_path, is_tcl=False)
-            prev_step = None
+            prev_step = self.configs.get('start_prev_checkpoint')
             for step in steps:
                 self.write_to_file(self.generate_code(step),
                                    os.path.join(self.script_dir, f'{step}.tcl'),
@@ -192,7 +192,7 @@ saveDesign %s
         elif runmode == 'normal':
             self.write_to_file(self.generate_mmmc_code(), self.mmmc_script_path, is_tcl=False)
 
-            prev_step = None
+            prev_step = self.configs.get('start_prev_checkpoint')
             for step in steps:
                 # Possibly you don't need a clock tree for combinational module
                 # So you have to make sure you can run through the flow!
@@ -626,13 +626,14 @@ source %s
     os.path.join(self.data_dir, 'clk.spec'),
 )
         
+        cts_command = self.configs.get('cts_command', 'clock_opt_design')
         codes += """
 # -------------------------------------------------------------
-# run ccopt
+# run CTS
 # -------------------------------------------------------------
-ccopt_design -cts
+%s
 report_ccopt_skew_groups
-"""
+""" % cts_command
         
         codes += """
 # -------------------------------------------------------------
