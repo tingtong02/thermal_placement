@@ -664,13 +664,17 @@ setAnalysisMode -analysisType onChipVariation
 
 # FIXME: many routing configuration still missing!
 #        They are now just copied from the example script
-setNanoRouteMode -quiet -drouteEndIteration 20
-setNanoRouteMode -quiet -drouteFixAntenna true
-setNanoRouteMode -quiet -drouteUseMultiCutViaEffort medium
-setNanoRouteMode -quiet -drouteMinSlackForWireOptimization 0.1
+setNanoRouteMode -quiet -drouteEndIteration %d
+setNanoRouteMode -quiet -drouteFixAntenna %s
+setNanoRouteMode -quiet -drouteUseMultiCutViaEffort %s
+setNanoRouteMode -quiet -drouteMinSlackForWireOptimization %.3f
 setDelayCalMode -engine %s -siAware %s
 """ % (
     self.configs.get('route_max_threads', self.configs.get('max_threads', 8)),
+    self.configs.get('droute_end_iteration', 20),
+    'true' if self.configs.get('droute_fix_antenna', True) else 'false',
+    self.configs.get('droute_multicut_via_effort', 'medium'),
+    self.configs.get('droute_min_slack_for_wire_optimization', 0.1),
     self.configs.get('route_delay_engine', 'default'),
     'true' if self.configs.get('route_si_aware', True) else 'false',
 )

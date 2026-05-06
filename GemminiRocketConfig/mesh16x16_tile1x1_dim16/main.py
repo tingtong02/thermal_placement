@@ -81,6 +81,13 @@ def build_config() -> dict:
         "innovus_threads": int(os.environ.get("TP_CADENCE_INNOVUS_CPUS", "8")),
         "route_max_threads": int(os.environ.get("TP_STAGE2_ROUTE_CPUS", "1")),
         "route_si_aware": os.environ.get("TP_STAGE2_ROUTE_SI_AWARE", "false").lower() in {"1", "true", "yes", "on"},
+        "droute_end_iteration": int(os.environ.get("TP_STAGE2_DROUTE_END_ITERATION", "20")),
+        "droute_fix_antenna": os.environ.get("TP_STAGE2_DROUTE_FIX_ANTENNA", "true").lower() in {"1", "true", "yes", "on"},
+        "droute_multicut_via_effort": os.environ.get("TP_STAGE2_DROUTE_MULTICUT_VIA_EFFORT", "medium"),
+        "droute_min_slack_for_wire_optimization": float(os.environ.get("TP_STAGE2_DROUTE_MIN_SLACK", "0.1")),
+        "place_global_timing_effort": os.environ.get("TP_STAGE2_PLACE_TIMING_EFFORT", "medium"),
+        "place_global_cong_effort": os.environ.get("TP_STAGE2_PLACE_CONG_EFFORT", "auto"),
+        "place_detail_wire_length_opt_effort": os.environ.get("TP_STAGE2_PLACE_DETAIL_WIRE_EFFORT", "medium"),
         **tech,
     }
 
@@ -159,6 +166,7 @@ def build_genus_config(config: dict, runmode: str = "script_only", steps: list[s
         "syn_generic_effort": "medium",
         "syn_map_effort": "high",
         "syn_opt_effort": "medium",
+        "syn_opt_mode": "logical",
     }
 
 
@@ -370,6 +378,15 @@ def run_genus_syn(config: dict) -> Path:
     return out
 
 
+def build_pnr_smoke_config(config: dict) -> dict:
+    smoke = dict(config)
+    smoke["droute_end_iteration"] = int(os.environ.get("TP_STAGE2_DROUTE_END_ITERATION", "5"))
+    smoke["place_global_timing_effort"] = os.environ.get("TP_STAGE2_PLACE_TIMING_EFFORT", "low")
+    smoke["place_global_cong_effort"] = os.environ.get("TP_STAGE2_PLACE_CONG_EFFORT", "low")
+    smoke["place_detail_wire_length_opt_effort"] = os.environ.get("TP_STAGE2_PLACE_DETAIL_WIRE_EFFORT", "none")
+    return smoke
+
+
 def run_innovus_floorplan_smoke(config: dict) -> Path:
     genus_rundir = find_genus_synthesis_run(config)
     genus_output = build_genus_output_from_run(config, genus_rundir)
@@ -422,6 +439,88 @@ def run_innovus_floorplan_smoke(config: dict) -> Path:
     return out
 
 
+def run_innovus_pnr_smoke(config: dict) -> Path:
+    smoke_config = build_pnr_smoke_config(config)
+    genus_rundir = find_genus_synthesis_run(smoke_config)
+    genus_output = build_genus_output_from_run(smoke_config, genus_rundir)
+    innovus_manager = InnovusManager(
+        build_innovus_config(
+            smoke_config,
+            genus_output,
+            runmode="normal",
+            steps=["init", "floorplan", "powerplan", "placement", "cts", "routing"],
+        )
+    )
+    innovus_output = innovus_manager.run()
+
+    floorplan_def = Path(innovus_manager.floorplan_def_path)
+    pin_status = parse_def_pin_status(floorplan_def) if floorplan_def.is_file() else {
+        "def_file": str(floorplan_def),
+        "ok": False,
+        "error": "floorplan DEF was not produced",
+    }
+    required_artifacts = {
+        "routing_checkpoint": innovus_output["routing_checkpoint"],
+        "routed_def": innovus_output["def_file"],
+        "routed_verilog": innovus_output["routed_verilog_file"],
+        "routed_sdf": innovus_output["sdf_file"],
+        "routed_spef": innovus_output["spef_file"],
+        "gds": innovus_output["gds_file"],
+        "post_route_timing_dir": innovus_output["post_route_timing_dir"],
+        "post_route_area_report": innovus_output["post_route_area_report"],
+        "post_route_power_report": innovus_output["post_route_power_report"],
+        "post_route_drc_report": innovus_output["post_route_drc_report"],
+        "post_route_connectivity_report": innovus_output["post_route_connectivity_report"],
+    }
+    artifact_status = {name: Path(path).exists() for name, path in required_artifacts.items()}
+
+    startup_dir = Path(smoke_config["rundir"]) / "startup"
+    startup_dir.mkdir(parents=True, exist_ok=True)
+    manifest = {
+        "stage": "phase2_innovus_pnr_smoke",
+        "ok": True,
+        "notes": [
+            "Cadence Innovus was launched through the Python manager.",
+            "This is a reduced-effort run-through smoke, not final Stage 2 signoff.",
+            "Final Stage 2 acceptance still requires DRC/connectivity/timing/artifact classification and normal-quality settings.",
+        ],
+        "source_genus_rundir": str(genus_rundir),
+        "genus_output": genus_output,
+        "innovus_rundir": innovus_manager.rundir,
+        "innovus_output": innovus_output,
+        "reduced_effort_knobs": {
+            "droute_end_iteration": smoke_config["droute_end_iteration"],
+            "route_max_threads": smoke_config["route_max_threads"],
+            "route_si_aware": smoke_config["route_si_aware"],
+            "place_global_timing_effort": smoke_config["place_global_timing_effort"],
+            "place_global_cong_effort": smoke_config["place_global_cong_effort"],
+            "place_detail_wire_length_opt_effort": smoke_config["place_detail_wire_length_opt_effort"],
+        },
+        "pin_status": pin_status,
+        "artifact_status": artifact_status,
+        "scripts": {
+            "mmmc": innovus_manager.mmmc_script_path,
+            "init": str(Path(innovus_manager.script_dir) / "init.tcl"),
+            "floorplan": str(Path(innovus_manager.script_dir) / "floorplan.tcl"),
+            "powerplan": str(Path(innovus_manager.script_dir) / "powerplan.tcl"),
+            "placement": str(Path(innovus_manager.script_dir) / "placement.tcl"),
+            "cts": str(Path(innovus_manager.script_dir) / "cts.tcl"),
+            "routing": str(Path(innovus_manager.script_dir) / "routing.tcl"),
+        },
+        "logs": {
+            "init": str(Path(innovus_manager.log_dir) / "init.log"),
+            "floorplan": str(Path(innovus_manager.log_dir) / "floorplan.log"),
+            "powerplan": str(Path(innovus_manager.log_dir) / "powerplan.log"),
+            "placement": str(Path(innovus_manager.log_dir) / "placement.log"),
+            "cts": str(Path(innovus_manager.log_dir) / "cts.log"),
+            "routing": str(Path(innovus_manager.log_dir) / "routing.log"),
+        },
+    }
+    out = startup_dir / "innovus_pnr_smoke_manifest.json"
+    out.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    return out
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="GemminiRocketConfig mesh16x16 Phase 2 startup")
     parser.add_argument("--preflight", action="store_true", help="Validate inputs and paths without writing outputs")
@@ -430,6 +529,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-genus-elab", action="store_true", help="Launch a Python-managed Genus frontend/elaboration smoke without synthesis")
     parser.add_argument("--run-genus-syn", action="store_true", help="Launch Python-managed Genus synthesis and reports without Innovus")
     parser.add_argument("--run-innovus-floorplan-smoke", action="store_true", help="Launch Python-managed Innovus init/floorplan smoke from a completed Genus synthesis run")
+    parser.add_argument("--run-innovus-pnr-smoke", action="store_true", help="Launch reduced-effort Python-managed Innovus powerplan/place/CTS/route smoke from a completed Genus synthesis run")
     parser.add_argument("--print-config", action="store_true", help="Print resolved startup config as JSON")
     return parser.parse_args()
 
@@ -440,7 +540,7 @@ def main() -> int:
     ok, errors = preflight(config)
     if args.print_config:
         print(json.dumps(config, indent=2))
-    if args.preflight or args.dry_run or args.write_scripts or args.run_genus_elab or args.run_genus_syn or args.run_innovus_floorplan_smoke:
+    if args.preflight or args.dry_run or args.write_scripts or args.run_genus_elab or args.run_genus_syn or args.run_innovus_floorplan_smoke or args.run_innovus_pnr_smoke:
         print_summary(config)
         if args.dry_run:
             print(f"manifest={write_dry_run(config, errors)}")
@@ -456,9 +556,11 @@ def main() -> int:
             print(f"genus_syn_manifest={run_genus_syn(config)}")
         if args.run_innovus_floorplan_smoke:
             print(f"innovus_floorplan_manifest={run_innovus_floorplan_smoke(config)}")
+        if args.run_innovus_pnr_smoke:
+            print(f"innovus_pnr_smoke_manifest={run_innovus_pnr_smoke(config)}")
         print("preflight_ok=True")
         return 0
-    print("No action requested. Use --preflight, --dry-run, --write-scripts, --run-genus-elab, --run-genus-syn, --run-innovus-floorplan-smoke, or --print-config.")
+    print("No action requested. Use --preflight, --dry-run, --write-scripts, --run-genus-elab, --run-genus-syn, --run-innovus-floorplan-smoke, --run-innovus-pnr-smoke, or --print-config.")
     return 0
 
 
