@@ -35,6 +35,7 @@ Initial checks:
 python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --preflight
 python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --dry-run
 python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --write-scripts
+python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --run-genus-elab
 ```
 
-These checks do not launch Cadence commercial tools.
+`--run-genus-elab` launches Genus for frontend/elaboration only; the other checks do not launch Cadence commercial tools.

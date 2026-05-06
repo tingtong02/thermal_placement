@@ -147,12 +147,12 @@ def write_dry_run(config: dict, errors: list[str]) -> Path:
     return out
 
 
-def build_genus_config(config: dict) -> dict:
+def build_genus_config(config: dict, runmode: str = "script_only", steps: list[str] | None = None) -> dict:
     return {
         **config,
         "rundir": str(Path(config["rundir"]) / "genus"),
-        "runmode": "script_only",
-        "steps": ["syn", "report"],
+        "runmode": runmode,
+        "steps": steps or ["syn", "report"],
         "hdl_error_on_blackbox": True,
         "hdl_resolve_instance_with_libcell": True,
         "syn_generic_effort": "medium",
@@ -213,11 +213,35 @@ def write_manager_scripts(config: dict) -> Path:
     return out
 
 
+
+def run_genus_elab(config: dict) -> Path:
+    genus_manager = GenusManager(build_genus_config(config, runmode="normal", steps=["elab"]))
+    genus_output = genus_manager.run()
+
+    startup_dir = Path(config["rundir"]) / "startup"
+    startup_dir.mkdir(parents=True, exist_ok=True)
+    manifest = {
+        "stage": "phase2_genus_elaboration_smoke",
+        "ok": True,
+        "notes": [
+            "Cadence Genus was launched through the Python manager.",
+            "This frontend/elaboration smoke does not run synthesis.",
+        ],
+        "genus_rundir": genus_manager.rundir,
+        "genus_output": genus_output,
+        "check_design_report": genus_manager.check_design_report_path,
+        "elab_qor_report": genus_manager.elab_qor_report_path,
+    }
+    out = startup_dir / "genus_elab_manifest.json"
+    out.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    return out
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="GemminiRocketConfig mesh16x16 Phase 2 startup")
     parser.add_argument("--preflight", action="store_true", help="Validate inputs and paths without writing outputs")
     parser.add_argument("--dry-run", action="store_true", help="Validate inputs and write a startup manifest under physical/<tag>/startup")
     parser.add_argument("--write-scripts", action="store_true", help="Generate Genus/Innovus Tcl through manager/ without launching commercial tools")
+    parser.add_argument("--run-genus-elab", action="store_true", help="Launch a Python-managed Genus frontend/elaboration smoke without synthesis")
     parser.add_argument("--print-config", action="store_true", help="Print resolved startup config as JSON")
     return parser.parse_args()
 
@@ -228,7 +252,7 @@ def main() -> int:
     ok, errors = preflight(config)
     if args.print_config:
         print(json.dumps(config, indent=2))
-    if args.preflight or args.dry_run or args.write_scripts:
+    if args.preflight or args.dry_run or args.write_scripts or args.run_genus_elab:
         print_summary(config)
         if args.dry_run:
             print(f"manifest={write_dry_run(config, errors)}")
@@ -238,9 +262,11 @@ def main() -> int:
             return 1
         if args.write_scripts:
             print(f"manager_manifest={write_manager_scripts(config)}")
+        if args.run_genus_elab:
+            print(f"genus_elab_manifest={run_genus_elab(config)}")
         print("preflight_ok=True")
         return 0
-    print("No action requested. Use --preflight, --dry-run, --write-scripts, or --print-config.")
+    print("No action requested. Use --preflight, --dry-run, --write-scripts, --run-genus-elab, or --print-config.")
     return 0
 
 

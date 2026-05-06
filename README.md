@@ -20,9 +20,10 @@ Do not use base conda or system Python for this repository. After any modificati
 python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --preflight
 python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --dry-run
 python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --write-scripts
+python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --run-genus-elab
 ```
 
-`--preflight` validates inputs and environment. `--dry-run` writes a startup manifest. `--write-scripts` exercises the dacs-style `manager/` path and generates Genus/Innovus Tcl without launching commercial tools.
+`--preflight` validates inputs and environment. `--dry-run` writes a startup manifest. `--write-scripts` exercises the dacs-style `manager/` path and generates Genus/Innovus Tcl without launching commercial tools. `--run-genus-elab` launches a Python-managed Genus frontend/elaboration smoke without synthesis.
 
 ## Gemmini Entry Layout
 

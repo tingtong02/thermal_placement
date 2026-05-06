@@ -52,6 +52,14 @@ class GenusManager(BaseManager):
         return os.path.join(self.data_dir, '%s.sdf' % self.top_module)
 
     @property
+    def check_design_report_path(self) -> str:
+        return os.path.join(self.report_dir, 'check_design.rpt')
+
+    @property
+    def elab_qor_report_path(self) -> str:
+        return os.path.join(self.report_dir, 'elab_qor.rpt')
+
+    @property
     def timing_report_path(self) -> str:
         """
             Timing report. Marks the end of reporting.
@@ -65,6 +73,10 @@ class GenusManager(BaseManager):
     @property
     def syn_script_path(self) -> str:
         return os.path.join(self.script_dir, 'syn.tcl')
+
+    @property
+    def elab_script_path(self) -> str:
+        return os.path.join(self.script_dir, 'elab.tcl')
     
     @property
     def sdc_script_path(self) -> str:
@@ -153,42 +165,55 @@ write_db %s/%s.db
         steps = self.configs.get('steps', ['syn', 'report'])
 
         runmode = self.configs.get('runmode', 'normal')
-        
-        if runmode == 'script_only':
-            fused_code = ""
-            if 'syn' in steps: fused_code += self.generate_syn_code()
-            if 'report' in steps: fused_code += self.generate_report_code()
 
-            self.write_to_file(self.generate_sdc_code(), self.sdc_script_path, is_tcl=False)
-            self.write_to_file(self.generate_mmmc_code(), self.mmmc_script_path, is_tcl=False)
-            self.write_to_file(fused_code, self.fused_syn_script_path, is_tcl=True)
+        self.write_to_file(self.generate_sdc_code(), self.sdc_script_path, is_tcl=False)
+        self.write_to_file(self.generate_mmmc_code(), self.mmmc_script_path, is_tcl=False)
+
+        if runmode == 'script_only':
+            if 'elab' in steps:
+                self.write_to_file(self.generate_elab_code(), self.elab_script_path, is_tcl=True)
+            if 'syn' in steps or 'report' in steps:
+                fused_code = ""
+                if 'syn' in steps: fused_code += self.generate_syn_code()
+                if 'report' in steps: fused_code += self.generate_report_code()
+                self.write_to_file(fused_code, self.fused_syn_script_path, is_tcl=True)
             return
 
         if runmode == 'fast':
             fused_code = ""
+            if 'elab' in steps: fused_code += self.generate_elab_code()
             if 'syn' in steps: fused_code += self.generate_syn_code()
             if 'report' in steps: fused_code += self.generate_report_code()
-            
-            self.write_to_file(self.generate_sdc_code(), self.sdc_script_path, is_tcl=False)
-            self.write_to_file(self.generate_mmmc_code(), self.mmmc_script_path, is_tcl=False)
             self.write_to_file(fused_code, self.fused_syn_script_path, is_tcl=True)
 
+            condition = lambda: if_exist(self.hdl_mapped_path)
+            if 'elab' in steps and 'syn' not in steps:
+                condition = lambda: if_exist(self.check_design_report_path)
             self.run_tcl_script(
                 script_path=self.fused_syn_script_path,
                 step_name='fused',
                 timeout=10 * 3600,
-                condition=lambda: if_exist(self.hdl_mapped_path)
+                condition=condition
             )
 
         elif runmode == 'normal':
-            self.write_to_file(self.generate_sdc_code(), self.sdc_script_path, is_tcl=False)
-            self.write_to_file(self.generate_mmmc_code(), self.mmmc_script_path, is_tcl=False)
-            self.write_to_file(self.generate_syn_code(), self.syn_script_path,
-                               prev_checkpoint=None, cur_checkpoint='syn', is_tcl=True)
-            self.write_to_file(self.generate_report_code(), self.report_script_path,
-                               prev_checkpoint='syn', cur_checkpoint='report', is_tcl=True)
-            
-            # let the users determine which steps to use, we don't check it here
+            if 'elab' in steps:
+                self.write_to_file(self.generate_elab_code(), self.elab_script_path,
+                                   prev_checkpoint=None, cur_checkpoint='elab', is_tcl=True)
+            if 'syn' in steps:
+                self.write_to_file(self.generate_syn_code(), self.syn_script_path,
+                                   prev_checkpoint=None, cur_checkpoint='syn', is_tcl=True)
+            if 'report' in steps:
+                self.write_to_file(self.generate_report_code(), self.report_script_path,
+                                   prev_checkpoint='syn', cur_checkpoint='report', is_tcl=True)
+
+            if 'elab' in steps:
+                self.run_tcl_script(
+                    script_path=self.elab_script_path,
+                    step_name='elab',
+                    timeout=2 * 3600,
+                    condition=lambda: if_exist(self.check_design_report_path)
+                )
             if 'syn' in steps:
                 self.run_tcl_script(
                     script_path=self.syn_script_path,
@@ -351,6 +376,49 @@ set_analysis_view -setup { setup_view } -hold { hold_view }
     self.get_file_list('setup_lib_files'),
     self.get_file_list('hold_lib_files'),
     qrc_tech_suffix,
+)
+        return codes
+
+    def generate_elab_code(self) -> str:
+        """
+            Generate frontend/elaboration TCL script without synthesis.
+        """
+        codes = """
+# -------------------------------------------------------------
+# Global frontend settings
+# -------------------------------------------------------------
+set_db hdl_error_on_blackbox %s
+set_db max_cpus_per_server %d
+""" % (
+    'true' if self.configs.get('hdl_error_on_blackbox', True) else 'false',
+    self.configs.get('max_threads', 8),
+)
+        if self.configs.get('hdl_resolve_instance_with_libcell', False):
+            codes += "set_db hdl_resolve_instance_with_libcell true\n"
+
+        codes += """
+# -------------------------------------------------------------
+# Read library and physical collateral
+# -------------------------------------------------------------
+read_mmmc %s
+read_physical -lef { %s }
+
+# -------------------------------------------------------------
+# Read and elaborate RTL
+# -------------------------------------------------------------
+read_hdl -sv { %s }
+elaborate %s
+init_design -top %s
+check_design -unresolved > %s
+report_qor > %s
+""" % (
+    self.mmmc_script_path,
+    self.get_file_list('lef_files'),
+    self.get_file_list('verilog_files'),
+    self.top_module,
+    self.top_module,
+    self.check_design_report_path,
+    self.elab_qor_report_path,
 )
         return codes
 
