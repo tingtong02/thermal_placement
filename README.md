@@ -81,4 +81,4 @@ runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/<tag>/innovu
 
 ## Current Manager Status
 
-`manager/` adaptation is needed because Phase 2 must stay Python-manager-first. The current adaptation supports same-environment command construction through `env_setup_script`, fake-SRAM libcell resolution in Genus, Innovus IO pin assignment, final routed artifact export commands, and `script_only` mode for checks. Real Genus/Innovus launch remains a separate explicit step after reviewing the generated Tcl.
+`manager/` adaptation was required because Phase 2 must stay Python-manager-first. The current adaptation supports same-environment command construction through `env_setup_script`, fake-SRAM libcell resolution in Genus, Innovus IO pin assignment, final routed artifact export commands, and `script_only` mode for checks. Real Genus/Innovus launch remains a separate explicit step after reviewing the generated Tcl.
