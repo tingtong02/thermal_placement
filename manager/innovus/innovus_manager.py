@@ -50,6 +50,30 @@ class InnovusManager(BaseManager):
     def innovus_bin(self) -> str:
         return self.configs.get('innovus_bin')
 
+    @property
+    def env_setup_script(self) -> str:
+        return self.configs.get('env_setup_script', '')
+
+    @property
+    def routed_def_path(self) -> str:
+        return os.path.join(self.data_dir, f"{self.top_module}.routed.def")
+
+    @property
+    def routed_verilog_path(self) -> str:
+        return os.path.join(self.data_dir, f"{self.top_module}.routed.v")
+
+    @property
+    def routed_sdf_path(self) -> str:
+        return os.path.join(self.data_dir, f"{self.top_module}.routed.sdf")
+
+    @property
+    def routed_spef_path(self) -> str:
+        return os.path.join(self.data_dir, f"{self.top_module}.routed.spef")
+
+    @property
+    def routed_gds_path(self) -> str:
+        return os.path.join(self.data_dir, f"{self.top_module}.gds")
+
     def get_file_list(self, key: str, sep: str = " ") -> str:
         """
             Get the string of a file list from configs.
@@ -109,11 +133,13 @@ saveDesign %s
                 f.write("exit 0\n")
 
     def run_tcl_script(self, step_name: str, timeout: int, condition: Callable) -> None:
-        cmd = "cd {} && source ~/.bashrc && " \
-                "{} -no_gui -abort_on_error -overwrite " \
+        source_env = f"source {self.env_setup_script} && " if self.env_setup_script else ""
+        cmd = "cd {} && " \
+                "{}{} -no_gui -abort_on_error -overwrite " \
                 "-file {} " \
                 "-log {} ".format(
                 self.rundir,
+                source_env,
                 self.innovus_bin,
                 os.path.join(self.script_dir, f'{step_name}.tcl'),
                 os.path.join(self.log_dir, step_name),
@@ -135,6 +161,16 @@ saveDesign %s
         steps = self.configs.get('steps', default_steps)
 
         runmode = self.configs.get('runmode', 'normal')
+
+        if runmode == 'script_only':
+            self.write_to_file(self.generate_mmmc_code(), self.mmmc_script_path, is_tcl=False)
+            prev_step = None
+            for step in steps:
+                self.write_to_file(self.generate_code(step),
+                                   os.path.join(self.script_dir, f'{step}.tcl'),
+                                   is_tcl=True, prev_checkpoint=prev_step, cur_checkpoint=step)
+                prev_step = step
+            return
 
         if runmode == 'fast':
             self.write_to_file(self.generate_mmmc_code(), self.mmmc_script_path, is_tcl=False)
@@ -172,7 +208,19 @@ saveDesign %s
             raise NotImplementedError("runmode %s is not supported" % runmode)
 
     def generate_output_impl(self) -> dict:
-        return dict()
+        return {
+            'def_file': self.routed_def_path,
+            'routed_verilog_file': self.routed_verilog_path,
+            'sdf_file': self.routed_sdf_path,
+            'spef_file': self.routed_spef_path,
+            'gds_file': self.routed_gds_path,
+            'routing_checkpoint': os.path.join(self.data_dir, 'routing.enc'),
+            'post_route_timing_dir': os.path.join(self.report_dir, 'postRoute_timing'),
+            'post_route_area_report': os.path.join(self.report_dir, 'postRoute_area.rpt'),
+            'post_route_power_report': os.path.join(self.report_dir, 'postRoute_power.rpt'),
+            'post_route_drc_report': os.path.join(self.report_dir, 'postRoute_drc.rpt'),
+            'post_route_connectivity_report': os.path.join(self.report_dir, 'postRoute_connectivity.rpt'),
+        }
 
     def generate_mmmc_code(self) -> str:
         """
@@ -636,6 +684,29 @@ optDesign -postRoute -setup
         codes += self.generate_timing_report_code(stage='postRoute')
         codes += self.generate_area_report_code(stage='postRoute')
         codes += self.generate_power_report_code(stage='postRoute')
+        codes += """
+# -------------------------------------------------------------
+# Export routed implementation artifacts
+# -------------------------------------------------------------
+defOut -routing %s
+saveNetlist %s
+write_sdf %s
+rcOut -spef %s
+verify_drc -report %s
+verifyConnectivity -type all -error 1000 -warning 50 -report %s
+streamOut %s -mapFile %s -merge { %s } -mode ALL
+""" % (
+            self.routed_def_path,
+            self.routed_verilog_path,
+            self.routed_sdf_path,
+            self.routed_spef_path,
+            os.path.join(self.report_dir, 'postRoute_drc.rpt'),
+            os.path.join(self.report_dir, 'postRoute_connectivity.rpt'),
+            self.routed_gds_path,
+            self.configs.get('stream_layer_map'),
+            self.get_file_list('gds_files'),
+        )
+
 
         return codes
 

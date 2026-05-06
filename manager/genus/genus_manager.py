@@ -89,6 +89,10 @@ class GenusManager(BaseManager):
     def genus_bin(self) -> str:
         return self.configs.get('genus_bin')
 
+    @property
+    def env_setup_script(self) -> str:
+        return self.configs.get('env_setup_script', '')
+
     def get_file_list(self, key: str, sep: str = " ") -> str:
         """
             Get the string of a file list from configs.
@@ -129,11 +133,13 @@ write_db %s/%s.db
 
 
     def run_tcl_script(self, script_path: str, step_name: str, timeout: int, condition: Callable) -> None:
-        cmd = "cd {} && source ~/.bashrc && " \
-                "{} -no_gui -abort_on_error -overwrite " \
+        source_env = f"source {self.env_setup_script} && " if self.env_setup_script else ""
+        cmd = "cd {} && " \
+                "{}{} -no_gui -abort_on_error -overwrite " \
                 "-file {} " \
                 "-log {} ".format(
                 self.rundir,
+                source_env,
                 self.genus_bin,
                 script_path,
                 os.path.join(self.log_dir, step_name)
@@ -148,6 +154,16 @@ write_db %s/%s.db
 
         runmode = self.configs.get('runmode', 'normal')
         
+        if runmode == 'script_only':
+            fused_code = ""
+            if 'syn' in steps: fused_code += self.generate_syn_code()
+            if 'report' in steps: fused_code += self.generate_report_code()
+
+            self.write_to_file(self.generate_sdc_code(), self.sdc_script_path, is_tcl=False)
+            self.write_to_file(self.generate_mmmc_code(), self.mmmc_script_path, is_tcl=False)
+            self.write_to_file(fused_code, self.fused_syn_script_path, is_tcl=True)
+            return
+
         if runmode == 'fast':
             fused_code = ""
             if 'syn' in steps: fused_code += self.generate_syn_code()
@@ -352,6 +368,9 @@ set_db max_cpus_per_server %d
     'true' if self.configs.get('hdl_error_on_blackbox', True) else 'false',
     self.configs.get('max_threads', 8),
 )
+        if self.configs.get('hdl_resolve_instance_with_libcell', False):
+            codes += "set_db hdl_resolve_instance_with_libcell true\n"
+
         
         codes += """
 # -------------------------------------------------------------
