@@ -1,7 +1,7 @@
 # cadence_startup
 
 This is a copied DACS-style Cadence startup tree for Thermal Placement Phase 2.
-It is being adapted for GemminiRocketConfig mesh16x16_tile1x1_dim16 with full ASAP7 and fake SRAM.
+It is being adapted for GemminiRocketConfig with full ASAP7 and fake SRAM.
 
 ## Current Entry
 
@@ -10,6 +10,22 @@ source tools/env_gemmini_thermal.sh
 python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --preflight
 python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --dry-run
 ```
+
+`GemminiRocketConfig/` is the Chipyard config family. The next directory level is the concrete Gemmini parameter set. The current active set is:
+
+```text
+mesh16x16_tile1x1_dim16
+```
+
+Future Gemmini parameter sets can be added as sibling entries, for example:
+
+```text
+GemminiRocketConfig/
+  mesh16x16_tile1x1_dim16/
+  <other_mesh_tile_dim>/
+```
+
+Each parameter-set entry should own its `env.py`, `main.py`, and local README, and should point to the matching run root under `runs/`. The active project plan currently permits only `mesh16x16_tile1x1_dim16`; adding another parameter set for real runs requires updating the active plan first.
 
 Inputs come from:
 
@@ -33,7 +49,7 @@ runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/<tag>/
 
 ## Directory Notes
 
-- `GemminiRocketConfig/`: current project-specific experiment entry.
+- `GemminiRocketConfig/`: project-specific entries grouped by Gemmini parameter set.
 - `flow/`: copied flow wrappers from DACS; kept as reference for the Python-driven structure.
 - `manager/`: copied DACS tool managers; next area to adapt before real Genus/Innovus execution.
 - `tech/`: ASAP7 and Gemmini fake-SRAM tech configuration.

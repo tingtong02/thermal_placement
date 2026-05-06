@@ -2,6 +2,14 @@
 
 This is the Gemmini Phase 2 startup entry for the copied dacs-style Cadence flow.
 
+The directory name encodes the concrete Gemmini parameters used by this entry:
+
+```text
+mesh16x16_tile1x1_dim16
+```
+
+For future Gemmini variants, add a sibling directory under `GemminiRocketConfig/` with the same pattern and keep that variant's paths in its own `env.py` and `main.py`. The current active plan still fixes the real run target to this mesh16x16/tile1x1/DIM16 configuration.
+
 Inputs come from:
 
 ```text
