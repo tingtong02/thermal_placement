@@ -36,6 +36,7 @@ python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py 
 python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --dry-run
 python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --write-scripts
 python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --run-genus-elab
+python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --run-genus-syn
 ```
 
 `--run-genus-elab` launches Genus for frontend/elaboration only; the other checks do not launch Cadence commercial tools.
