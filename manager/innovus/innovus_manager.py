@@ -55,6 +55,10 @@ class InnovusManager(BaseManager):
         return self.configs.get('env_setup_script', '')
 
     @property
+    def floorplan_def_path(self) -> str:
+        return os.path.join(self.data_dir, f"{self.top_module}.floorplan.def")
+
+    @property
     def routed_def_path(self) -> str:
         return os.path.join(self.data_dir, f"{self.top_module}.routed.def")
 
@@ -209,6 +213,9 @@ saveDesign %s
 
     def generate_output_impl(self) -> dict:
         return {
+            'floorplan_def_file': self.floorplan_def_path,
+            'init_checkpoint': os.path.join(self.data_dir, 'init.enc'),
+            'floorplan_checkpoint': os.path.join(self.data_dir, 'floorplan.enc'),
             'def_file': self.routed_def_path,
             'routed_verilog_file': self.routed_verilog_path,
             'sdf_file': self.routed_sdf_path,
@@ -360,7 +367,7 @@ setPlaceMode -place_global_place_io_pins true
 # -------------------------------------------------------------
 defOut -floorplan -noStdCells %s
 """ % (
-    os.path.join(self.data_dir, 'floorplan.def')
+    self.floorplan_def_path,
 )
         return codes
 

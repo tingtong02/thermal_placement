@@ -22,9 +22,12 @@ python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py 
 python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --write-scripts
 python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --run-genus-elab
 python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --run-genus-syn
+TP_STAGE2_RUN_TAG=gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_innovus_floorplan_<date> \
+  TP_STAGE2_GENUS_RUN_TAG=<completed_genus_syn_tag> \
+  python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --run-innovus-floorplan-smoke
 ```
 
-`--preflight` validates inputs and environment. `--dry-run` writes a startup manifest. `--write-scripts` exercises the dacs-style `manager/` path and generates Genus/Innovus Tcl without launching commercial tools. `--run-genus-elab` launches a Python-managed Genus frontend/elaboration smoke without synthesis.
+`--preflight` validates inputs and environment. `--dry-run` writes a startup manifest. `--write-scripts` exercises the dacs-style `manager/` path and generates Genus/Innovus Tcl without launching commercial tools. `--run-genus-elab` launches a Python-managed Genus frontend/elaboration smoke without synthesis. `--run-genus-syn` launches Genus synthesis/report only. `--run-innovus-floorplan-smoke` launches Innovus init/floorplan only from a completed Genus synthesis run and checks top-level pin placement from the generated floorplan DEF.
 
 ## Gemmini Entry Layout
 

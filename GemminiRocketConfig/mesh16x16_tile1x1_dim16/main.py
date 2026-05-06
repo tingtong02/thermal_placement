@@ -8,6 +8,7 @@ import json
 import os
 import sys
 from datetime import datetime
+from typing import Any
 from pathlib import Path
 
 THIS_DIR = Path(__file__).resolve().parent
@@ -161,14 +162,112 @@ def build_genus_config(config: dict, runmode: str = "script_only", steps: list[s
     }
 
 
-def build_innovus_config(config: dict, genus_output: dict) -> dict:
+def build_innovus_config(
+    config: dict,
+    genus_output: dict,
+    runmode: str = "script_only",
+    steps: list[str] | None = None,
+) -> dict:
     return {
         **config,
         **genus_output,
         "rundir": str(Path(config["rundir"]) / "innovus"),
-        "runmode": "script_only",
-        "steps": ["init", "floorplan", "powerplan", "placement", "cts", "routing"],
+        "runmode": runmode,
+        "steps": steps or ["init", "floorplan", "powerplan", "placement", "cts", "routing"],
         "max_threads": config["innovus_threads"],
+    }
+
+
+def find_genus_synthesis_run(config: dict) -> Path:
+    explicit = os.environ.get("TP_STAGE2_GENUS_RUN_TAG")
+    if explicit:
+        candidate = RESULT_ROOT / explicit / "genus"
+        return candidate
+
+    candidates = []
+    for netlist in RESULT_ROOT.glob("*/genus/data/Gemmini-mapped.v"):
+        rundir = netlist.parents[1]
+        setup_sdc = rundir / "data" / "constraint_setup.sdc"
+        hold_sdc = rundir / "data" / "constraint_hold.sdc"
+        if setup_sdc.is_file() and hold_sdc.is_file():
+            candidates.append(rundir)
+    if not candidates:
+        raise FileNotFoundError("no completed Genus synthesis run found under physical/*/genus")
+    return max(candidates, key=lambda path: (path / "data" / "Gemmini-mapped.v").stat().st_mtime)
+
+
+def build_genus_output_from_run(config: dict, genus_rundir: Path) -> dict:
+    genus_rundir = genus_rundir.resolve()
+    output = {
+        "verilog_file": str(genus_rundir / "data" / "Gemmini-mapped.v"),
+        "top_module": TOP_MODULE,
+        "setup_lib_files": config["setup_lib_files"],
+        "hold_lib_files": config["hold_lib_files"],
+        "lef_files": config["lef_files"],
+        "qrc_techfiles": config["qrc_techfiles"],
+        "cts_inv_cells": config.get("cts_inv_cells", []),
+        "setup_sdc_file": str(genus_rundir / "data" / "constraint_setup.sdc"),
+        "hold_sdc_file": str(genus_rundir / "data" / "constraint_hold.sdc"),
+        "path_groups": [],
+    }
+    missing = [path for path in (output["verilog_file"], output["setup_sdc_file"], output["hold_sdc_file"]) if not Path(path).is_file()]
+    if missing:
+        raise FileNotFoundError("missing Genus synthesis output(s): " + ", ".join(missing))
+    return output
+
+
+def parse_def_pin_status(def_path: Path) -> dict[str, Any]:
+    in_pins = False
+    total = 0
+    placed = 0
+    fixed = 0
+    unplaced = 0
+    examples: list[str] = []
+    current_name: str | None = None
+    current_lines: list[str] = []
+
+    def flush_pin() -> None:
+        nonlocal total, placed, fixed, unplaced, current_name, current_lines
+        if current_name is None:
+            return
+        total += 1
+        body = " ".join(current_lines)
+        if " + FIXED " in body:
+            fixed += 1
+        elif " + PLACED " in body:
+            placed += 1
+        else:
+            unplaced += 1
+            if len(examples) < 10:
+                examples.append(current_name)
+        current_name = None
+        current_lines = []
+
+    for raw in def_path.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = raw.strip()
+        if line.startswith("PINS "):
+            in_pins = True
+            continue
+        if in_pins and line.startswith("END PINS"):
+            flush_pin()
+            break
+        if not in_pins:
+            continue
+        if line.startswith("- "):
+            flush_pin()
+            parts = line.split()
+            current_name = parts[1] if len(parts) > 1 else line
+            current_lines = [f" {line} "]
+        elif current_name is not None:
+            current_lines.append(f" {line} ")
+    return {
+        "def_file": str(def_path),
+        "total_pins": total,
+        "placed_pins": placed,
+        "fixed_pins": fixed,
+        "unplaced_pins": unplaced,
+        "unplaced_examples": examples,
+        "ok": total > 0 and unplaced == 0,
     }
 
 
@@ -271,6 +370,58 @@ def run_genus_syn(config: dict) -> Path:
     return out
 
 
+def run_innovus_floorplan_smoke(config: dict) -> Path:
+    genus_rundir = find_genus_synthesis_run(config)
+    genus_output = build_genus_output_from_run(config, genus_rundir)
+    innovus_manager = InnovusManager(
+        build_innovus_config(
+            config,
+            genus_output,
+            runmode="normal",
+            steps=["init", "floorplan"],
+        )
+    )
+    innovus_output = innovus_manager.run()
+
+    floorplan_def = Path(innovus_manager.floorplan_def_path)
+    pin_status = parse_def_pin_status(floorplan_def) if floorplan_def.is_file() else {
+        "def_file": str(floorplan_def),
+        "ok": False,
+        "error": "floorplan DEF was not produced",
+    }
+    if not pin_status.get("ok", False):
+        raise RuntimeError(f"Innovus floorplan pin placement check failed: {pin_status}")
+
+    startup_dir = Path(config["rundir"]) / "startup"
+    startup_dir.mkdir(parents=True, exist_ok=True)
+    manifest = {
+        "stage": "phase2_innovus_floorplan_smoke",
+        "ok": True,
+        "notes": [
+            "Cadence Innovus was launched through the Python manager.",
+            "This smoke runs init and floorplan only; it does not run powerplan, placement, CTS, routing, extraction, or streamOut.",
+            "Pin placement is checked by parsing the generated floorplan DEF PINS section.",
+        ],
+        "source_genus_rundir": str(genus_rundir),
+        "genus_output": genus_output,
+        "innovus_rundir": innovus_manager.rundir,
+        "innovus_output": innovus_output,
+        "pin_status": pin_status,
+        "scripts": {
+            "mmmc": innovus_manager.mmmc_script_path,
+            "init": str(Path(innovus_manager.script_dir) / "init.tcl"),
+            "floorplan": str(Path(innovus_manager.script_dir) / "floorplan.tcl"),
+        },
+        "logs": {
+            "init": str(Path(innovus_manager.log_dir) / "init.log"),
+            "floorplan": str(Path(innovus_manager.log_dir) / "floorplan.log"),
+        },
+    }
+    out = startup_dir / "innovus_floorplan_manifest.json"
+    out.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    return out
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="GemminiRocketConfig mesh16x16 Phase 2 startup")
     parser.add_argument("--preflight", action="store_true", help="Validate inputs and paths without writing outputs")
@@ -278,6 +429,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--write-scripts", action="store_true", help="Generate Genus/Innovus Tcl through manager/ without launching commercial tools")
     parser.add_argument("--run-genus-elab", action="store_true", help="Launch a Python-managed Genus frontend/elaboration smoke without synthesis")
     parser.add_argument("--run-genus-syn", action="store_true", help="Launch Python-managed Genus synthesis and reports without Innovus")
+    parser.add_argument("--run-innovus-floorplan-smoke", action="store_true", help="Launch Python-managed Innovus init/floorplan smoke from a completed Genus synthesis run")
     parser.add_argument("--print-config", action="store_true", help="Print resolved startup config as JSON")
     return parser.parse_args()
 
@@ -288,7 +440,7 @@ def main() -> int:
     ok, errors = preflight(config)
     if args.print_config:
         print(json.dumps(config, indent=2))
-    if args.preflight or args.dry_run or args.write_scripts or args.run_genus_elab or args.run_genus_syn:
+    if args.preflight or args.dry_run or args.write_scripts or args.run_genus_elab or args.run_genus_syn or args.run_innovus_floorplan_smoke:
         print_summary(config)
         if args.dry_run:
             print(f"manifest={write_dry_run(config, errors)}")
@@ -302,9 +454,11 @@ def main() -> int:
             print(f"genus_elab_manifest={run_genus_elab(config)}")
         if args.run_genus_syn:
             print(f"genus_syn_manifest={run_genus_syn(config)}")
+        if args.run_innovus_floorplan_smoke:
+            print(f"innovus_floorplan_manifest={run_innovus_floorplan_smoke(config)}")
         print("preflight_ok=True")
         return 0
-    print("No action requested. Use --preflight, --dry-run, --write-scripts, --run-genus-elab, --run-genus-syn, or --print-config.")
+    print("No action requested. Use --preflight, --dry-run, --write-scripts, --run-genus-elab, --run-genus-syn, --run-innovus-floorplan-smoke, or --print-config.")
     return 0
 
 
