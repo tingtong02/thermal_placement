@@ -212,6 +212,7 @@ def write_prelaunch_summary(config: dict, profile: str) -> Path:
     startup_dir.mkdir(parents=True, exist_ok=True)
     summary = {
         "profile": profile,
+        "run_tag": Path(config["rundir"]).name,
         "rundir": config["rundir"],
         "clock": {
             "name": config["clk_name"],
@@ -252,9 +253,9 @@ def write_prelaunch_summary(config: dict, profile: str) -> Path:
             "route_si_aware": config.get("route_si_aware"),
         },
         "genus_synthesis": {
-            "syn_generic_effort": config.get("syn_generic_effort"),
-            "syn_map_effort": config.get("syn_map_effort"),
-            "syn_opt_effort": config.get("syn_opt_effort"),
+            "syn_generic_effort": config.get("syn_generic_effort", "medium"),
+            "syn_map_effort": config.get("syn_map_effort", "high"),
+            "syn_opt_effort": config.get("syn_opt_effort", "medium"),
             "syn_opt_mode": config.get("syn_opt_mode") or "bare",
             "syn_opt_warning_policy": "SYNTH-33 is classified as a non-fatal Cadence deprecation warning for the current compatibility route",
         },
