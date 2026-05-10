@@ -91,3 +91,6 @@ runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/<tag>/innovu
 ## Current Manager Status
 
 `manager/` adaptation was required because Phase 2 must stay Python-manager-first. The current adaptation supports same-environment command construction through `env_setup_script`, fake-SRAM libcell resolution in Genus, Innovus IO pin assignment, final routed artifact export commands, and `script_only` mode for checks. Real Genus/Innovus launch remains a separate explicit step after reviewing the generated Tcl. The full-flow launch must use a clean semantic run tag; real launch checks refuse non-empty `data/` or `log/` output areas unless `TP_STAGE2_ALLOW_EXISTING_RUN=1` is explicitly set.
+
+
+2026-05-11 synthesis policy: Phase 2 uses bare `syn_opt` for the current compatibility route. `SYNTH-33` is classified as a non-fatal Cadence deprecation warning; `syn_opt -logical` is not the default because the local license set lacks `GEN_ENG100`.

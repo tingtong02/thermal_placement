@@ -47,3 +47,6 @@ TP_STAGE2_RUN_TAG=<clean_full_phase2_tag> TP_STAGE2_GENUS_RUN_TAG=<clean_full_ph
 ```
 
 `--run-genus-elab` launches Genus for frontend/elaboration only. `--run-genus-syn` launches Genus synthesis/report only. `--run-innovus-floorplan-smoke` launches Innovus init/floorplan only from a completed Genus synthesis run and checks top-level pin placement from the generated floorplan DEF. `--run-innovus-full` launches the non-smoke full Innovus implementation path with explicit fake SRAM macro placement, PG 0-open gating, CTS/routing M2-M8 alignment, per-step manifests, and post-route artifact gates. The preflight, dry-run, and write-scripts checks do not launch Cadence commercial tools.
+
+
+2026-05-11 synthesis policy: Phase 2 uses bare `syn_opt` for the current compatibility route. `SYNTH-33` is classified as a non-fatal Cadence deprecation warning; `syn_opt -logical` is not the default because the local license set lacks `GEN_ENG100`.

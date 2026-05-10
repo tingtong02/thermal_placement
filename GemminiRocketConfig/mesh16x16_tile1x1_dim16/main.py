@@ -251,6 +251,13 @@ def write_prelaunch_summary(config: dict, profile: str) -> Path:
             "route": config.get("route_max_threads"),
             "route_si_aware": config.get("route_si_aware"),
         },
+        "genus_synthesis": {
+            "syn_generic_effort": config.get("syn_generic_effort"),
+            "syn_map_effort": config.get("syn_map_effort"),
+            "syn_opt_effort": config.get("syn_opt_effort"),
+            "syn_opt_mode": config.get("syn_opt_mode") or "bare",
+            "syn_opt_warning_policy": "SYNTH-33 is classified as a non-fatal Cadence deprecation warning for the current compatibility route",
+        },
         "artifact_gates": [
             "cts.enc",
             "routing.enc",
@@ -360,7 +367,7 @@ def build_genus_config(config: dict, runmode: str = "script_only", steps: list[s
         "syn_generic_effort": "medium",
         "syn_map_effort": "high",
         "syn_opt_effort": "medium",
-        "syn_opt_mode": "logical",
+        "syn_opt_mode": "",
     }
 
 

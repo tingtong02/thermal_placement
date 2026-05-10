@@ -530,9 +530,9 @@ syn_map %s
     '-physical' if self.configs.get('syn_map_physical', False) else '',
 )
         if self.configs.get('syn_opt_effort', None):
-            syn_opt_mode = self.configs.get('syn_opt_mode')
-            if not syn_opt_mode:
-                syn_opt_mode = 'spatial' if self.configs.get('syn_opt_physical', False) else 'logical'
+            syn_opt_mode = self.configs.get('syn_opt_mode', None)
+            if syn_opt_mode is None:
+                syn_opt_mode = 'spatial' if self.configs.get('syn_opt_physical', False) else ''
             syn_opt_arg = f"-{syn_opt_mode}" if syn_opt_mode else ''
             codes += """
 set syn_opt_effort %s
