@@ -40,6 +40,10 @@ python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py 
 TP_STAGE2_RUN_TAG=gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_innovus_floorplan_<date> \
   TP_STAGE2_GENUS_RUN_TAG=<completed_genus_syn_tag> \
   python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --run-innovus-floorplan-smoke
+TP_STAGE2_RUN_TAG=<clean_full_phase2_tag> \
+  python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --run-genus-syn
+TP_STAGE2_RUN_TAG=<clean_full_phase2_tag> TP_STAGE2_GENUS_RUN_TAG=<clean_full_phase2_tag> \
+  python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --run-innovus-full
 ```
 
-`--run-genus-elab` launches Genus for frontend/elaboration only. `--run-genus-syn` launches Genus synthesis/report only. `--run-innovus-floorplan-smoke` launches Innovus init/floorplan only from a completed Genus synthesis run and checks top-level pin placement from the generated floorplan DEF. The preflight, dry-run, and write-scripts checks do not launch Cadence commercial tools.
+`--run-genus-elab` launches Genus for frontend/elaboration only. `--run-genus-syn` launches Genus synthesis/report only. `--run-innovus-floorplan-smoke` launches Innovus init/floorplan only from a completed Genus synthesis run and checks top-level pin placement from the generated floorplan DEF. `--run-innovus-full` launches the non-smoke full Innovus implementation path with explicit fake SRAM macro placement, PG 0-open gating, CTS/routing M2-M8 alignment, per-step manifests, and post-route artifact gates. The preflight, dry-run, and write-scripts checks do not launch Cadence commercial tools.

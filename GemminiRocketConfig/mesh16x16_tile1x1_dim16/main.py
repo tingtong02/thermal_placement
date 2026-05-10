@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 from datetime import datetime
 from typing import Any
@@ -101,6 +102,18 @@ def build_config() -> dict:
         config["sroute_min_layer"] = os.environ["TP_STAGE2_SROUTE_MIN_LAYER"]
     if "TP_STAGE2_SROUTE_MAX_LAYER" in os.environ:
         config["sroute_max_layer"] = os.environ["TP_STAGE2_SROUTE_MAX_LAYER"]
+    if "TP_STAGE2_ROUTE_MIN_LAYER" in os.environ:
+        config["route_min_layer"] = os.environ["TP_STAGE2_ROUTE_MIN_LAYER"]
+    if "TP_STAGE2_ROUTE_MAX_LAYER" in os.environ:
+        config["route_max_layer"] = os.environ["TP_STAGE2_ROUTE_MAX_LAYER"]
+    if "TP_STAGE2_NDR_CTS_MIN_LAYER" in os.environ:
+        config["ndr_cts_min_layer"] = os.environ["TP_STAGE2_NDR_CTS_MIN_LAYER"]
+    if "TP_STAGE2_NDR_CTS_MAX_LAYER" in os.environ:
+        config["ndr_cts_max_layer"] = os.environ["TP_STAGE2_NDR_CTS_MAX_LAYER"]
+    if "TP_STAGE2_REQUIRE_PG_CLEAN" in os.environ:
+        config["require_pg_clean"] = os.environ["TP_STAGE2_REQUIRE_PG_CLEAN"].lower() in {"1", "true", "yes", "on"}
+    if "TP_STAGE2_EXPECTED_FAKE_SRAM_MACROS" in os.environ:
+        config["expected_fake_sram_macro_instances"] = int(os.environ["TP_STAGE2_EXPECTED_FAKE_SRAM_MACROS"])
     return config
 
 
@@ -167,6 +180,175 @@ def write_dry_run(config: dict, errors: list[str]) -> Path:
     return out
 
 
+def stage2_required_artifacts(innovus_output: dict, innovus_rundir: Path) -> dict[str, str]:
+    return {
+        "cts_checkpoint": str(innovus_rundir / "data" / "cts.enc"),
+        "routing_checkpoint": innovus_output["routing_checkpoint"],
+        "routed_def": innovus_output["def_file"],
+        "routed_verilog": innovus_output["routed_verilog_file"],
+        "routed_sdf": innovus_output["sdf_file"],
+        "routed_spef": innovus_output["spef_file"],
+        "gds": innovus_output["gds_file"],
+        "post_route_timing_dir": innovus_output["post_route_timing_dir"],
+        "post_route_area_report": innovus_output["post_route_area_report"],
+        "post_route_power_report": innovus_output["post_route_power_report"],
+        "post_route_drc_report": innovus_output["post_route_drc_report"],
+        "post_route_connectivity_report": innovus_output["post_route_connectivity_report"],
+    }
+
+
+def evaluate_artifact_gates(required_artifacts: dict[str, str]) -> dict[str, Any]:
+    status = {name: Path(path).exists() for name, path in required_artifacts.items()}
+    return {
+        "ok": all(status.values()),
+        "required_artifacts": required_artifacts,
+        "artifact_status": status,
+        "missing": [name for name, exists in status.items() if not exists],
+    }
+
+
+def write_prelaunch_summary(config: dict, profile: str) -> Path:
+    startup_dir = Path(config["rundir"]) / "startup"
+    startup_dir.mkdir(parents=True, exist_ok=True)
+    summary = {
+        "profile": profile,
+        "rundir": config["rundir"],
+        "clock": {
+            "name": config["clk_name"],
+            "port": config["clk_port_name"],
+            "period_ns": config["clk_period_ns"],
+            "period_ps": config["clk_period_ns"] * 1000.0,
+            "frequency_mhz": 1000.0 / config["clk_period_ns"],
+        },
+        "route_layers": {
+            "route_min_layer": config.get("route_min_layer"),
+            "route_max_layer": config.get("route_max_layer"),
+            "ndr_cts_min_layer": config.get("ndr_cts_min_layer"),
+            "ndr_cts_max_layer": config.get("ndr_cts_max_layer"),
+            "m10_policy": "classify ASAP7 M10 IMPTR messages separately; do not route through M10 in this plan",
+        },
+        "pg": {
+            "stripe_width": config.get("stripe_width"),
+            "stripe_spacing": config.get("stripe_spacing"),
+            "stripe_distance": config.get("stripe_distance"),
+            "stripe_v_layer": config.get("stripe_v_layer"),
+            "stripe_h_layer": config.get("stripe_h_layer"),
+            "sroute_min_layer": config.get("sroute_min_layer"),
+            "sroute_max_layer": config.get("sroute_max_layer"),
+            "require_pg_clean": config.get("require_pg_clean", True),
+        },
+        "macro_placement": {
+            "policy": "explicit_grid_fixed_fake_sram_macros",
+            "fake_sram_macro_cells": config.get("fake_sram_macro_cells"),
+            "expected_instances": config.get("expected_fake_sram_macro_instances"),
+            "cols": config.get("macro_placement_cols"),
+            "halo_x": config.get("macro_halo_x"),
+            "halo_y": config.get("macro_halo_y"),
+        },
+        "cadence_threads": {
+            "genus": config.get("max_threads"),
+            "innovus": config.get("innovus_threads"),
+            "route": config.get("route_max_threads"),
+            "route_si_aware": config.get("route_si_aware"),
+        },
+        "artifact_gates": [
+            "cts.enc",
+            "routing.enc",
+            "routed DEF",
+            "routed Verilog",
+            "routed SDF",
+            "SPEF",
+            "GDS",
+            "post-route timing/area/power/DRC/connectivity reports",
+        ],
+        "clean_output_policy": {
+            "real_genus_launch": "fail if genus/data or genus/log already contains files unless TP_STAGE2_ALLOW_EXISTING_RUN=1",
+            "real_innovus_full_launch": "fail if innovus/data or innovus/log already contains files unless TP_STAGE2_ALLOW_EXISTING_RUN=1",
+            "script_generation": "may create scripts/startup files only and does not launch Cadence",
+        },
+    }
+    out = startup_dir / "prelaunch_config_summary.json"
+    out.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    return out
+
+
+def ensure_clean_launch_area(config: dict, tool: str) -> None:
+    if os.environ.get("TP_STAGE2_ALLOW_EXISTING_RUN", "false").lower() in {"1", "true", "yes", "on"}:
+        return
+    root = Path(config["rundir"]) / tool
+    checked = [root / "data", root / "log"]
+    existing = []
+    for directory in checked:
+        if directory.is_dir():
+            existing.extend(path for path in directory.iterdir() if path.name != ".gitkeep")
+    if existing:
+        sample = ", ".join(str(path) for path in existing[:5])
+        raise FileExistsError(f"refusing to launch into non-clean {tool} output area: {sample}")
+
+
+def parse_def_macro_status(def_path: Path, macro_cells: list[str], expected_count: int) -> dict[str, Any]:
+    if not def_path.is_file():
+        return {"ok": False, "def_file": str(def_path), "error": "floorplan DEF missing"}
+    text = def_path.read_text(encoding="utf-8", errors="replace")
+    die_match = re.search(r"DIEAREA\s+\(\s+(-?\d+)\s+(-?\d+)\s+\)\s+\(\s+(-?\d+)\s+(-?\d+)\s+\)", text)
+    die = tuple(int(v) for v in die_match.groups()) if die_match else None
+    components: list[dict[str, Any]] = []
+    in_components = False
+    current: list[str] = []
+    for raw in text.splitlines():
+        line = raw.strip()
+        if line.startswith("COMPONENTS "):
+            in_components = True
+            continue
+        if in_components and line.startswith("END COMPONENTS"):
+            if current:
+                components.append(_parse_def_component(current, die, macro_cells))
+            break
+        if not in_components:
+            continue
+        if line.startswith("- "):
+            if current:
+                components.append(_parse_def_component(current, die, macro_cells))
+            current = [line]
+        elif current:
+            current.append(line)
+    macros = [item for item in components if item.get("is_fake_sram_macro")]
+    bad = [item for item in macros if not item.get("inside_die", False) or item.get("status") not in {"PLACED", "FIXED"}]
+    return {
+        "ok": len(macros) == expected_count and not bad,
+        "def_file": str(def_path),
+        "diearea": die,
+        "macro_cells": macro_cells,
+        "expected_count": expected_count,
+        "macro_count": len(macros),
+        "bad_macros": bad,
+        "macros": macros,
+    }
+
+
+def _parse_def_component(lines: list[str], die: tuple[int, int, int, int] | None, macro_cells: list[str]) -> dict[str, Any]:
+    body = " ".join(lines)
+    head = lines[0].split()
+    name = head[1] if len(head) > 1 else ""
+    master = head[2] if len(head) > 2 else ""
+    loc_match = re.search(r"\+\s+(PLACED|FIXED)\s+\(\s+(-?\d+)\s+(-?\d+)\s+\)", body)
+    status = loc_match.group(1) if loc_match else "UNPLACED"
+    x = int(loc_match.group(2)) if loc_match else None
+    y = int(loc_match.group(3)) if loc_match else None
+    inside_die = False
+    if die and x is not None and y is not None:
+        inside_die = die[0] <= x <= die[2] and die[1] <= y <= die[3]
+    return {
+        "name": name,
+        "master": master,
+        "is_fake_sram_macro": master in macro_cells,
+        "status": status,
+        "x": x,
+        "y": y,
+        "inside_die": inside_die,
+    }
+
+
 def build_genus_config(config: dict, runmode: str = "script_only", steps: list[str] | None = None) -> dict:
     return {
         **config,
@@ -218,6 +400,10 @@ def find_genus_synthesis_run(config: dict) -> Path:
 
 def build_genus_output_from_run(config: dict, genus_rundir: Path) -> dict:
     genus_rundir = genus_rundir.resolve()
+    setup_clean = genus_rundir / "data" / "constraint_setup_innovus.sdc"
+    hold_clean = genus_rundir / "data" / "constraint_hold_innovus.sdc"
+    setup_raw = genus_rundir / "data" / "constraint_setup.sdc"
+    hold_raw = genus_rundir / "data" / "constraint_hold.sdc"
     output = {
         "verilog_file": str(genus_rundir / "data" / "Gemmini-mapped.v"),
         "top_module": TOP_MODULE,
@@ -226,8 +412,10 @@ def build_genus_output_from_run(config: dict, genus_rundir: Path) -> dict:
         "lef_files": config["lef_files"],
         "qrc_techfiles": config["qrc_techfiles"],
         "cts_inv_cells": config.get("cts_inv_cells", []),
-        "setup_sdc_file": str(genus_rundir / "data" / "constraint_setup.sdc"),
-        "hold_sdc_file": str(genus_rundir / "data" / "constraint_hold.sdc"),
+        "setup_sdc_file": str(setup_clean if setup_clean.is_file() else setup_raw),
+        "hold_sdc_file": str(hold_clean if hold_clean.is_file() else hold_raw),
+        "raw_setup_sdc_file": str(setup_raw),
+        "raw_hold_sdc_file": str(hold_raw),
         "path_groups": [],
     }
     missing = [path for path in (output["verilog_file"], output["setup_sdc_file"], output["hold_sdc_file"]) if not Path(path).is_file()]
@@ -357,6 +545,7 @@ def run_genus_elab(config: dict) -> Path:
 
 
 def run_genus_syn(config: dict) -> Path:
+    ensure_clean_launch_area(config, "genus")
     genus_manager = GenusManager(build_genus_config(config, runmode="normal", steps=["syn", "report"]))
     genus_output = genus_manager.run()
 
@@ -401,7 +590,18 @@ def build_pnr_smoke_config(config: dict) -> dict:
     smoke["stripe_distance"] = float(os.environ.get("TP_STAGE2_STRIPE_DISTANCE", "20.0"))
     smoke["sroute_min_layer"] = os.environ.get("TP_STAGE2_SROUTE_MIN_LAYER", smoke.get("sroute_min_layer", "M1"))
     smoke["sroute_max_layer"] = os.environ.get("TP_STAGE2_SROUTE_MAX_LAYER", smoke.get("sroute_max_layer", "M8"))
+    smoke["require_pg_clean"] = False
     return smoke
+
+
+def build_full_innovus_config(config: dict) -> dict:
+    full = dict(config)
+    full["droute_end_iteration"] = int(os.environ.get("TP_STAGE2_DROUTE_END_ITERATION", str(full.get("droute_end_iteration", 20))))
+    full["place_global_timing_effort"] = os.environ.get("TP_STAGE2_PLACE_TIMING_EFFORT", full.get("place_global_timing_effort", "medium"))
+    full["place_global_cong_effort"] = os.environ.get("TP_STAGE2_PLACE_CONG_EFFORT", full.get("place_global_cong_effort", "auto"))
+    full["place_detail_wire_length_opt_effort"] = os.environ.get("TP_STAGE2_PLACE_DETAIL_WIRE_EFFORT", full.get("place_detail_wire_length_opt_effort", "medium"))
+    full["require_pg_clean"] = True
+    return full
 
 
 def run_innovus_floorplan_smoke(config: dict) -> Path:
@@ -602,6 +802,70 @@ def run_innovus_pnr_smoke(config: dict) -> Path:
     return out
 
 
+def run_innovus_full(config: dict) -> Path:
+    full_config = build_full_innovus_config(config)
+    ensure_clean_launch_area(full_config, "innovus")
+    genus_rundir = find_genus_synthesis_run(full_config)
+    genus_output = build_genus_output_from_run(full_config, genus_rundir)
+    innovus_manager = InnovusManager(
+        build_innovus_config(
+            full_config,
+            genus_output,
+            runmode="normal",
+            steps=["init", "floorplan", "powerplan", "placement", "cts", "routing"],
+        )
+    )
+    innovus_output = innovus_manager.run()
+
+    floorplan_def = Path(innovus_manager.floorplan_def_path)
+    pin_status = parse_def_pin_status(floorplan_def) if floorplan_def.is_file() else {
+        "def_file": str(floorplan_def),
+        "ok": False,
+        "error": "floorplan DEF was not produced",
+    }
+    macro_status = parse_def_macro_status(
+        floorplan_def,
+        full_config.get("fake_sram_macro_cells", ["mem_ext", "mem_0_ext"]),
+        full_config.get("expected_fake_sram_macro_instances", 6),
+    )
+    required_artifacts = stage2_required_artifacts(innovus_output, Path(innovus_manager.rundir))
+    gate_status = evaluate_artifact_gates(required_artifacts)
+
+    startup_dir = Path(full_config["rundir"]) / "startup"
+    startup_dir.mkdir(parents=True, exist_ok=True)
+    manifest = {
+        "stage": "phase2_innovus_full",
+        "ok": gate_status["ok"] and pin_status.get("ok", False) and macro_status.get("ok", False),
+        "notes": [
+            "Cadence Innovus full implementation was launched through the Python manager.",
+            "This is the non-smoke Phase 2 route. Acceptance still depends on DRC/connectivity/timing classification in the final report.",
+            "ASAP7 M10 IMPTR collateral messages must be classified separately from routed DRC.",
+        ],
+        "source_genus_rundir": str(genus_rundir),
+        "genus_output": genus_output,
+        "innovus_rundir": innovus_manager.rundir,
+        "innovus_output": innovus_output,
+        "pin_status": pin_status,
+        "macro_status": macro_status,
+        "gate_status": gate_status,
+        "prelaunch_summary": str(startup_dir / "prelaunch_config_summary.json"),
+        "scripts": {
+            "mmmc": innovus_manager.mmmc_script_path,
+            "init": str(Path(innovus_manager.script_dir) / "init.tcl"),
+            "floorplan": str(Path(innovus_manager.script_dir) / "floorplan.tcl"),
+            "powerplan": str(Path(innovus_manager.script_dir) / "powerplan.tcl"),
+            "placement": str(Path(innovus_manager.script_dir) / "placement.tcl"),
+            "cts": str(Path(innovus_manager.script_dir) / "cts.tcl"),
+            "routing": str(Path(innovus_manager.script_dir) / "routing.tcl"),
+        },
+    }
+    out = startup_dir / "innovus_full_manifest.json"
+    out.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    if not manifest["ok"]:
+        raise RuntimeError(f"Innovus full artifact gate failed; see {out}")
+    return out
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="GemminiRocketConfig mesh16x16 Phase 2 startup")
     parser.add_argument("--preflight", action="store_true", help="Validate inputs and paths without writing outputs")
@@ -612,6 +876,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-innovus-floorplan-smoke", action="store_true", help="Launch Python-managed Innovus init/floorplan smoke from a completed Genus synthesis run")
     parser.add_argument("--run-innovus-pnr-smoke", action="store_true", help="Launch reduced-effort Python-managed Innovus powerplan/place/CTS/route smoke from a completed Genus synthesis run")
     parser.add_argument("--run-innovus-cts-route-smoke", action="store_true", help="Resume reduced-effort Innovus CTS/routing smoke from an existing placement.enc in the selected run tag")
+    parser.add_argument("--run-innovus-full", action="store_true", help="Launch non-smoke Python-managed Innovus full implementation from a completed Genus synthesis run")
     parser.add_argument("--print-config", action="store_true", help="Print resolved startup config as JSON")
     return parser.parse_args()
 
@@ -622,7 +887,7 @@ def main() -> int:
     ok, errors = preflight(config)
     if args.print_config:
         print(json.dumps(config, indent=2))
-    if args.preflight or args.dry_run or args.write_scripts or args.run_genus_elab or args.run_genus_syn or args.run_innovus_floorplan_smoke or args.run_innovus_pnr_smoke or args.run_innovus_cts_route_smoke:
+    if args.preflight or args.dry_run or args.write_scripts or args.run_genus_elab or args.run_genus_syn or args.run_innovus_floorplan_smoke or args.run_innovus_pnr_smoke or args.run_innovus_cts_route_smoke or args.run_innovus_full:
         print_summary(config)
         if args.dry_run:
             print(f"manifest={write_dry_run(config, errors)}")
@@ -631,10 +896,12 @@ def main() -> int:
                 print(f"ERROR: {error}")
             return 1
         if args.write_scripts:
+            print(f"prelaunch_summary={write_prelaunch_summary(config, 'script_generation')}")
             print(f"manager_manifest={write_manager_scripts(config)}")
         if args.run_genus_elab:
             print(f"genus_elab_manifest={run_genus_elab(config)}")
         if args.run_genus_syn:
+            print(f"prelaunch_summary={write_prelaunch_summary(config, 'genus_synthesis')}")
             print(f"genus_syn_manifest={run_genus_syn(config)}")
         if args.run_innovus_floorplan_smoke:
             print(f"innovus_floorplan_manifest={run_innovus_floorplan_smoke(config)}")
@@ -642,9 +909,12 @@ def main() -> int:
             print(f"innovus_pnr_smoke_manifest={run_innovus_pnr_smoke(config)}")
         if args.run_innovus_cts_route_smoke:
             print(f"innovus_cts_route_smoke_manifest={run_innovus_cts_route_smoke(config)}")
+        if args.run_innovus_full:
+            print(f"prelaunch_summary={write_prelaunch_summary(build_full_innovus_config(config), 'innovus_full')}")
+            print(f"innovus_full_manifest={run_innovus_full(config)}")
         print("preflight_ok=True")
         return 0
-    print("No action requested. Use --preflight, --dry-run, --write-scripts, --run-genus-elab, --run-genus-syn, --run-innovus-floorplan-smoke, --run-innovus-pnr-smoke, --run-innovus-cts-route-smoke, or --print-config.")
+    print("No action requested. Use --preflight, --dry-run, --write-scripts, --run-genus-elab, --run-genus-syn, --run-innovus-floorplan-smoke, --run-innovus-pnr-smoke, --run-innovus-cts-route-smoke, --run-innovus-full, or --print-config.")
     return 0
 
 

@@ -1,4 +1,7 @@
+import json
 import os
+from datetime import datetime
+from pathlib import Path
 from typing import Callable
 
 from manager.common import BaseManager
@@ -77,6 +80,76 @@ class InnovusManager(BaseManager):
     @property
     def routed_gds_path(self) -> str:
         return os.path.join(self.data_dir, f"{self.top_module}.gds")
+
+    def step_manifest_path(self, step_name: str) -> str:
+        return os.path.join(self.report_dir, f"{step_name}_manifest.json")
+
+    def expected_step_artifacts(self, step_name: str) -> dict:
+        mapping = {
+            'init': {'checkpoint': os.path.join(self.data_dir, 'init.enc')},
+            'floorplan': {
+                'checkpoint': os.path.join(self.data_dir, 'floorplan.enc'),
+                'floorplan_def': self.floorplan_def_path,
+                'macro_placement_report': os.path.join(self.report_dir, 'floorplan_macro_placement.rpt'),
+            },
+            'powerplan': {
+                'checkpoint': os.path.join(self.data_dir, 'powerplan.enc'),
+                'connectivity_report': os.path.join(self.report_dir, 'powerplan_connectivity.rpt'),
+                'pg_short_report': os.path.join(self.report_dir, 'powerplan_PG_short.rpt'),
+            },
+            'placement': {
+                'checkpoint': os.path.join(self.data_dir, 'placement.enc'),
+                'timing_dir': os.path.join(self.report_dir, 'preCTS_timing'),
+                'area_report': os.path.join(self.report_dir, 'preCTS_area.rpt'),
+                'power_report': os.path.join(self.report_dir, 'preCTS_power.rpt'),
+            },
+            'cts': {
+                'checkpoint': os.path.join(self.data_dir, 'cts.enc'),
+                'timing_dir': os.path.join(self.report_dir, 'postCTS_timing'),
+            },
+            'routing': {
+                'checkpoint': os.path.join(self.data_dir, 'routing.enc'),
+                'routed_def': self.routed_def_path,
+                'routed_verilog': self.routed_verilog_path,
+                'routed_sdf': self.routed_sdf_path,
+                'routed_spef': self.routed_spef_path,
+                'gds': self.routed_gds_path,
+                'timing_dir': os.path.join(self.report_dir, 'postRoute_timing'),
+                'area_report': os.path.join(self.report_dir, 'postRoute_area.rpt'),
+                'power_report': os.path.join(self.report_dir, 'postRoute_power.rpt'),
+                'drc_report': os.path.join(self.report_dir, 'postRoute_drc.rpt'),
+                'connectivity_report': os.path.join(self.report_dir, 'postRoute_connectivity.rpt'),
+            },
+        }
+        return mapping.get(step_name, {})
+
+    def write_step_manifest(self, step_name: str, ok: bool, error: str | None = None) -> None:
+        expected = self.expected_step_artifacts(step_name)
+        artifact_status = {name: Path(path).exists() for name, path in expected.items()}
+        manifest = {
+            'step': step_name,
+            'ok': ok,
+            'error': error,
+            'timestamp': datetime.now().isoformat(timespec='seconds'),
+            'rundir': self.rundir,
+            'script': os.path.join(self.script_dir, f'{step_name}.tcl'),
+            'log': os.path.join(self.log_dir, f'{step_name}.log'),
+            'expected_artifacts': expected,
+            'artifact_status': artifact_status,
+            'classification': self.classify_step(step_name, ok, artifact_status, error),
+        }
+        Path(self.step_manifest_path(step_name)).write_text(json.dumps(manifest, indent=2), encoding='utf-8')
+
+    def classify_step(self, step_name: str, ok: bool, artifact_status: dict, error: str | None) -> dict:
+        if ok and all(artifact_status.values()):
+            return {'status': 'complete', 'reason': 'expected artifacts exist'}
+        if step_name == 'powerplan':
+            return {'status': 'pg_connectivity_check_required', 'reason': 'powerplan acceptance requires zero special-net opens'}
+        if step_name == 'routing':
+            return {'status': 'post_route_artifact_gate', 'reason': 'routing acceptance requires routed DEF/Verilog/SDF/SPEF/GDS and reports'}
+        if error:
+            return {'status': 'failed', 'reason': error}
+        return {'status': 'incomplete', 'reason': 'one or more expected artifacts are missing'}
 
     def get_file_list(self, key: str, sep: str = " ") -> str:
         """
@@ -202,11 +275,16 @@ saveDesign %s
                 prev_step = step
 
             for step in steps:
-                self.run_tcl_script(
-                    step_name=step,
-                    timeout=10 * 3600,
-                    condition=lambda: if_exist(os.path.join(self.data_dir, f'{step}.enc'))
-                )
+                try:
+                    self.run_tcl_script(
+                        step_name=step,
+                        timeout=10 * 3600,
+                        condition=lambda step_name=step: if_exist(os.path.join(self.data_dir, f'{step_name}.enc'))
+                    )
+                except Exception as exc:
+                    self.write_step_manifest(step, ok=False, error=repr(exc))
+                    raise
+                self.write_step_manifest(step, ok=True)
 
         else:
             raise NotImplementedError("runmode %s is not supported" % runmode)
@@ -357,16 +435,67 @@ assignIoPins -autoBusGroup
 # -------------------------------------------------------------
 setPlaceMode -place_global_place_io_pins true
 """
-        """
-            Place large macros and hierarchical modules.
-            TODO: We'll fix this part later.
-        """
         codes += """
+# -------------------------------------------------------------
+# Explicit fake SRAM macro placement
+# -------------------------------------------------------------
+set tp_fake_sram_cells {%s}
+set tp_expected_fake_sram_macros %d
+set tp_macro_cols %d
+set tp_macro_halo_x %.3f
+set tp_macro_halo_y %.3f
+set tp_macro_report [open %s w]
+puts $tp_macro_report "# Fake SRAM macro placement report"
+puts $tp_macro_report "# policy=explicit_grid cols=$tp_macro_cols halo=${tp_macro_halo_x}x${tp_macro_halo_y}um"
+set tp_macros {}
+foreach inst_ptr [dbGet top.insts] {
+    set master [dbGet $inst_ptr.cell.name]
+    if {[lsearch -exact $tp_fake_sram_cells $master] >= 0} {
+        lappend tp_macros [dbGet $inst_ptr.name]
+    }
+}
+set tp_macros [lsort $tp_macros]
+puts $tp_macro_report "macro_count=[llength $tp_macros]"
+if {[llength $tp_macros] != $tp_expected_fake_sram_macros} {
+    close $tp_macro_report
+    error "expected $tp_expected_fake_sram_macros fake SRAM macro instances, found [llength $tp_macros]: $tp_macros"
+}
+set tp_core_box [dbGet top.fPlan.coreBox]
+set tp_llx [lindex $tp_core_box 0]
+set tp_lly [lindex $tp_core_box 1]
+set tp_urx [lindex $tp_core_box 2]
+set tp_ury [lindex $tp_core_box 3]
+set tp_rows [expr {int(ceil(double([llength $tp_macros]) / double($tp_macro_cols)))}]
+set tp_slot_w [expr {($tp_urx - $tp_llx - 2.0 * $tp_macro_halo_x) / double($tp_macro_cols)}]
+set tp_slot_h [expr {($tp_ury - $tp_lly - 2.0 * $tp_macro_halo_y) / double($tp_rows)}]
+set tp_i 0
+foreach inst $tp_macros {
+    set tp_col [expr {$tp_i %% $tp_macro_cols}]
+    set tp_row [expr {int($tp_i / $tp_macro_cols)}]
+    set tp_x [expr {$tp_llx + $tp_macro_halo_x + $tp_col * $tp_slot_w}]
+    set tp_y [expr {$tp_lly + $tp_macro_halo_y + $tp_row * $tp_slot_h}]
+    placeInstance $inst $tp_x $tp_y R0 -fixed
+    puts $tp_macro_report "$inst placed x=$tp_x y=$tp_y orient=R0 status=fixed"
+    incr tp_i
+}
+if {[catch {addHaloToBlock $tp_macro_halo_x $tp_macro_halo_y $tp_macro_halo_x $tp_macro_halo_y -allMacro} tp_halo_msg]} {
+    puts $tp_macro_report "halo_warning=$tp_halo_msg"
+} else {
+    puts $tp_macro_report "halo_status=applied"
+}
+close $tp_macro_report
+
 # -------------------------------------------------------------
 # Generate floorplan
 # -------------------------------------------------------------
 defOut -floorplan -noStdCells %s
 """ % (
+    " ".join(self.configs.get('fake_sram_macro_cells', ['mem_ext', 'mem_0_ext'])),
+    self.configs.get('expected_fake_sram_macro_instances', 6),
+    self.configs.get('macro_placement_cols', 3),
+    self.configs.get('macro_halo_x', 5.0),
+    self.configs.get('macro_halo_y', 5.0),
+    os.path.join(self.report_dir, 'floorplan_macro_placement.rpt'),
     self.floorplan_def_path,
 )
         return codes
@@ -443,7 +572,7 @@ addStripe -nets {VSS VDD} \
 # -------------------------------------------------------------
 set sroute_min_layer %s
 set sroute_max_layer %s
-sroute -connect { corePin } \
+sroute -connect { corePin blockPin } \
     -layerChangeRange " $sroute_min_layer $sroute_max_layer " \
     -corePinTarget { None } \
     -allowJogging 1 \
@@ -468,9 +597,21 @@ verifyConnectivity -type special \
     -warning 50 \
     -report %s
 verify_PG_short -no_routing_blkg -report %s
+set tp_require_pg_clean %s
+if {$tp_require_pg_clean} {
+    set tp_pg_report %s
+    set tp_pg_fh [open $tp_pg_report r]
+    set tp_pg_text [read $tp_pg_fh]
+    close $tp_pg_fh
+    if {![regexp {Verification Complete[ ]*:[ ]*0[ ]+Viols} $tp_pg_text]} {
+        error "PG special-net connectivity is not clean; expected 0 Viols in $tp_pg_report"
+    }
+}
 """ % (
     os.path.join(self.report_dir, 'powerplan_connectivity.rpt'),
     os.path.join(self.report_dir, 'powerplan_PG_short.rpt'),
+    'true' if self.configs.get('require_pg_clean', True) else 'false',
+    os.path.join(self.report_dir, 'powerplan_connectivity.rpt'),
 )
         return codes
 
@@ -606,8 +747,8 @@ add_ndr -name cts_1 \
     -spacing_multiplier "$ndr_cts_min_layer:$ndr_cts_max_layer $mul"
 create_route_type -name clk_net_rule \
     -non_default_rule cts_1 \
-    -top_preferred_layer $ndr_cts_min_layer \
-    -bottom_preferred_layer $ndr_cts_max_layer
+    -top_preferred_layer $ndr_cts_max_layer \
+    -bottom_preferred_layer $ndr_cts_min_layer
 set_ccopt_property -route_type clk_net_rule -net_type trunk
 """ % (
     self.configs.get('cts_routing_mul', 2),
@@ -662,6 +803,8 @@ optDesign -postCTS -hold
 # -------------------------------------------------------------
 setMultiCpuUsage -localCpu %d
 setAnalysisMode -analysisType onChipVariation
+setDesignMode -topRoutingLayer %s
+setDesignMode -bottomRoutingLayer %s
 
 # FIXME: many routing configuration still missing!
 #        They are now just copied from the example script
@@ -672,6 +815,8 @@ setNanoRouteMode -quiet -drouteMinSlackForWireOptimization %.3f
 setDelayCalMode -engine %s -siAware %s
 """ % (
     self.configs.get('route_max_threads', self.configs.get('max_threads', 8)),
+    self.configs.get('route_max_layer'),
+    self.configs.get('route_min_layer'),
     self.configs.get('droute_end_iteration', 20),
     'true' if self.configs.get('droute_fix_antenna', True) else 'false',
     self.configs.get('droute_multicut_via_effort', 'medium'),

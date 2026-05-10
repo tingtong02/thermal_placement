@@ -25,9 +25,13 @@ python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py 
 TP_STAGE2_RUN_TAG=gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_innovus_floorplan_<date> \
   TP_STAGE2_GENUS_RUN_TAG=<completed_genus_syn_tag> \
   python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --run-innovus-floorplan-smoke
+TP_STAGE2_RUN_TAG=<clean_full_phase2_tag> \
+  python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --run-genus-syn
+TP_STAGE2_RUN_TAG=<clean_full_phase2_tag> TP_STAGE2_GENUS_RUN_TAG=<clean_full_phase2_tag> \
+  python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --run-innovus-full
 ```
 
-`--preflight` validates inputs and environment. `--dry-run` writes a startup manifest. `--write-scripts` exercises the dacs-style `manager/` path and generates Genus/Innovus Tcl without launching commercial tools. `--run-genus-elab` launches a Python-managed Genus frontend/elaboration smoke without synthesis. `--run-genus-syn` launches Genus synthesis/report only. `--run-innovus-floorplan-smoke` launches Innovus init/floorplan only from a completed Genus synthesis run and checks top-level pin placement from the generated floorplan DEF.
+`--preflight` validates inputs and environment. `--dry-run` writes a startup manifest. `--write-scripts` exercises the dacs-style `manager/` path and generates Genus/Innovus Tcl plus `prelaunch_config_summary.json` without launching commercial tools. `--run-genus-elab` launches a Python-managed Genus frontend/elaboration smoke without synthesis. `--run-genus-syn` launches Genus synthesis/report only. `--run-innovus-floorplan-smoke` launches Innovus init/floorplan only from a completed Genus synthesis run and checks top-level pin placement from the generated floorplan DEF. `--run-innovus-full` launches the non-smoke full Innovus implementation path with explicit fake SRAM macro placement, PG 0-open gating, CTS/routing M2-M8 alignment, per-step manifests, and post-route artifact gates.
 
 ## Gemmini Entry Layout
 
@@ -86,4 +90,4 @@ runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/<tag>/innovu
 
 ## Current Manager Status
 
-`manager/` adaptation was required because Phase 2 must stay Python-manager-first. The current adaptation supports same-environment command construction through `env_setup_script`, fake-SRAM libcell resolution in Genus, Innovus IO pin assignment, final routed artifact export commands, and `script_only` mode for checks. Real Genus/Innovus launch remains a separate explicit step after reviewing the generated Tcl.
+`manager/` adaptation was required because Phase 2 must stay Python-manager-first. The current adaptation supports same-environment command construction through `env_setup_script`, fake-SRAM libcell resolution in Genus, Innovus IO pin assignment, final routed artifact export commands, and `script_only` mode for checks. Real Genus/Innovus launch remains a separate explicit step after reviewing the generated Tcl. The full-flow launch must use a clean semantic run tag; real launch checks refuse non-empty `data/` or `log/` output areas unless `TP_STAGE2_ALLOW_EXISTING_RUN=1` is explicitly set.

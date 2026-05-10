@@ -52,6 +52,22 @@ class GenusManager(BaseManager):
         return os.path.join(self.data_dir, '%s.sdf' % self.top_module)
 
     @property
+    def setup_sdc_path(self) -> str:
+        return os.path.join(self.data_dir, 'constraint_setup.sdc')
+
+    @property
+    def hold_sdc_path(self) -> str:
+        return os.path.join(self.data_dir, 'constraint_hold.sdc')
+
+    @property
+    def innovus_setup_sdc_path(self) -> str:
+        return os.path.join(self.data_dir, 'constraint_setup_innovus.sdc')
+
+    @property
+    def innovus_hold_sdc_path(self) -> str:
+        return os.path.join(self.data_dir, 'constraint_hold_innovus.sdc')
+
+    @property
     def check_design_report_path(self) -> str:
         return os.path.join(self.report_dir, 'check_design.rpt')
 
@@ -240,8 +256,10 @@ write_db %s/%s.db
             'lef_files': self.configs.get('lef_files'),
             'qrc_techfiles': self.configs.get('qrc_techfiles'),
             'cts_inv_cells': self.configs.get('cts_inv_cells', []),
-            'setup_sdc_file': os.path.join(self.data_dir, 'constraint_setup.sdc'),
-            'hold_sdc_file': os.path.join(self.data_dir, 'constraint_hold.sdc'),
+            'setup_sdc_file': self.innovus_setup_sdc_path,
+            'hold_sdc_file': self.innovus_hold_sdc_path,
+            'raw_setup_sdc_file': self.setup_sdc_path,
+            'raw_hold_sdc_file': self.hold_sdc_path,
             'path_groups': self.configs.get('path_groups', []),
         }
         return output
@@ -530,13 +548,40 @@ syn_opt %s
 # -------------------------------------------------------------
 write_hdl -mapped > %s
 write_sdf > %s
-write_sdc -view setup_view > %s/constraint_setup.sdc
-write_sdc -view hold_view > %s/constraint_hold.sdc
+set raw_setup_sdc %s
+set raw_hold_sdc %s
+set innovus_setup_sdc %s
+set innovus_hold_sdc %s
+write_sdc -view setup_view > $raw_setup_sdc
+write_sdc -view hold_view > $raw_hold_sdc
+
+proc tp_write_innovus_clean_sdc {raw_sdc clean_sdc clock_period_ps} {
+    set in [open $raw_sdc r]
+    set out [open $clean_sdc w]
+    puts $out "# Innovus-clean SDC generated from $raw_sdc"
+    puts $out "# Timing unit evidence: Genus used set_units -time 1.0ps; clock period is ${clock_period_ps} ps = 5.000 ns = 200 MHz."
+    while {[gets $in line] >= 0} {
+        set trimmed [string trim $line]
+        if {[string match {set_units*} $trimmed]} {
+            puts $out "# Filtered for Innovus TCLCMD-1461: $line"
+            continue
+        }
+        puts $out $line
+    }
+    close $in
+    close $out
+}
+tp_write_innovus_clean_sdc $raw_setup_sdc $innovus_setup_sdc %.1f
+tp_write_innovus_clean_sdc $raw_hold_sdc $innovus_hold_sdc %.1f
 """ % (
     self.hdl_mapped_path,
     self.sdf_path,
-    self.data_dir,
-    self.data_dir,
+    self.setup_sdc_path,
+    self.hold_sdc_path,
+    self.innovus_setup_sdc_path,
+    self.innovus_hold_sdc_path,
+    self.configs.get('clk_period_ns') * 1000.0,
+    self.configs.get('clk_period_ns') * 1000.0,
 )
 
         return codes
