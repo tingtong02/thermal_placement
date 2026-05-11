@@ -153,7 +153,7 @@ class Asap7Library(StdcellLibrary):
             "stripe_v_layer": "M8",
             "stripe_h_layer": "M9",
             "sroute_min_layer": "M1",
-            "sroute_max_layer": "M8",
+            "sroute_max_layer": "M9",
             "sroute_core_pin_target": "stripe",
             "sroute_block_pin_target": "stripe",
             "route_min_layer": "M2",
