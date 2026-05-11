@@ -11,6 +11,7 @@ import subprocess
 import sys
 from datetime import datetime
 from typing import Any
+from collections import Counter
 from pathlib import Path
 
 THIS_DIR = Path(__file__).resolve().parent
@@ -1222,6 +1223,195 @@ def run_innovus_pg_diagnostic(config: dict) -> Path:
     return out
 
 
+def find_pg_inspection_checkpoint(config: dict) -> Path:
+    explicit = os.environ.get("TP_STAGE2_PG_INSPECT_SOURCE_ENC")
+    if explicit:
+        candidate = Path(explicit).expanduser()
+        if not candidate.is_absolute():
+            candidate = TP_ROOT / candidate
+        if not candidate.is_file():
+            raise FileNotFoundError(f"PG inspection checkpoint does not exist: {candidate}")
+        return candidate.resolve()
+
+    preferred = sorted(RESULT_ROOT.glob("*/innovus_pgdiag/data/pgdiag_floating_stripe_then_m9.enc"), key=lambda path: path.stat().st_mtime)
+    if preferred:
+        return preferred[-1].resolve()
+    candidates = sorted(RESULT_ROOT.glob("*/innovus_pgdiag/data/pgdiag_*.enc"), key=lambda path: path.stat().st_mtime)
+    if not candidates:
+        raise FileNotFoundError("no PG diagnostic checkpoint found under physical/*/innovus_pgdiag/data")
+    return candidates[-1].resolve()
+
+
+def write_pg_inspection_tcl(source_checkpoint: Path, script_path: Path, report_dir: Path) -> dict[str, str]:
+    report_dir.mkdir(parents=True, exist_ok=True)
+    routed_def = report_dir / "pg_inspection_routed.def"
+    connectivity = report_dir / "pg_inspection_connectivity.rpt"
+    shorts = report_dir / "pg_inspection_PG_short.rpt"
+    summary = report_dir / "pg_inspection_tcl_summary.rpt"
+    lines = [
+        f"source {source_checkpoint}",
+        f"set tp_report_dir {report_dir}",
+        "file mkdir $tp_report_dir",
+        f"set tp_summary [open {summary} w]",
+        f"puts $tp_summary \"source_checkpoint={source_checkpoint}\"",
+        "puts $tp_summary \"top=[dbGet top.name]\"",
+        "puts $tp_summary \"core_box=[concat {*}[dbGet top.fPlan.coreBox]]\"",
+        "if {[catch {llength [dbGet top.nets.isPwrOrGnd 1 -p]} tp_special_count]} {",
+        "    puts $tp_summary \"special_net_count_error=$tp_special_count\"",
+        "} else {",
+        "    puts $tp_summary \"special_net_count=$tp_special_count\"",
+        "}",
+        "close $tp_summary",
+        f"defOut -routing {routed_def}",
+        f"verifyConnectivity -type special -noAntenna -noWeakConnect -noUnroutedNet -error 1000 -warning 50 -report {connectivity}",
+        f"verify_PG_short -no_routing_blkg -report {shorts}",
+        "exit 0",
+    ]
+    script_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return {
+        "routed_def": str(routed_def),
+        "connectivity_report": str(connectivity),
+        "short_report": str(shorts),
+        "tcl_summary": str(summary),
+    }
+
+
+def parse_pg_inspection_def(def_path: Path) -> dict[str, Any]:
+    if not def_path.is_file():
+        return {"ok": False, "def": str(def_path), "error": "missing DEF"}
+    text = def_path.read_text(encoding="utf-8", errors="replace")
+    section = re.search(r"SPECIALNETS\s+\d+\s*;(.*?)END SPECIALNETS", text, re.DOTALL)
+    if not section:
+        return {"ok": False, "def": str(def_path), "error": "SPECIALNETS section not found"}
+    current_net = None
+    layer_counts: Counter[str] = Counter()
+    via_counts: Counter[str] = Counter()
+    shape_counts: Counter[str] = Counter()
+    orientation_counts: Counter[str] = Counter()
+    net_line_counts: Counter[str] = Counter()
+    layer_orientation_counts: Counter[str] = Counter()
+    for raw in section.group(1).splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        if line.startswith("- "):
+            parts = line.split()
+            current_net = parts[1] if len(parts) > 1 else None
+        if current_net not in {"VDD", "VSS"}:
+            continue
+        net_line_counts[current_net] += 1
+        for layer in re.findall(r"\b(?:ROUTED|NEW)\s+(M\d+)\b", line):
+            layer_counts[f"{current_net}:{layer}"] += 1
+        for shape in re.findall(r"\+\s+SHAPE\s+(\S+)", line):
+            shape_counts[f"{current_net}:{shape}"] += 1
+        for via in re.findall(r"\b(?:VIA|VIARULE)\s+(\S+)", line):
+            via_counts[f"{current_net}:{via}"] += 1
+        coords = [(int(x), int(y)) for x, y in re.findall(r"\(\s*(-?\d+)\s+(-?\d+)\s*\)", line)]
+        if len(coords) >= 2:
+            for (x1, y1), (x2, y2) in zip(coords, coords[1:]):
+                if x1 == x2 and y1 == y2:
+                    continue
+                orientation = "horizontal" if abs(x2 - x1) >= abs(y2 - y1) else "vertical"
+                orientation_counts[f"{current_net}:{orientation}"] += 1
+                layers = re.findall(r"\b(?:ROUTED|NEW)\s+(M\d+)\b", line)
+                if layers:
+                    layer_orientation_counts[f"{current_net}:{layers[-1]}:{orientation}"] += 1
+    return {
+        "ok": True,
+        "def": str(def_path),
+        "net_line_counts": dict(sorted(net_line_counts.items())),
+        "layer_counts": dict(sorted(layer_counts.items())),
+        "shape_counts": dict(sorted(shape_counts.items())),
+        "via_counts": dict(sorted(via_counts.items())),
+        "orientation_counts": dict(sorted(orientation_counts.items())),
+        "layer_orientation_counts": dict(sorted(layer_orientation_counts.items())),
+    }
+
+
+def summarize_pg_open_clusters(report_path: Path) -> dict[str, Any]:
+    if not report_path.is_file():
+        return {"ok": False, "report": str(report_path), "error": "missing report"}
+    pattern = re.compile(r"Net (VDD|VSS): .* at \(([-0-9.]+), ([-0-9.]+)\) \(([-0-9.]+), ([-0-9.]+)\)")
+    by_net: Counter[str] = Counter()
+    shape_counts: Counter[str] = Counter()
+    x_span_counts: Counter[str] = Counter()
+    x_coord_counts: Counter[str] = Counter()
+    for line in report_path.read_text(encoding="utf-8", errors="replace").splitlines():
+        match = pattern.search(line)
+        if not match:
+            continue
+        net, x1_s, y1_s, x2_s, y2_s = match.groups()
+        x1, y1, x2, y2 = map(float, (x1_s, y1_s, x2_s, y2_s))
+        by_net[net] += 1
+        dx = abs(x2 - x1)
+        dy = abs(y2 - y1)
+        if dx > dy * 10:
+            shape_counts[f"{net}:horizontal"] += 1
+            x_span_counts[f"{net}:{round(x1)}:{round(x2)}"] += 1
+        elif dy > dx * 10:
+            shape_counts[f"{net}:vertical"] += 1
+            x_coord_counts[f"{net}:{round((x1 + x2) / 2, 1)}"] += 1
+        else:
+            shape_counts[f"{net}:small"] += 1
+            x_coord_counts[f"{net}:{round((x1 + x2) / 2, 1)}"] += 1
+    return {
+        "ok": True,
+        "report": str(report_path),
+        "by_net": dict(sorted(by_net.items())),
+        "shape_counts": dict(sorted(shape_counts.items())),
+        "top_x_spans": dict(x_span_counts.most_common(20)),
+        "top_x_coords": dict(x_coord_counts.most_common(20)),
+    }
+
+
+def run_innovus_pg_inspection(config: dict) -> Path:
+    inspect_config = build_full_innovus_config(config)
+    source_checkpoint = find_pg_inspection_checkpoint(inspect_config)
+    inspect_root = Path(inspect_config["rundir"]) / "innovus_pginspect"
+    script_dir = inspect_root / "scripts"
+    log_dir = inspect_root / "log"
+    report_dir = inspect_root / "reports"
+    for directory in (script_dir, log_dir, report_dir):
+        directory.mkdir(parents=True, exist_ok=True)
+    script_path = script_dir / "pg_inspection.tcl"
+    paths = write_pg_inspection_tcl(source_checkpoint, script_path, report_dir)
+    log_path = log_dir / "pg_inspection.log"
+    cmd = (
+        f"source {ENV_SETUP_SCRIPT} && cd {inspect_root} && "
+        f"{inspect_config['innovus_bin']} -no_gui -abort_on_error -overwrite "
+        f"-file {script_path} -log {log_path.with_suffix('')}"
+    )
+    completed = subprocess.run(["bash", "-lc", cmd], cwd=TP_ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+    connectivity = parse_pg_verify_report(Path(paths["connectivity_report"]))
+    shorts = parse_pg_short_report(Path(paths["short_report"]))
+    def_summary = parse_pg_inspection_def(Path(paths["routed_def"]))
+    open_clusters = summarize_pg_open_clusters(Path(paths["connectivity_report"]))
+    startup_dir = Path(inspect_config["rundir"]) / "startup"
+    startup_dir.mkdir(parents=True, exist_ok=True)
+    manifest = {
+        "stage": "phase2_innovus_pg_inspection",
+        "ok": completed.returncode == 0,
+        "accepted_phase2": False,
+        "source_checkpoint": str(source_checkpoint),
+        "innovus_pginspect_rundir": str(inspect_root),
+        "script": str(script_path),
+        "log": str(log_path),
+        "returncode": completed.returncode,
+        "paths": paths,
+        "connectivity": connectivity,
+        "shorts": shorts,
+        "def_summary": def_summary,
+        "open_clusters": open_clusters,
+        "notes": [
+            "Inspection only: this does not change PG geometry and is not accepted Phase 2 evidence.",
+            "Use the DEF SPECIALNETS summary and open clusters to choose the next narrow PG repair candidate.",
+        ],
+    }
+    out = startup_dir / "innovus_pg_inspection_manifest.json"
+    out.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    return out
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="GemminiRocketConfig mesh16x16 Phase 2 startup")
     parser.add_argument("--preflight", action="store_true", help="Validate inputs and paths without writing outputs")
@@ -1234,6 +1424,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-innovus-cts-route-smoke", action="store_true", help="Resume reduced-effort Innovus CTS/routing smoke from an existing placement.enc in the selected run tag")
     parser.add_argument("--run-innovus-full", action="store_true", help="Launch non-smoke Python-managed Innovus full implementation from a completed Genus synthesis run")
     parser.add_argument("--run-innovus-pg-diagnostic", action="store_true", help="Run checkpoint-level Innovus PG diagnostic variants from an existing floorplan.enc")
+    parser.add_argument("--run-innovus-pg-inspection", action="store_true", help="Run read-only Innovus PG inspection from an existing PG checkpoint")
     parser.add_argument("--print-config", action="store_true", help="Print resolved startup config as JSON")
     return parser.parse_args()
 
@@ -1244,7 +1435,7 @@ def main() -> int:
     ok, errors = preflight(config)
     if args.print_config:
         print(json.dumps(config, indent=2))
-    if args.preflight or args.dry_run or args.write_scripts or args.run_genus_elab or args.run_genus_syn or args.run_innovus_floorplan_smoke or args.run_innovus_pnr_smoke or args.run_innovus_cts_route_smoke or args.run_innovus_full or args.run_innovus_pg_diagnostic:
+    if args.preflight or args.dry_run or args.write_scripts or args.run_genus_elab or args.run_genus_syn or args.run_innovus_floorplan_smoke or args.run_innovus_pnr_smoke or args.run_innovus_cts_route_smoke or args.run_innovus_full or args.run_innovus_pg_diagnostic or args.run_innovus_pg_inspection:
         print_summary(config)
         if args.dry_run:
             print(f"manifest={write_dry_run(config, errors)}")
@@ -1272,6 +1463,9 @@ def main() -> int:
         if args.run_innovus_pg_diagnostic:
             print(f"prelaunch_summary={write_prelaunch_summary(build_full_innovus_config(config), 'innovus_pg_diagnostic')}")
             print(f"innovus_pg_diagnostic_manifest={run_innovus_pg_diagnostic(config)}")
+        if args.run_innovus_pg_inspection:
+            print(f"prelaunch_summary={write_prelaunch_summary(build_full_innovus_config(config), 'innovus_pg_inspection')}")
+            print(f"innovus_pg_inspection_manifest={run_innovus_pg_inspection(config)}")
         print("preflight_ok=True")
         return 0
     print("No action requested. Use --preflight, --dry-run, --write-scripts, --run-genus-elab, --run-genus-syn, --run-innovus-floorplan-smoke, --run-innovus-pnr-smoke, --run-innovus-cts-route-smoke, --run-innovus-full, --run-innovus-pg-diagnostic, or --print-config.")
