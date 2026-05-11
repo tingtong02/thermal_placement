@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 from datetime import datetime
 from typing import Any
@@ -884,6 +885,214 @@ def run_innovus_full(config: dict) -> Path:
     return out
 
 
+def find_innovus_floorplan_checkpoint(config: dict) -> Path:
+    explicit = os.environ.get("TP_STAGE2_PG_FLOORPLAN_ENC")
+    if explicit:
+        candidate = Path(explicit)
+        if not candidate.is_file():
+            raise FileNotFoundError(f"TP_STAGE2_PG_FLOORPLAN_ENC does not exist: {candidate}")
+        return candidate.resolve()
+
+    source_tag = os.environ.get("TP_STAGE2_PG_SOURCE_RUN_TAG")
+    if source_tag:
+        candidate = RESULT_ROOT / source_tag / "innovus" / "data" / "floorplan.enc"
+        if not candidate.is_file():
+            raise FileNotFoundError(f"source floorplan checkpoint does not exist: {candidate}")
+        return candidate.resolve()
+
+    candidates = sorted(RESULT_ROOT.glob("*/innovus/data/floorplan.enc"), key=lambda path: path.stat().st_mtime)
+    if not candidates:
+        raise FileNotFoundError("no Innovus floorplan.enc checkpoint found under physical/*/innovus/data")
+    return candidates[-1].resolve()
+
+
+def parse_pg_verify_report(report_path: Path) -> dict[str, Any]:
+    if not report_path.is_file():
+        return {"ok": False, "report": str(report_path), "error": "missing report"}
+    text = report_path.read_text(encoding="utf-8", errors="replace")
+    match = re.search(r"Verification Complete\s*:\s*(\d+)\s+Viols", text)
+    viols = int(match.group(1)) if match else None
+    return {
+        "ok": viols == 0,
+        "report": str(report_path),
+        "violations": viols,
+        "open_line_count": len(re.findall(r"has special routes with opens", text)),
+    }
+
+
+def parse_pg_short_report(report_path: Path) -> dict[str, Any]:
+    if not report_path.is_file():
+        return {"ok": False, "report": str(report_path), "error": "missing report"}
+    text = report_path.read_text(encoding="utf-8", errors="replace")
+    match = re.search(r"Verification Complete\s*:\s*(\d+)\s+Short Viols", text)
+    shorts = int(match.group(1)) if match else None
+    return {"ok": shorts == 0, "report": str(report_path), "short_violations": shorts}
+
+
+def pg_diagnostic_variants(config: dict) -> list[dict[str, Any]]:
+    width = float(os.environ.get("TP_STAGE2_PG_DIAG_STRIPE_WIDTH", str(config.get("stripe_width", 0.04))))
+    spacing = float(os.environ.get("TP_STAGE2_PG_DIAG_STRIPE_SPACING", str(config.get("stripe_spacing", 0.40))))
+    distance = float(os.environ.get("TP_STAGE2_PG_DIAG_STRIPE_DISTANCE", str(config.get("stripe_distance", 10.0))))
+    return [
+        {
+            "name": "baseline_m9",
+            "description": "reproduce current M8/M9 stripe plus sroute-to-stripe policy from the floorplan checkpoint",
+            "stripe_width": width,
+            "stripe_spacing": spacing,
+            "stripe_distance": distance,
+            "m1_over_pins": False,
+            "core_target": config.get("sroute_core_pin_target", "stripe"),
+            "block_target": config.get("sroute_block_pin_target", "stripe"),
+        },
+        {
+            "name": "m1_over_pins_then_m9",
+            "description": "add explicit M1 over-PG-pin followpin stripes before M8/M9 stripes and sroute",
+            "stripe_width": width,
+            "stripe_spacing": spacing,
+            "stripe_distance": distance,
+            "m1_over_pins": True,
+            "core_target": "stripe",
+            "block_target": "stripe",
+        },
+        {
+            "name": "core_rowend_block_nearest",
+            "description": "try row-end core-pin targeting and nearest block-pin targeting without changing signal/CTS route policy",
+            "stripe_width": width,
+            "stripe_spacing": spacing,
+            "stripe_distance": distance,
+            "m1_over_pins": False,
+            "core_target": "firstAfterRowEnd",
+            "block_target": "nearestTarget",
+        },
+    ]
+
+
+def write_pg_diagnostic_tcl(config: dict, source_floorplan: Path, script_path: Path, variant: dict[str, Any], report_dir: Path, data_dir: Path) -> None:
+    connectivity = report_dir / f"{variant['name']}_connectivity.rpt"
+    shorts = report_dir / f"{variant['name']}_PG_short.rpt"
+    diag = report_dir / f"{variant['name']}_diagnostic.rpt"
+    checkpoint = data_dir / f"pgdiag_{variant['name']}.enc"
+    m1_width = float(os.environ.get("TP_STAGE2_PG_DIAG_M1_WIDTH", "0.018"))
+    lines = [
+        f"source {source_floorplan}",
+        f"set tp_diag_dir {report_dir}",
+        "file mkdir $tp_diag_dir",
+        f"set tp_diag [open {diag} w]",
+        f"puts $tp_diag \"variant={variant['name']}\"",
+        f"puts $tp_diag \"description={variant['description']}\"",
+        "set pwr_port VDD",
+        "set gnd_port VSS",
+        "globalNetConnect VDD -type pgpin -pin $pwr_port -inst *",
+        "globalNetConnect VDD -type tiehi -pin $pwr_port -inst *",
+        "globalNetConnect VDD -type net -net VDD",
+        "globalNetConnect VSS -type pgpin -pin $gnd_port -inst *",
+        "globalNetConnect VSS -type tielo -pin $gnd_port -inst *",
+        "globalNetConnect VSS -type net -net VSS",
+        "set tp_core_box_raw [dbGet top.fPlan.coreBox]",
+        "set tp_core_box [concat {*}$tp_core_box_raw]",
+        "puts $tp_diag \"core_box=$tp_core_box\"",
+        "set tp_macro_count 0",
+        "foreach inst_ptr [dbGet top.insts] {",
+        "    set master [dbGet $inst_ptr.cell.name]",
+        "    if {$master == \"mem_ext\" || $master == \"mem_0_ext\"} {",
+        "        incr tp_macro_count",
+        "        puts $tp_diag \"macro=[dbGet $inst_ptr.name] master=$master box=[dbGet $inst_ptr.box] status=[dbGet $inst_ptr.pStatus]\"",
+        "    }",
+        "}",
+        "puts $tp_diag \"macro_count=$tp_macro_count\"",
+    ]
+    if variant["m1_over_pins"]:
+        lines += [
+            f"puts $tp_diag \"m1_over_pins_width={m1_width}\"",
+            f"if {{[catch {{addStripe -nets {{VSS VDD}} -layer {{M1}} -direction horizontal -width {m1_width:.3f} -over_pins 1 -pin_layer M1 -uda power_followpin}} tp_m1_msg]}} {{",
+            "    puts $tp_diag \"m1_over_pins_status=error:$tp_m1_msg\"",
+            "} else {",
+            "    puts $tp_diag \"m1_over_pins_status=applied\"",
+            "}",
+        ]
+    else:
+        lines.append("puts $tp_diag \"m1_over_pins_status=skipped\"")
+    lines += [
+        f"set stripe_width {float(variant['stripe_width']):.6f}",
+        f"set stripe_spacing {float(variant['stripe_spacing']):.6f}",
+        f"set stripe_distance {float(variant['stripe_distance']):.6f}",
+        "addStripe -nets {VSS VDD} -layer {M8} -direction vertical -width $stripe_width -spacing $stripe_spacing -set_to_set_distance $stripe_distance -start_from left -uda power_stripe_v",
+        "addStripe -nets {VSS VDD} -layer {M9} -direction horizontal -width $stripe_width -spacing $stripe_spacing -set_to_set_distance $stripe_distance -start_from bottom -uda power_stripe_h",
+        f"set sroute_min_layer {config.get('sroute_min_layer', 'M1')}",
+        f"set sroute_max_layer {config.get('sroute_max_layer', 'M9')}",
+        f"set sroute_core_pin_target {variant['core_target']}",
+        f"set sroute_block_pin_target {variant['block_target']}",
+        "puts $tp_diag \"sroute_min_layer=$sroute_min_layer\"",
+        "puts $tp_diag \"sroute_max_layer=$sroute_max_layer\"",
+        "puts $tp_diag \"sroute_core_pin_target=$sroute_core_pin_target\"",
+        "puts $tp_diag \"sroute_block_pin_target=$sroute_block_pin_target\"",
+        "close $tp_diag",
+        "sroute -connect { corePin blockPin } -layerChangeRange \" $sroute_min_layer $sroute_max_layer \" -corePinTarget $sroute_core_pin_target -blockPinTarget $sroute_block_pin_target -allowJogging 1 -crossoverViaLayerRange \" $sroute_min_layer $sroute_max_layer \" -nets { VDD VSS } -allowLayerChange 1 -targetViaLayerRange \" $sroute_min_layer $sroute_max_layer \" -detailed_log -uda power_rail",
+        f"verifyConnectivity -type special -noAntenna -noWeakConnect -noUnroutedNet -error 1000 -warning 50 -report {connectivity}",
+        f"verify_PG_short -no_routing_blkg -report {shorts}",
+        f"saveDesign {checkpoint}",
+        "exit 0",
+    ]
+    script_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def run_innovus_pg_diagnostic(config: dict) -> Path:
+    diag_config = build_full_innovus_config(config)
+    source_floorplan = find_innovus_floorplan_checkpoint(diag_config)
+    innovus_root = Path(diag_config["rundir"]) / "innovus_pgdiag"
+    script_dir = innovus_root / "scripts"
+    log_dir = innovus_root / "log"
+    report_dir = innovus_root / "reports"
+    data_dir = innovus_root / "data"
+    for directory in (script_dir, log_dir, report_dir, data_dir):
+        directory.mkdir(parents=True, exist_ok=True)
+
+    variants = pg_diagnostic_variants(diag_config)
+    results: list[dict[str, Any]] = []
+    for variant in variants:
+        script_path = script_dir / f"{variant['name']}.tcl"
+        variant_report_dir = report_dir / variant["name"]
+        variant_report_dir.mkdir(parents=True, exist_ok=True)
+        write_pg_diagnostic_tcl(diag_config, source_floorplan, script_path, variant, variant_report_dir, data_dir)
+        log_path = log_dir / f"{variant['name']}.log"
+        cmd = (
+            f"source {ENV_SETUP_SCRIPT} && cd {innovus_root} && "
+            f"{diag_config['innovus_bin']} -no_gui -abort_on_error -overwrite "
+            f"-file {script_path} -log {log_path.with_suffix('')}"
+        )
+        completed = subprocess.run(["bash", "-lc", cmd], cwd=TP_ROOT)
+        connectivity = parse_pg_verify_report(variant_report_dir / f"{variant['name']}_connectivity.rpt")
+        shorts = parse_pg_short_report(variant_report_dir / f"{variant['name']}_PG_short.rpt")
+        results.append({
+            "variant": variant,
+            "returncode": completed.returncode,
+            "ok": completed.returncode == 0 and connectivity.get("ok", False) and shorts.get("ok", False),
+            "script": str(script_path),
+            "log": str(log_path),
+            "connectivity": connectivity,
+            "shorts": shorts,
+            "checkpoint": str(data_dir / f"pgdiag_{variant['name']}.enc"),
+        })
+
+    startup_dir = Path(diag_config["rundir"]) / "startup"
+    startup_dir.mkdir(parents=True, exist_ok=True)
+    manifest = {
+        "stage": "phase2_innovus_pg_diagnostic",
+        "ok": any(result["ok"] for result in results),
+        "accepted_phase2": False,
+        "notes": [
+            "This is a checkpoint-level PG diagnostic loop only; it does not run placement, CTS, route, extraction, or streamOut.",
+            "A passing variant is evidence for a candidate PG strategy, not a complete Phase 2 implementation until folded into the normal Python flow and rerun through artifact gates.",
+        ],
+        "source_floorplan_checkpoint": str(source_floorplan),
+        "innovus_pgdiag_rundir": str(innovus_root),
+        "results": results,
+    }
+    out = startup_dir / "innovus_pg_diagnostic_manifest.json"
+    out.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    return out
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="GemminiRocketConfig mesh16x16 Phase 2 startup")
     parser.add_argument("--preflight", action="store_true", help="Validate inputs and paths without writing outputs")
@@ -895,6 +1104,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-innovus-pnr-smoke", action="store_true", help="Launch reduced-effort Python-managed Innovus powerplan/place/CTS/route smoke from a completed Genus synthesis run")
     parser.add_argument("--run-innovus-cts-route-smoke", action="store_true", help="Resume reduced-effort Innovus CTS/routing smoke from an existing placement.enc in the selected run tag")
     parser.add_argument("--run-innovus-full", action="store_true", help="Launch non-smoke Python-managed Innovus full implementation from a completed Genus synthesis run")
+    parser.add_argument("--run-innovus-pg-diagnostic", action="store_true", help="Run checkpoint-level Innovus PG diagnostic variants from an existing floorplan.enc")
     parser.add_argument("--print-config", action="store_true", help="Print resolved startup config as JSON")
     return parser.parse_args()
 
@@ -905,7 +1115,7 @@ def main() -> int:
     ok, errors = preflight(config)
     if args.print_config:
         print(json.dumps(config, indent=2))
-    if args.preflight or args.dry_run or args.write_scripts or args.run_genus_elab or args.run_genus_syn or args.run_innovus_floorplan_smoke or args.run_innovus_pnr_smoke or args.run_innovus_cts_route_smoke or args.run_innovus_full:
+    if args.preflight or args.dry_run or args.write_scripts or args.run_genus_elab or args.run_genus_syn or args.run_innovus_floorplan_smoke or args.run_innovus_pnr_smoke or args.run_innovus_cts_route_smoke or args.run_innovus_full or args.run_innovus_pg_diagnostic:
         print_summary(config)
         if args.dry_run:
             print(f"manifest={write_dry_run(config, errors)}")
@@ -930,9 +1140,12 @@ def main() -> int:
         if args.run_innovus_full:
             print(f"prelaunch_summary={write_prelaunch_summary(build_full_innovus_config(config), 'innovus_full')}")
             print(f"innovus_full_manifest={run_innovus_full(config)}")
+        if args.run_innovus_pg_diagnostic:
+            print(f"prelaunch_summary={write_prelaunch_summary(build_full_innovus_config(config), 'innovus_pg_diagnostic')}")
+            print(f"innovus_pg_diagnostic_manifest={run_innovus_pg_diagnostic(config)}")
         print("preflight_ok=True")
         return 0
-    print("No action requested. Use --preflight, --dry-run, --write-scripts, --run-genus-elab, --run-genus-syn, --run-innovus-floorplan-smoke, --run-innovus-pnr-smoke, --run-innovus-cts-route-smoke, --run-innovus-full, or --print-config.")
+    print("No action requested. Use --preflight, --dry-run, --write-scripts, --run-genus-elab, --run-genus-syn, --run-innovus-floorplan-smoke, --run-innovus-pnr-smoke, --run-innovus-cts-route-smoke, --run-innovus-full, --run-innovus-pg-diagnostic, or --print-config.")
     return 0
 
 
