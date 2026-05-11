@@ -944,6 +944,7 @@ def pg_diagnostic_variants(config: dict) -> list[dict[str, Any]]:
             "stripe_distance": distance,
             "m1_over_pins": False,
             "cut_rows": False,
+            "core_ring": False,
             "core_target": config.get("sroute_core_pin_target", "stripe"),
             "block_target": config.get("sroute_block_pin_target", "stripe"),
         },
@@ -955,6 +956,7 @@ def pg_diagnostic_variants(config: dict) -> list[dict[str, Any]]:
             "stripe_distance": distance,
             "m1_over_pins": True,
             "cut_rows": False,
+            "core_ring": False,
             "core_target": "stripe",
             "block_target": "stripe",
         },
@@ -966,6 +968,7 @@ def pg_diagnostic_variants(config: dict) -> list[dict[str, Any]]:
             "stripe_distance": distance,
             "m1_over_pins": False,
             "cut_rows": False,
+            "core_ring": False,
             "core_target": "firstAfterRowEnd",
             "block_target": "nearestTarget",
         },
@@ -977,8 +980,21 @@ def pg_diagnostic_variants(config: dict) -> list[dict[str, Any]]:
             "stripe_distance": distance,
             "m1_over_pins": False,
             "cut_rows": True,
+            "core_ring": False,
             "core_target": "stripe",
             "block_target": "stripe",
+        },
+        {
+            "name": "core_ring_then_m9",
+            "description": "add explicit M8/M9 core PG ring before M8/M9 stripes and sroute-to-ring",
+            "stripe_width": width,
+            "stripe_spacing": spacing,
+            "stripe_distance": distance,
+            "m1_over_pins": False,
+            "cut_rows": False,
+            "core_ring": True,
+            "core_target": "ring",
+            "block_target": "ring",
         },
     ]
     selected = os.environ.get("TP_STAGE2_PG_DIAG_VARIANTS")
@@ -1044,6 +1060,19 @@ def write_pg_diagnostic_tcl(config: dict, source_floorplan: Path, script_path: P
         ]
     else:
         lines.append("puts $tp_diag \"cut_rows=skipped\"")
+    if variant.get("core_ring", False):
+        ring_width = float(os.environ.get("TP_STAGE2_PG_DIAG_RING_WIDTH", str(config.get("stripe_width", 0.04))))
+        ring_spacing = float(os.environ.get("TP_STAGE2_PG_DIAG_RING_SPACING", str(config.get("stripe_spacing", 0.40))))
+        ring_offset = float(os.environ.get("TP_STAGE2_PG_DIAG_RING_OFFSET", "1.000"))
+        lines += [
+            f"set ring_width {ring_width:.6f}",
+            f"set ring_spacing {ring_spacing:.6f}",
+            f"set ring_offset {ring_offset:.6f}",
+            "puts $tp_diag \"core_ring=enabled layer=left/right:M8 top/bottom:M9 width=$ring_width spacing=$ring_spacing offset=$ring_offset\"",
+            "addRing -nets {VSS VDD} -type core_rings -follow core -layer {top M9 bottom M9 left M8 right M8} -width $ring_width -spacing $ring_spacing -offset $ring_offset -center 1 -uda power_core_ring",
+        ]
+    else:
+        lines.append("puts $tp_diag \"core_ring=skipped\"")
     if variant["m1_over_pins"]:
         lines += [
             f"puts $tp_diag \"m1_over_pins_width={m1_width}\"",
