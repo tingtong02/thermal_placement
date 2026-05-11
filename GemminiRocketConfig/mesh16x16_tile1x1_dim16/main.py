@@ -993,6 +993,20 @@ def pg_diagnostic_variants(config: dict) -> list[dict[str, Any]]:
             "m1_over_pins": False,
             "cut_rows": False,
             "core_ring": True,
+            "core_ring_center": True,
+            "core_target": "ring",
+            "block_target": "ring",
+        },
+        {
+            "name": "core_ring_inside_then_m9",
+            "description": "add non-centered inside-core M8/M9 PG ring before stripes and sroute-to-ring",
+            "stripe_width": width,
+            "stripe_spacing": spacing,
+            "stripe_distance": distance,
+            "m1_over_pins": False,
+            "cut_rows": False,
+            "core_ring": True,
+            "core_ring_center": False,
             "core_target": "ring",
             "block_target": "ring",
         },
@@ -1064,12 +1078,14 @@ def write_pg_diagnostic_tcl(config: dict, source_floorplan: Path, script_path: P
         ring_width = float(os.environ.get("TP_STAGE2_PG_DIAG_RING_WIDTH", str(config.get("stripe_width", 0.04))))
         ring_spacing = float(os.environ.get("TP_STAGE2_PG_DIAG_RING_SPACING", str(config.get("stripe_spacing", 0.40))))
         ring_offset = float(os.environ.get("TP_STAGE2_PG_DIAG_RING_OFFSET", "1.000"))
+        center_arg = " -center 1" if variant.get("core_ring_center", True) else ""
+        center_note = "true" if variant.get("core_ring_center", True) else "false"
         lines += [
             f"set ring_width {ring_width:.6f}",
             f"set ring_spacing {ring_spacing:.6f}",
             f"set ring_offset {ring_offset:.6f}",
-            "puts $tp_diag \"core_ring=enabled layer=left/right:M8 top/bottom:M9 width=$ring_width spacing=$ring_spacing offset=$ring_offset\"",
-            "addRing -nets {VSS VDD} -type core_rings -follow core -layer {top M9 bottom M9 left M8 right M8} -width $ring_width -spacing $ring_spacing -offset $ring_offset -center 1 -uda power_core_ring",
+            f"puts $tp_diag \"core_ring=enabled center={center_note} layer=left/right:M8 top/bottom:M9 width=$ring_width spacing=$ring_spacing offset=$ring_offset\"",
+            f"addRing -nets {{VSS VDD}} -type core_rings -follow core -layer {{top M9 bottom M9 left M8 right M8}} -width $ring_width -spacing $ring_spacing -offset $ring_offset{center_arg} -uda power_core_ring",
         ]
     else:
         lines.append("puts $tp_diag \"core_ring=skipped\"")
