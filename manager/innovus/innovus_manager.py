@@ -578,9 +578,12 @@ addStripe -nets {VSS VDD} \
 # -------------------------------------------------------------
 set sroute_min_layer %s
 set sroute_max_layer %s
+set sroute_core_pin_target %s
+set sroute_block_pin_target %s
 sroute -connect { corePin blockPin } \
     -layerChangeRange " $sroute_min_layer $sroute_max_layer " \
-    -corePinTarget { None } \
+    -corePinTarget $sroute_core_pin_target \
+    -blockPinTarget $sroute_block_pin_target \
     -allowJogging 1 \
     -crossoverViaLayerRange " $sroute_min_layer $sroute_max_layer " \
     -nets { VDD VSS } \
@@ -590,6 +593,8 @@ sroute -connect { corePin blockPin } \
 """ % (
     self.configs.get('sroute_min_layer'),
     self.configs.get('sroute_max_layer'),
+    self.configs.get('sroute_core_pin_target', 'stripe'),
+    self.configs.get('sroute_block_pin_target', 'stripe'),
 )
         """
             Verify connect violation

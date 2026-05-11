@@ -102,6 +102,10 @@ def build_config() -> dict:
         config["sroute_min_layer"] = os.environ["TP_STAGE2_SROUTE_MIN_LAYER"]
     if "TP_STAGE2_SROUTE_MAX_LAYER" in os.environ:
         config["sroute_max_layer"] = os.environ["TP_STAGE2_SROUTE_MAX_LAYER"]
+    if "TP_STAGE2_SROUTE_CORE_PIN_TARGET" in os.environ:
+        config["sroute_core_pin_target"] = os.environ["TP_STAGE2_SROUTE_CORE_PIN_TARGET"]
+    if "TP_STAGE2_SROUTE_BLOCK_PIN_TARGET" in os.environ:
+        config["sroute_block_pin_target"] = os.environ["TP_STAGE2_SROUTE_BLOCK_PIN_TARGET"]
     if "TP_STAGE2_ROUTE_MIN_LAYER" in os.environ:
         config["route_min_layer"] = os.environ["TP_STAGE2_ROUTE_MIN_LAYER"]
     if "TP_STAGE2_ROUTE_MAX_LAYER" in os.environ:
@@ -236,6 +240,8 @@ def write_prelaunch_summary(config: dict, profile: str) -> Path:
             "stripe_h_layer": config.get("stripe_h_layer"),
             "sroute_min_layer": config.get("sroute_min_layer"),
             "sroute_max_layer": config.get("sroute_max_layer"),
+            "sroute_core_pin_target": config.get("sroute_core_pin_target"),
+            "sroute_block_pin_target": config.get("sroute_block_pin_target"),
             "require_pg_clean": config.get("require_pg_clean", True),
         },
         "macro_placement": {
@@ -598,6 +604,8 @@ def build_pnr_smoke_config(config: dict) -> dict:
     smoke["stripe_distance"] = float(os.environ.get("TP_STAGE2_STRIPE_DISTANCE", "20.0"))
     smoke["sroute_min_layer"] = os.environ.get("TP_STAGE2_SROUTE_MIN_LAYER", smoke.get("sroute_min_layer", "M1"))
     smoke["sroute_max_layer"] = os.environ.get("TP_STAGE2_SROUTE_MAX_LAYER", smoke.get("sroute_max_layer", "M8"))
+    smoke["sroute_core_pin_target"] = os.environ.get("TP_STAGE2_SROUTE_CORE_PIN_TARGET", smoke.get("sroute_core_pin_target", "stripe"))
+    smoke["sroute_block_pin_target"] = os.environ.get("TP_STAGE2_SROUTE_BLOCK_PIN_TARGET", smoke.get("sroute_block_pin_target", "stripe"))
     smoke["require_pg_clean"] = False
     return smoke
 
@@ -608,6 +616,8 @@ def build_full_innovus_config(config: dict) -> dict:
     full["place_global_timing_effort"] = os.environ.get("TP_STAGE2_PLACE_TIMING_EFFORT", full.get("place_global_timing_effort", "medium"))
     full["place_global_cong_effort"] = os.environ.get("TP_STAGE2_PLACE_CONG_EFFORT", full.get("place_global_cong_effort", "auto"))
     full["place_detail_wire_length_opt_effort"] = os.environ.get("TP_STAGE2_PLACE_DETAIL_WIRE_EFFORT", full.get("place_detail_wire_length_opt_effort", "medium"))
+    full["sroute_core_pin_target"] = os.environ.get("TP_STAGE2_SROUTE_CORE_PIN_TARGET", full.get("sroute_core_pin_target", "stripe"))
+    full["sroute_block_pin_target"] = os.environ.get("TP_STAGE2_SROUTE_BLOCK_PIN_TARGET", full.get("sroute_block_pin_target", "stripe"))
     full["require_pg_clean"] = True
     return full
 
