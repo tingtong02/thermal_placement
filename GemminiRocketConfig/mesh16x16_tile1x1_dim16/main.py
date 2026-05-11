@@ -988,6 +988,19 @@ def pg_diagnostic_variants(config: dict) -> list[dict[str, Any]]:
             "block_target": "stripe",
         },
         {
+            "name": "wide_pg_ladder_then_m9",
+            "description": "insert sparse legal-width M3-M7 PG ladder straps before the high-level PG mesh",
+            "stripe_width": width,
+            "stripe_spacing": spacing,
+            "stripe_distance": distance,
+            "m1_over_pins": False,
+            "wide_pg_ladder": True,
+            "cut_rows": False,
+            "core_ring": False,
+            "core_target": "stripe",
+            "block_target": "stripe",
+        },
+        {
             "name": "m2_stitch_then_m9",
             "description": "add low-layer M2 vertical stitch stripes before the M8/M9 PG mesh",
             "stripe_width": width,
@@ -1070,6 +1083,15 @@ def write_pg_diagnostic_tcl(config: dict, source_floorplan: Path, script_path: P
     m1_width = float(os.environ.get("TP_STAGE2_PG_DIAG_M1_WIDTH", "0.018"))
     m2_stitch_width = float(os.environ.get("TP_STAGE2_PG_DIAG_M2_STITCH_WIDTH", "0.018"))
     m2_stitch_spacing = float(os.environ.get("TP_STAGE2_PG_DIAG_M2_STITCH_SPACING", "0.400"))
+    wide_ladder_distance = float(os.environ.get("TP_STAGE2_PG_DIAG_WIDE_LADDER_DISTANCE", "40.000"))
+    wide_ladder_spacing = float(os.environ.get("TP_STAGE2_PG_DIAG_WIDE_LADDER_SPACING", "0.400"))
+    wide_ladder_specs = [
+        ("M3", "vertical", 0.234),
+        ("M4", "horizontal", 0.216),
+        ("M5", "vertical", 0.216),
+        ("M6", "horizontal", 0.288),
+        ("M7", "vertical", 0.288),
+    ]
     lines = [
         f"source {source_floorplan}",
         f"set tp_diag_dir {report_dir}",
@@ -1156,6 +1178,22 @@ def write_pg_diagnostic_tcl(config: dict, source_floorplan: Path, script_path: P
         "puts $tp_diag \"stripe_horizontal_layer=$stripe_horizontal_layer\"",
         "puts $tp_diag \"m2_stitch=enabled width=$m2_stitch_width spacing=$m2_stitch_spacing\"" if variant.get("m2_stitch", False) else "puts $tp_diag \"m2_stitch=skipped\"",
         "addStripe -nets {VSS VDD} -layer {M2} -direction vertical -width $m2_stitch_width -spacing $m2_stitch_spacing -set_to_set_distance $stripe_distance -start_from left -uda power_m2_stitch" if variant.get("m2_stitch", False) else "puts $tp_diag \"m2_stitch_addStripe=skipped\"",
+    ]
+    if variant.get("wide_pg_ladder", False):
+        lines += [
+            f"set wide_ladder_distance {wide_ladder_distance:.6f}",
+            f"set wide_ladder_spacing {wide_ladder_spacing:.6f}",
+            "puts $tp_diag \"wide_ladder=enabled distance=$wide_ladder_distance spacing=$wide_ladder_spacing\"",
+        ]
+        for layer, direction, layer_width in wide_ladder_specs:
+            start_from = "left" if direction == "vertical" else "bottom"
+            lines += [
+                f"puts $tp_diag \"wide_ladder_layer={layer} direction={direction} width={layer_width:.6f}\"",
+                f"addStripe -nets {{VSS VDD}} -layer {{{layer}}} -direction {direction} -width {layer_width:.6f} -spacing $wide_ladder_spacing -set_to_set_distance $wide_ladder_distance -start_from {start_from} -uda power_wide_ladder_{layer.lower()}",
+            ]
+    else:
+        lines.append("puts $tp_diag \"wide_ladder=skipped\"")
+    lines += [
         "addStripe -nets {VSS VDD} -layer $stripe_vertical_layer -direction vertical -width $stripe_width -spacing $stripe_spacing -set_to_set_distance $stripe_distance -start_from left -uda power_stripe_v",
         "addStripe -nets {VSS VDD} -layer $stripe_horizontal_layer -direction horizontal -width $stripe_width -spacing $stripe_spacing -set_to_set_distance $stripe_distance -start_from bottom -uda power_stripe_h",
         f"set sroute_min_layer {config.get('sroute_min_layer', 'M1')}",
