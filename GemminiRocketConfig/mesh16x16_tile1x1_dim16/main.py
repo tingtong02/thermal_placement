@@ -973,6 +973,19 @@ def pg_diagnostic_variants(config: dict) -> list[dict[str, Any]]:
             "block_target": "nearestTarget",
         },
         {
+            "name": "m2_stitch_then_m9",
+            "description": "add low-layer M2 vertical stitch stripes before the M8/M9 PG mesh",
+            "stripe_width": width,
+            "stripe_spacing": spacing,
+            "stripe_distance": distance,
+            "m1_over_pins": False,
+            "m2_stitch": True,
+            "cut_rows": False,
+            "core_ring": False,
+            "core_target": "stripe",
+            "block_target": "stripe",
+        },
+        {
             "name": "floating_stripe_then_m9",
             "description": "expand sroute connection to include floating special stripes and target stripes",
             "stripe_width": width,
@@ -1040,6 +1053,8 @@ def write_pg_diagnostic_tcl(config: dict, source_floorplan: Path, script_path: P
     diag = report_dir / f"{variant['name']}_diagnostic.rpt"
     checkpoint = data_dir / f"pgdiag_{variant['name']}.enc"
     m1_width = float(os.environ.get("TP_STAGE2_PG_DIAG_M1_WIDTH", "0.018"))
+    m2_stitch_width = float(os.environ.get("TP_STAGE2_PG_DIAG_M2_STITCH_WIDTH", "0.018"))
+    m2_stitch_spacing = float(os.environ.get("TP_STAGE2_PG_DIAG_M2_STITCH_SPACING", "0.400"))
     lines = [
         f"source {source_floorplan}",
         f"set tp_diag_dir {report_dir}",
@@ -1118,6 +1133,10 @@ def write_pg_diagnostic_tcl(config: dict, source_floorplan: Path, script_path: P
         f"set stripe_width {float(variant['stripe_width']):.6f}",
         f"set stripe_spacing {float(variant['stripe_spacing']):.6f}",
         f"set stripe_distance {float(variant['stripe_distance']):.6f}",
+        f"set m2_stitch_width {m2_stitch_width:.6f}",
+        f"set m2_stitch_spacing {m2_stitch_spacing:.6f}",
+        "puts $tp_diag \"m2_stitch=enabled width=$m2_stitch_width spacing=$m2_stitch_spacing\"" if variant.get("m2_stitch", False) else "puts $tp_diag \"m2_stitch=skipped\"",
+        "addStripe -nets {VSS VDD} -layer {M2} -direction vertical -width $m2_stitch_width -spacing $m2_stitch_spacing -set_to_set_distance $stripe_distance -start_from left -uda power_m2_stitch" if variant.get("m2_stitch", False) else "puts $tp_diag \"m2_stitch_addStripe=skipped\"",
         "addStripe -nets {VSS VDD} -layer {M8} -direction vertical -width $stripe_width -spacing $stripe_spacing -set_to_set_distance $stripe_distance -start_from left -uda power_stripe_v",
         "addStripe -nets {VSS VDD} -layer {M9} -direction horizontal -width $stripe_width -spacing $stripe_spacing -set_to_set_distance $stripe_distance -start_from bottom -uda power_stripe_h",
         f"set sroute_min_layer {config.get('sroute_min_layer', 'M1')}",
