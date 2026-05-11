@@ -460,21 +460,16 @@ if {[llength $tp_macros] != $tp_expected_fake_sram_macros} {
     close $tp_macro_report
     error "expected $tp_expected_fake_sram_macros fake SRAM macro instances, found [llength $tp_macros]: $tp_macros"
 }
-set tp_core_box [dbGet top.fPlan.coreBox]
-if {[llength $tp_core_box] == 2 && [llength [lindex $tp_core_box 0]] == 2 && [llength [lindex $tp_core_box 1]] == 2} {
-    set tp_llx [lindex [lindex $tp_core_box 0] 0]
-    set tp_lly [lindex [lindex $tp_core_box 0] 1]
-    set tp_urx [lindex [lindex $tp_core_box 1] 0]
-    set tp_ury [lindex [lindex $tp_core_box 1] 1]
-} elseif {[llength $tp_core_box] >= 4} {
-    set tp_llx [lindex $tp_core_box 0]
-    set tp_lly [lindex $tp_core_box 1]
-    set tp_urx [lindex $tp_core_box 2]
-    set tp_ury [lindex $tp_core_box 3]
-} else {
+set tp_core_box_raw [dbGet top.fPlan.coreBox]
+set tp_core_box [concat {*}$tp_core_box_raw]
+if {[llength $tp_core_box] < 4} {
     close $tp_macro_report
-    error "unexpected coreBox format for fake SRAM macro placement: '$tp_core_box'"
+    error "unexpected coreBox format for fake SRAM macro placement: '$tp_core_box_raw' flattened='$tp_core_box'"
 }
+set tp_llx [lindex $tp_core_box 0]
+set tp_lly [lindex $tp_core_box 1]
+set tp_urx [lindex $tp_core_box 2]
+set tp_ury [lindex $tp_core_box 3]
 puts $tp_macro_report "core_box=$tp_llx $tp_lly $tp_urx $tp_ury"
 set tp_rows [expr {int(ceil(double([llength $tp_macros]) / double($tp_macro_cols)))}]
 set tp_slot_w [expr {($tp_urx - $tp_llx - 2.0 * $tp_macro_halo_x) / double($tp_macro_cols)}]
