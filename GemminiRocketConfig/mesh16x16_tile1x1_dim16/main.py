@@ -1027,7 +1027,7 @@ def write_pg_diagnostic_tcl(config: dict, source_floorplan: Path, script_path: P
         "puts $tp_diag \"sroute_core_pin_target=$sroute_core_pin_target\"",
         "puts $tp_diag \"sroute_block_pin_target=$sroute_block_pin_target\"",
         "close $tp_diag",
-        "sroute -connect { corePin blockPin } -layerChangeRange \" $sroute_min_layer $sroute_max_layer \" -corePinTarget $sroute_core_pin_target -blockPinTarget $sroute_block_pin_target -allowJogging 1 -crossoverViaLayerRange \" $sroute_min_layer $sroute_max_layer \" -nets { VDD VSS } -allowLayerChange 1 -targetViaLayerRange \" $sroute_min_layer $sroute_max_layer \" -detailed_log -uda power_rail",
+        "sroute -connect { corePin blockPin } -layerChangeRange \" $sroute_min_layer $sroute_max_layer \" -corePinTarget $sroute_core_pin_target -blockPinTarget $sroute_block_pin_target -allowJogging 1 -crossoverViaLayerRange \" $sroute_min_layer $sroute_max_layer \" -nets { VDD VSS } -allowLayerChange 1 -targetViaLayerRange \" $sroute_min_layer $sroute_max_layer \" -uda power_rail",
         f"verifyConnectivity -type special -noAntenna -noWeakConnect -noUnroutedNet -error 1000 -warning 50 -report {connectivity}",
         f"verify_PG_short -no_routing_blkg -report {shorts}",
         f"saveDesign {checkpoint}",
@@ -1060,7 +1060,7 @@ def run_innovus_pg_diagnostic(config: dict) -> Path:
             f"{diag_config['innovus_bin']} -no_gui -abort_on_error -overwrite "
             f"-file {script_path} -log {log_path.with_suffix('')}"
         )
-        completed = subprocess.run(["bash", "-lc", cmd], cwd=TP_ROOT)
+        completed = subprocess.run(["bash", "-lc", cmd], cwd=TP_ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
         connectivity = parse_pg_verify_report(variant_report_dir / f"{variant['name']}_connectivity.rpt")
         shorts = parse_pg_short_report(variant_report_dir / f"{variant['name']}_PG_short.rpt")
         results.append({
