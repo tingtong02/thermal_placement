@@ -911,6 +911,8 @@ def parse_pg_verify_report(report_path: Path) -> dict[str, Any]:
         return {"ok": False, "report": str(report_path), "error": "missing report"}
     text = report_path.read_text(encoding="utf-8", errors="replace")
     match = re.search(r"Verification Complete\s*:\s*(\d+)\s+Viols", text)
+    if not match:
+        match = re.search(r"Begin Summary\s+(\d+)\s+Problem\(s\).*?Special Wires", text, re.DOTALL)
     viols = int(match.group(1)) if match else None
     return {
         "ok": viols == 0,
@@ -933,7 +935,7 @@ def pg_diagnostic_variants(config: dict) -> list[dict[str, Any]]:
     width = float(os.environ.get("TP_STAGE2_PG_DIAG_STRIPE_WIDTH", str(config.get("stripe_width", 0.04))))
     spacing = float(os.environ.get("TP_STAGE2_PG_DIAG_STRIPE_SPACING", str(config.get("stripe_spacing", 0.40))))
     distance = float(os.environ.get("TP_STAGE2_PG_DIAG_STRIPE_DISTANCE", str(config.get("stripe_distance", 10.0))))
-    return [
+    variants = [
         {
             "name": "baseline_m9",
             "description": "reproduce current M8/M9 stripe plus sroute-to-stripe policy from the floorplan checkpoint",
@@ -941,6 +943,7 @@ def pg_diagnostic_variants(config: dict) -> list[dict[str, Any]]:
             "stripe_spacing": spacing,
             "stripe_distance": distance,
             "m1_over_pins": False,
+            "cut_rows": False,
             "core_target": config.get("sroute_core_pin_target", "stripe"),
             "block_target": config.get("sroute_block_pin_target", "stripe"),
         },
@@ -951,6 +954,7 @@ def pg_diagnostic_variants(config: dict) -> list[dict[str, Any]]:
             "stripe_spacing": spacing,
             "stripe_distance": distance,
             "m1_over_pins": True,
+            "cut_rows": False,
             "core_target": "stripe",
             "block_target": "stripe",
         },
@@ -961,10 +965,29 @@ def pg_diagnostic_variants(config: dict) -> list[dict[str, Any]]:
             "stripe_spacing": spacing,
             "stripe_distance": distance,
             "m1_over_pins": False,
+            "cut_rows": False,
             "core_target": "firstAfterRowEnd",
             "block_target": "nearestTarget",
         },
+        {
+            "name": "cutrow_halo_then_m9",
+            "description": "cut stdcell rows around explicit fake SRAM macro boxes before M8/M9 stripes and sroute",
+            "stripe_width": width,
+            "stripe_spacing": spacing,
+            "stripe_distance": distance,
+            "m1_over_pins": False,
+            "cut_rows": True,
+            "core_target": "stripe",
+            "block_target": "stripe",
+        },
     ]
+    selected = os.environ.get("TP_STAGE2_PG_DIAG_VARIANTS")
+    if selected:
+        wanted = {item.strip() for item in selected.split(",") if item.strip()}
+        variants = [variant for variant in variants if variant["name"] in wanted]
+        if not variants:
+            raise ValueError(f"no PG diagnostic variants selected by TP_STAGE2_PG_DIAG_VARIANTS={selected!r}")
+    return variants
 
 
 def write_pg_diagnostic_tcl(config: dict, source_floorplan: Path, script_path: Path, variant: dict[str, Any], report_dir: Path, data_dir: Path) -> None:
@@ -1001,6 +1024,26 @@ def write_pg_diagnostic_tcl(config: dict, source_floorplan: Path, script_path: P
         "}",
         "puts $tp_diag \"macro_count=$tp_macro_count\"",
     ]
+    if variant.get("cut_rows", False):
+        halo = float(os.environ.get("TP_STAGE2_PG_DIAG_CUTROW_HALO", str(config.get("macro_halo_x", 5.0))))
+        lines += [
+            f"set tp_cutrow_halo {halo:.3f}",
+            "puts $tp_diag \"cut_rows=enabled halo=$tp_cutrow_halo\"",
+            "foreach inst_ptr [dbGet top.insts] {",
+            "    set master [dbGet $inst_ptr.cell.name]",
+            "    if {$master == \"mem_ext\" || $master == \"mem_0_ext\"} {",
+            "        set box [concat {*}[dbGet $inst_ptr.box]]",
+            "        set inst_name [dbGet $inst_ptr.name]",
+            "        if {[catch {cutRow -area $box -halo $tp_cutrow_halo} tp_cutrow_msg]} {",
+            "            puts $tp_diag \"cutrow_error=$inst_name:$tp_cutrow_msg\"",
+            "        } else {",
+            "            puts $tp_diag \"cutrow_applied=$inst_name box=$box halo=$tp_cutrow_halo\"",
+            "        }",
+            "    }",
+            "}",
+        ]
+    else:
+        lines.append("puts $tp_diag \"cut_rows=skipped\"")
     if variant["m1_over_pins"]:
         lines += [
             f"puts $tp_diag \"m1_over_pins_width={m1_width}\"",
