@@ -1306,7 +1306,19 @@ def parse_pg_inspection_def(def_path: Path) -> dict[str, Any]:
             shape_counts[f"{current_net}:{shape}"] += 1
         for via in re.findall(r"\b(?:VIA|VIARULE)\s+(\S+)", line):
             via_counts[f"{current_net}:{via}"] += 1
-        coords = [(int(x), int(y)) for x, y in re.findall(r"\(\s*(-?\d+)\s+(-?\d+)\s*\)", line)]
+        coord_tokens = re.findall(r"\(\s*(-?\d+|\*)\s+(-?\d+|\*)\s*\)", line)
+        coords = []
+        last_x = None
+        last_y = None
+        for x_token, y_token in coord_tokens:
+            if x_token == "*" and last_x is None:
+                continue
+            if y_token == "*" and last_y is None:
+                continue
+            x_val = last_x if x_token == "*" else int(x_token)
+            y_val = last_y if y_token == "*" else int(y_token)
+            coords.append((x_val, y_val))
+            last_x, last_y = x_val, y_val
         if len(coords) >= 2:
             for (x1, y1), (x2, y2) in zip(coords, coords[1:]):
                 if x1 == x2 and y1 == y2:
