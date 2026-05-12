@@ -9,6 +9,7 @@ import os
 import re
 import subprocess
 import sys
+import shutil
 from datetime import datetime
 from typing import Any
 from collections import Counter
@@ -300,6 +301,52 @@ def ensure_clean_launch_area(config: dict, tool: str) -> None:
     if existing:
         sample = ", ".join(str(path) for path in existing[:5])
         raise FileExistsError(f"refusing to launch into non-clean {tool} output area: {sample}")
+
+
+def seed_floorplan_checkpoint(source_checkpoint: Path, innovus_rundir: Path) -> dict[str, str]:
+    if not source_checkpoint.is_file():
+        raise FileNotFoundError(f"source floorplan checkpoint does not exist: {source_checkpoint}")
+    source_data_dir = source_checkpoint.parent
+    source_checkpoint_dat = source_checkpoint.with_name(source_checkpoint.name + ".dat")
+    if not source_checkpoint_dat.is_dir():
+        raise FileNotFoundError(f"source floorplan checkpoint data directory does not exist: {source_checkpoint_dat}")
+
+    dest_data_dir = innovus_rundir / "data"
+    dest_report_dir = innovus_rundir / "reports"
+    dest_data_dir.mkdir(parents=True, exist_ok=True)
+    dest_report_dir.mkdir(parents=True, exist_ok=True)
+
+    dest_checkpoint = dest_data_dir / "floorplan.enc"
+    dest_checkpoint_dat = dest_checkpoint.with_name(dest_checkpoint.name + ".dat")
+    if dest_checkpoint.exists() or dest_checkpoint_dat.exists():
+        raise FileExistsError(f"destination floorplan checkpoint already exists under {dest_data_dir}")
+
+    shutil.copy2(source_checkpoint, dest_checkpoint)
+    shutil.copytree(source_checkpoint_dat, dest_checkpoint_dat)
+
+    copied: dict[str, str] = {
+        "source_floorplan_checkpoint": str(source_checkpoint),
+        "seeded_floorplan_checkpoint": str(dest_checkpoint),
+        "source_floorplan_checkpoint_data": str(source_checkpoint_dat),
+        "seeded_floorplan_checkpoint_data": str(dest_checkpoint_dat),
+    }
+
+    source_def = source_data_dir / "Gemmini.floorplan.def"
+    if source_def.is_file():
+        dest_def = dest_data_dir / source_def.name
+        shutil.copy2(source_def, dest_def)
+        copied["source_floorplan_def"] = str(source_def)
+        copied["seeded_floorplan_def"] = str(dest_def)
+
+    source_report_dir = source_data_dir.parent / "reports"
+    for report_name in ("floorplan_macro_placement.rpt", "floorplan_manifest.json", "init_manifest.json"):
+        source_report = source_report_dir / report_name
+        if source_report.is_file():
+            dest_report = dest_report_dir / report_name
+            shutil.copy2(source_report, dest_report)
+            copied[f"seeded_{report_name}"] = str(dest_report)
+
+    return copied
 
 
 def parse_def_macro_status(def_path: Path, macro_cells: list[str], expected_count: int) -> dict[str, Any]:
@@ -620,7 +667,7 @@ def build_full_innovus_config(config: dict) -> dict:
     full["place_detail_wire_length_opt_effort"] = os.environ.get("TP_STAGE2_PLACE_DETAIL_WIRE_EFFORT", full.get("place_detail_wire_length_opt_effort", "medium"))
     full["sroute_core_pin_target"] = os.environ.get("TP_STAGE2_SROUTE_CORE_PIN_TARGET", full.get("sroute_core_pin_target", "stripe"))
     full["sroute_block_pin_target"] = os.environ.get("TP_STAGE2_SROUTE_BLOCK_PIN_TARGET", full.get("sroute_block_pin_target", "stripe"))
-    full["require_pg_clean"] = True
+    full["require_pg_clean"] = os.environ.get("TP_STAGE2_REQUIRE_PG_CLEAN", "false").lower() in {"1", "true", "yes", "on"}
     return full
 
 
@@ -883,6 +930,116 @@ def run_innovus_full(config: dict) -> Path:
     out.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     if not manifest["ok"]:
         raise RuntimeError(f"Innovus full artifact gate failed; see {out}")
+    return out
+
+
+def write_floorplan_resume_scripts(config: dict) -> Path:
+    full_config = build_full_innovus_config(config)
+    source_floorplan = find_innovus_floorplan_checkpoint(full_config)
+    genus_rundir = find_genus_synthesis_run(full_config)
+    genus_output = build_genus_output_from_run(full_config, genus_rundir)
+    innovus_config = build_innovus_config(
+        full_config,
+        genus_output,
+        runmode="script_only",
+        steps=["powerplan", "placement", "cts", "routing"],
+    )
+    innovus_config["start_prev_checkpoint"] = "floorplan"
+    innovus_manager = InnovusManager(innovus_config)
+    innovus_output = innovus_manager.run()
+
+    startup_dir = Path(full_config["rundir"]) / "startup"
+    startup_dir.mkdir(parents=True, exist_ok=True)
+    manifest = {
+        "stage": "phase2_innovus_full_from_floorplan_script_generation",
+        "quality_level": "PG-open thermal proxy" if not full_config.get("require_pg_clean", True) else "PG-clean requested",
+        "source_genus_rundir": str(genus_rundir),
+        "source_floorplan_checkpoint": str(source_floorplan),
+        "innovus_rundir": innovus_manager.rundir,
+        "innovus_output": innovus_output,
+        "require_pg_clean": full_config.get("require_pg_clean", True),
+        "scripts": {
+            "mmmc": innovus_manager.mmmc_script_path,
+            "powerplan": str(Path(innovus_manager.script_dir) / "powerplan.tcl"),
+            "placement": str(Path(innovus_manager.script_dir) / "placement.tcl"),
+            "cts": str(Path(innovus_manager.script_dir) / "cts.tcl"),
+            "routing": str(Path(innovus_manager.script_dir) / "routing.tcl"),
+        },
+        "notes": [
+            "Script generation only; Cadence is not launched and the source checkpoint is not copied yet.",
+            "The real launch will seed the selected floorplan checkpoint into this clean run tag before executing the generated scripts.",
+        ],
+    }
+    out = startup_dir / "innovus_full_from_floorplan_script_manifest.json"
+    out.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    return out
+
+
+def run_innovus_full_from_floorplan(config: dict) -> Path:
+    full_config = build_full_innovus_config(config)
+    ensure_clean_launch_area(full_config, "innovus")
+    source_floorplan = find_innovus_floorplan_checkpoint(full_config)
+    genus_rundir = find_genus_synthesis_run(full_config)
+    genus_output = build_genus_output_from_run(full_config, genus_rundir)
+    innovus_config = build_innovus_config(
+        full_config,
+        genus_output,
+        runmode="normal",
+        steps=["powerplan", "placement", "cts", "routing"],
+    )
+    innovus_config["start_prev_checkpoint"] = "floorplan"
+    innovus_manager = InnovusManager(innovus_config)
+    seed_status = seed_floorplan_checkpoint(source_floorplan, Path(innovus_manager.rundir))
+    innovus_output = innovus_manager.run()
+
+    floorplan_def = Path(innovus_manager.floorplan_def_path)
+    pin_status = parse_def_pin_status(floorplan_def) if floorplan_def.is_file() else {
+        "def_file": str(floorplan_def),
+        "ok": False,
+        "error": "floorplan DEF was not seeded",
+    }
+    macro_status = parse_def_macro_status(
+        floorplan_def,
+        full_config.get("fake_sram_macro_cells", ["mem_ext", "mem_0_ext"]),
+        full_config.get("expected_fake_sram_macro_instances", 6),
+    )
+    required_artifacts = stage2_required_artifacts(innovus_output, Path(innovus_manager.rundir))
+    gate_status = evaluate_artifact_gates(required_artifacts)
+
+    startup_dir = Path(full_config["rundir"]) / "startup"
+    startup_dir.mkdir(parents=True, exist_ok=True)
+    manifest = {
+        "stage": "phase2_innovus_full_from_floorplan",
+        "quality_level": "PG-open thermal proxy" if not full_config.get("require_pg_clean", True) else "PG-clean requested",
+        "ok": gate_status["ok"] and pin_status.get("ok", False) and macro_status.get("ok", False),
+        "notes": [
+            "Cadence Innovus full implementation resumed through the Python manager from a seeded floorplan checkpoint.",
+            "This route intentionally reuses a floorplan checkpoint and reruns powerplan, placement, CTS, routing, extraction, and streamOut in a clean run tag.",
+            "With require_pg_clean=false, nonzero PG special opens are recorded as a non-signoff PG-open thermal proxy limitation, not as PG-clean evidence.",
+            "ASAP7 M10 IMPTR collateral messages must be classified separately from routed DRC.",
+        ],
+        "source_genus_rundir": str(genus_rundir),
+        "source_floorplan_checkpoint": str(source_floorplan),
+        "seed_status": seed_status,
+        "genus_output": genus_output,
+        "innovus_rundir": innovus_manager.rundir,
+        "innovus_output": innovus_output,
+        "pin_status": pin_status,
+        "macro_status": macro_status,
+        "gate_status": gate_status,
+        "prelaunch_summary": str(startup_dir / "prelaunch_config_summary.json"),
+        "scripts": {
+            "mmmc": innovus_manager.mmmc_script_path,
+            "powerplan": str(Path(innovus_manager.script_dir) / "powerplan.tcl"),
+            "placement": str(Path(innovus_manager.script_dir) / "placement.tcl"),
+            "cts": str(Path(innovus_manager.script_dir) / "cts.tcl"),
+            "routing": str(Path(innovus_manager.script_dir) / "routing.tcl"),
+        },
+    }
+    out = startup_dir / "innovus_full_from_floorplan_manifest.json"
+    out.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    if not manifest["ok"]:
+        raise RuntimeError(f"Innovus full-from-floorplan artifact gate failed; see {out}")
     return out
 
 
@@ -1485,12 +1642,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--preflight", action="store_true", help="Validate inputs and paths without writing outputs")
     parser.add_argument("--dry-run", action="store_true", help="Validate inputs and write a startup manifest under physical/<tag>/startup")
     parser.add_argument("--write-scripts", action="store_true", help="Generate Genus/Innovus Tcl through manager/ without launching commercial tools")
+    parser.add_argument("--write-resume-scripts-from-floorplan", action="store_true", help="Generate floorplan-resume Innovus scripts only; do not launch Cadence")
     parser.add_argument("--run-genus-elab", action="store_true", help="Launch a Python-managed Genus frontend/elaboration smoke without synthesis")
     parser.add_argument("--run-genus-syn", action="store_true", help="Launch Python-managed Genus synthesis and reports without Innovus")
     parser.add_argument("--run-innovus-floorplan-smoke", action="store_true", help="Launch Python-managed Innovus init/floorplan smoke from a completed Genus synthesis run")
     parser.add_argument("--run-innovus-pnr-smoke", action="store_true", help="Launch reduced-effort Python-managed Innovus powerplan/place/CTS/route smoke from a completed Genus synthesis run")
     parser.add_argument("--run-innovus-cts-route-smoke", action="store_true", help="Resume reduced-effort Innovus CTS/routing smoke from an existing placement.enc in the selected run tag")
     parser.add_argument("--run-innovus-full", action="store_true", help="Launch non-smoke Python-managed Innovus full implementation from a completed Genus synthesis run")
+    parser.add_argument("--run-innovus-full-from-floorplan", action="store_true", help="Resume non-smoke Innovus full implementation from an existing floorplan.enc checkpoint")
     parser.add_argument("--run-innovus-pg-diagnostic", action="store_true", help="Run checkpoint-level Innovus PG diagnostic variants from an existing floorplan.enc")
     parser.add_argument("--run-innovus-pg-inspection", action="store_true", help="Run read-only Innovus PG inspection from an existing PG checkpoint")
     parser.add_argument("--print-config", action="store_true", help="Print resolved startup config as JSON")
@@ -1503,7 +1662,7 @@ def main() -> int:
     ok, errors = preflight(config)
     if args.print_config:
         print(json.dumps(config, indent=2))
-    if args.preflight or args.dry_run or args.write_scripts or args.run_genus_elab or args.run_genus_syn or args.run_innovus_floorplan_smoke or args.run_innovus_pnr_smoke or args.run_innovus_cts_route_smoke or args.run_innovus_full or args.run_innovus_pg_diagnostic or args.run_innovus_pg_inspection:
+    if args.preflight or args.dry_run or args.write_scripts or args.write_resume_scripts_from_floorplan or args.run_genus_elab or args.run_genus_syn or args.run_innovus_floorplan_smoke or args.run_innovus_pnr_smoke or args.run_innovus_cts_route_smoke or args.run_innovus_full or args.run_innovus_full_from_floorplan or args.run_innovus_pg_diagnostic or args.run_innovus_pg_inspection:
         print_summary(config)
         if args.dry_run:
             print(f"manifest={write_dry_run(config, errors)}")
@@ -1514,6 +1673,9 @@ def main() -> int:
         if args.write_scripts:
             print(f"prelaunch_summary={write_prelaunch_summary(config, 'script_generation')}")
             print(f"manager_manifest={write_manager_scripts(config)}")
+        if args.write_resume_scripts_from_floorplan:
+            print(f"prelaunch_summary={write_prelaunch_summary(build_full_innovus_config(config), 'innovus_full_from_floorplan_script_generation')}")
+            print(f"resume_script_manifest={write_floorplan_resume_scripts(config)}")
         if args.run_genus_elab:
             print(f"genus_elab_manifest={run_genus_elab(config)}")
         if args.run_genus_syn:
@@ -1528,6 +1690,9 @@ def main() -> int:
         if args.run_innovus_full:
             print(f"prelaunch_summary={write_prelaunch_summary(build_full_innovus_config(config), 'innovus_full')}")
             print(f"innovus_full_manifest={run_innovus_full(config)}")
+        if args.run_innovus_full_from_floorplan:
+            print(f"prelaunch_summary={write_prelaunch_summary(build_full_innovus_config(config), 'innovus_full_from_floorplan')}")
+            print(f"innovus_full_from_floorplan_manifest={run_innovus_full_from_floorplan(config)}")
         if args.run_innovus_pg_diagnostic:
             print(f"prelaunch_summary={write_prelaunch_summary(build_full_innovus_config(config), 'innovus_pg_diagnostic')}")
             print(f"innovus_pg_diagnostic_manifest={run_innovus_pg_diagnostic(config)}")
@@ -1536,7 +1701,7 @@ def main() -> int:
             print(f"innovus_pg_inspection_manifest={run_innovus_pg_inspection(config)}")
         print("preflight_ok=True")
         return 0
-    print("No action requested. Use --preflight, --dry-run, --write-scripts, --run-genus-elab, --run-genus-syn, --run-innovus-floorplan-smoke, --run-innovus-pnr-smoke, --run-innovus-cts-route-smoke, --run-innovus-full, --run-innovus-pg-diagnostic, or --print-config.")
+    print("No action requested. Use --preflight, --dry-run, --write-scripts, --write-resume-scripts-from-floorplan, --run-genus-elab, --run-genus-syn, --run-innovus-floorplan-smoke, --run-innovus-pnr-smoke, --run-innovus-cts-route-smoke, --run-innovus-full, --run-innovus-full-from-floorplan, --run-innovus-pg-diagnostic, or --print-config.")
     return 0
 
 
