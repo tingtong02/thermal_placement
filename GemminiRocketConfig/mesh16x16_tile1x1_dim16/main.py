@@ -85,6 +85,9 @@ def build_config() -> dict:
         "innovus_threads": int(os.environ.get("TP_CADENCE_INNOVUS_CPUS", "8")),
         "route_max_threads": int(os.environ.get("TP_STAGE2_ROUTE_CPUS", "1")),
         "route_si_aware": os.environ.get("TP_STAGE2_ROUTE_SI_AWARE", "false").lower() in {"1", "true", "yes", "on"},
+        "route_analysis_type": os.environ.get("TP_STAGE2_ROUTE_ANALYSIS_TYPE", "single"),
+        "route_run_postroute_opt": os.environ.get("TP_STAGE2_ROUTE_RUN_POSTROUTE_OPT", "false").lower() in {"1", "true", "yes", "on"},
+        "route_save_after_route_design": os.environ.get("TP_STAGE2_ROUTE_SAVE_AFTER_ROUTE_DESIGN", "true").lower() in {"1", "true", "yes", "on"},
         "droute_end_iteration": int(os.environ.get("TP_STAGE2_DROUTE_END_ITERATION", "20")),
         "droute_fix_antenna": os.environ.get("TP_STAGE2_DROUTE_FIX_ANTENNA", "true").lower() in {"1", "true", "yes", "on"},
         "droute_multicut_via_effort": os.environ.get("TP_STAGE2_DROUTE_MULTICUT_VIA_EFFORT", "medium"),
@@ -233,6 +236,9 @@ def write_prelaunch_summary(config: dict, profile: str) -> Path:
             "route_max_layer": config.get("route_max_layer"),
             "ndr_cts_min_layer": config.get("ndr_cts_min_layer"),
             "ndr_cts_max_layer": config.get("ndr_cts_max_layer"),
+            "analysis_type": config.get("route_analysis_type"),
+            "run_postroute_opt": config.get("route_run_postroute_opt"),
+            "save_after_route_design": config.get("route_save_after_route_design"),
             "m10_policy": "classify ASAP7 M10 IMPTR messages separately; do not route through M10 in this plan",
         },
         "pg": {
@@ -347,6 +353,30 @@ def seed_floorplan_checkpoint(source_checkpoint: Path, innovus_rundir: Path) -> 
             copied[f"seeded_{report_name}"] = str(dest_report)
 
     return copied
+
+
+def seed_innovus_checkpoint(source_checkpoint: Path, innovus_rundir: Path, checkpoint_name: str) -> dict[str, str]:
+    if not source_checkpoint.is_file():
+        raise FileNotFoundError(f"source {checkpoint_name} checkpoint does not exist: {source_checkpoint}")
+    source_checkpoint_dat = source_checkpoint.with_name(source_checkpoint.name + ".dat")
+    if not source_checkpoint_dat.is_dir():
+        raise FileNotFoundError(f"source {checkpoint_name} checkpoint data directory does not exist: {source_checkpoint_dat}")
+
+    dest_data_dir = innovus_rundir / "data"
+    dest_data_dir.mkdir(parents=True, exist_ok=True)
+    dest_checkpoint = dest_data_dir / f"{checkpoint_name}.enc"
+    dest_checkpoint_dat = dest_checkpoint.with_name(dest_checkpoint.name + ".dat")
+    if dest_checkpoint.exists() or dest_checkpoint_dat.exists():
+        raise FileExistsError(f"destination {checkpoint_name} checkpoint already exists under {dest_data_dir}")
+
+    shutil.copy2(source_checkpoint, dest_checkpoint)
+    shutil.copytree(source_checkpoint_dat, dest_checkpoint_dat)
+    return {
+        f"source_{checkpoint_name}_checkpoint": str(source_checkpoint),
+        f"seeded_{checkpoint_name}_checkpoint": str(dest_checkpoint),
+        f"source_{checkpoint_name}_checkpoint_data": str(source_checkpoint_dat),
+        f"seeded_{checkpoint_name}_checkpoint_data": str(dest_checkpoint_dat),
+    }
 
 
 def parse_def_macro_status(def_path: Path, macro_cells: list[str], expected_count: int) -> dict[str, Any]:
@@ -668,6 +698,9 @@ def build_full_innovus_config(config: dict) -> dict:
     full["sroute_core_pin_target"] = os.environ.get("TP_STAGE2_SROUTE_CORE_PIN_TARGET", full.get("sroute_core_pin_target", "stripe"))
     full["sroute_block_pin_target"] = os.environ.get("TP_STAGE2_SROUTE_BLOCK_PIN_TARGET", full.get("sroute_block_pin_target", "stripe"))
     full["require_pg_clean"] = os.environ.get("TP_STAGE2_REQUIRE_PG_CLEAN", "false").lower() in {"1", "true", "yes", "on"}
+    full["route_analysis_type"] = os.environ.get("TP_STAGE2_ROUTE_ANALYSIS_TYPE", full.get("route_analysis_type", "single"))
+    full["route_run_postroute_opt"] = os.environ.get("TP_STAGE2_ROUTE_RUN_POSTROUTE_OPT", "false").lower() in {"1", "true", "yes", "on"}
+    full["route_save_after_route_design"] = os.environ.get("TP_STAGE2_ROUTE_SAVE_AFTER_ROUTE_DESIGN", "true").lower() in {"1", "true", "yes", "on"}
     return full
 
 
@@ -1041,6 +1074,122 @@ def run_innovus_full_from_floorplan(config: dict) -> Path:
     if not manifest["ok"]:
         raise RuntimeError(f"Innovus full-from-floorplan artifact gate failed; see {out}")
     return out
+
+
+def write_routing_resume_scripts_from_cts(config: dict) -> Path:
+    full_config = build_full_innovus_config(config)
+    source_cts = find_innovus_cts_checkpoint(full_config)
+    genus_rundir = find_genus_synthesis_run(full_config)
+    genus_output = build_genus_output_from_run(full_config, genus_rundir)
+    innovus_config = build_innovus_config(
+        full_config,
+        genus_output,
+        runmode="script_only",
+        steps=["routing"],
+    )
+    innovus_config["start_prev_checkpoint"] = "cts"
+    innovus_manager = InnovusManager(innovus_config)
+    innovus_output = innovus_manager.run()
+
+    startup_dir = Path(full_config["rundir"]) / "startup"
+    startup_dir.mkdir(parents=True, exist_ok=True)
+    manifest = {
+        "stage": "phase2_innovus_routing_from_cts_script_generation",
+        "quality_level": "PG-open thermal proxy" if not full_config.get("require_pg_clean", True) else "PG-clean requested",
+        "source_genus_rundir": str(genus_rundir),
+        "source_cts_checkpoint": str(source_cts),
+        "innovus_rundir": innovus_manager.rundir,
+        "innovus_output": innovus_output,
+        "route_analysis_type": full_config.get("route_analysis_type"),
+        "route_run_postroute_opt": full_config.get("route_run_postroute_opt"),
+        "route_save_after_route_design": full_config.get("route_save_after_route_design"),
+        "scripts": {
+            "mmmc": innovus_manager.mmmc_script_path,
+            "routing": str(Path(innovus_manager.script_dir) / "routing.tcl"),
+        },
+        "notes": [
+            "Script generation only; Cadence is not launched and the source CTS checkpoint is not copied yet.",
+            "The real launch will seed the selected CTS checkpoint into this clean run tag before executing routing.tcl.",
+        ],
+    }
+    out = startup_dir / "innovus_routing_from_cts_script_manifest.json"
+    out.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    return out
+
+
+def run_innovus_routing_from_cts(config: dict) -> Path:
+    full_config = build_full_innovus_config(config)
+    ensure_clean_launch_area(full_config, "innovus")
+    source_cts = find_innovus_cts_checkpoint(full_config)
+    genus_rundir = find_genus_synthesis_run(full_config)
+    genus_output = build_genus_output_from_run(full_config, genus_rundir)
+    innovus_config = build_innovus_config(
+        full_config,
+        genus_output,
+        runmode="normal",
+        steps=["routing"],
+    )
+    innovus_config["start_prev_checkpoint"] = "cts"
+    innovus_manager = InnovusManager(innovus_config)
+    seed_status = seed_innovus_checkpoint(source_cts, Path(innovus_manager.rundir), "cts")
+    innovus_output = innovus_manager.run()
+
+    required_artifacts = stage2_required_artifacts(innovus_output, Path(innovus_manager.rundir))
+    gate_status = evaluate_artifact_gates(required_artifacts)
+    startup_dir = Path(full_config["rundir"]) / "startup"
+    startup_dir.mkdir(parents=True, exist_ok=True)
+    manifest = {
+        "stage": "phase2_innovus_routing_from_cts",
+        "quality_level": "PG-open thermal proxy" if not full_config.get("require_pg_clean", True) else "PG-clean requested",
+        "ok": gate_status["ok"],
+        "notes": [
+            "Cadence Innovus routing resumed through the Python manager from a seeded CTS checkpoint.",
+            "This route preserves the prior powerplan, placement, CTS, macro placement, and PG-open evidence, and reruns only routing/export.",
+            "routing.tcl saves routing.enc immediately after routeDesign before post-route reporting/export steps.",
+            "Nonzero PG opens or routed DRC violations must be reported as non-signoff thermal proxy limitations.",
+        ],
+        "source_genus_rundir": str(genus_rundir),
+        "source_cts_checkpoint": str(source_cts),
+        "seed_status": seed_status,
+        "genus_output": genus_output,
+        "innovus_rundir": innovus_manager.rundir,
+        "innovus_output": innovus_output,
+        "gate_status": gate_status,
+        "prelaunch_summary": str(startup_dir / "prelaunch_config_summary.json"),
+        "route_analysis_type": full_config.get("route_analysis_type"),
+        "route_run_postroute_opt": full_config.get("route_run_postroute_opt"),
+        "route_save_after_route_design": full_config.get("route_save_after_route_design"),
+        "scripts": {
+            "mmmc": innovus_manager.mmmc_script_path,
+            "routing": str(Path(innovus_manager.script_dir) / "routing.tcl"),
+        },
+    }
+    out = startup_dir / "innovus_routing_from_cts_manifest.json"
+    out.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    if not manifest["ok"]:
+        raise RuntimeError(f"Innovus routing-from-CTS artifact gate failed; see {out}")
+    return out
+
+
+def find_innovus_cts_checkpoint(config: dict) -> Path:
+    explicit = os.environ.get("TP_STAGE2_CTS_SOURCE_ENC")
+    if explicit:
+        candidate = Path(explicit)
+        if not candidate.is_file():
+            raise FileNotFoundError(f"TP_STAGE2_CTS_SOURCE_ENC does not exist: {candidate}")
+        return candidate.resolve()
+
+    source_tag = os.environ.get("TP_STAGE2_CTS_SOURCE_RUN_TAG")
+    if source_tag:
+        candidate = RESULT_ROOT / source_tag / "innovus" / "data" / "cts.enc"
+        if not candidate.is_file():
+            raise FileNotFoundError(f"source CTS checkpoint does not exist: {candidate}")
+        return candidate.resolve()
+
+    candidates = sorted(RESULT_ROOT.glob("*/innovus/data/cts.enc"), key=lambda path: path.stat().st_mtime)
+    if not candidates:
+        raise FileNotFoundError("no Innovus cts.enc checkpoint found under physical/*/innovus/data")
+    return candidates[-1].resolve()
 
 
 def find_innovus_floorplan_checkpoint(config: dict) -> Path:
@@ -1643,6 +1792,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dry-run", action="store_true", help="Validate inputs and write a startup manifest under physical/<tag>/startup")
     parser.add_argument("--write-scripts", action="store_true", help="Generate Genus/Innovus Tcl through manager/ without launching commercial tools")
     parser.add_argument("--write-resume-scripts-from-floorplan", action="store_true", help="Generate floorplan-resume Innovus scripts only; do not launch Cadence")
+    parser.add_argument("--write-routing-scripts-from-cts", action="store_true", help="Generate CTS-resume Innovus routing script only; do not launch Cadence")
     parser.add_argument("--run-genus-elab", action="store_true", help="Launch a Python-managed Genus frontend/elaboration smoke without synthesis")
     parser.add_argument("--run-genus-syn", action="store_true", help="Launch Python-managed Genus synthesis and reports without Innovus")
     parser.add_argument("--run-innovus-floorplan-smoke", action="store_true", help="Launch Python-managed Innovus init/floorplan smoke from a completed Genus synthesis run")
@@ -1650,6 +1800,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-innovus-cts-route-smoke", action="store_true", help="Resume reduced-effort Innovus CTS/routing smoke from an existing placement.enc in the selected run tag")
     parser.add_argument("--run-innovus-full", action="store_true", help="Launch non-smoke Python-managed Innovus full implementation from a completed Genus synthesis run")
     parser.add_argument("--run-innovus-full-from-floorplan", action="store_true", help="Resume non-smoke Innovus full implementation from an existing floorplan.enc checkpoint")
+    parser.add_argument("--run-innovus-routing-from-cts", action="store_true", help="Resume non-smoke Innovus routing/export from an existing cts.enc checkpoint")
     parser.add_argument("--run-innovus-pg-diagnostic", action="store_true", help="Run checkpoint-level Innovus PG diagnostic variants from an existing floorplan.enc")
     parser.add_argument("--run-innovus-pg-inspection", action="store_true", help="Run read-only Innovus PG inspection from an existing PG checkpoint")
     parser.add_argument("--print-config", action="store_true", help="Print resolved startup config as JSON")
@@ -1662,7 +1813,7 @@ def main() -> int:
     ok, errors = preflight(config)
     if args.print_config:
         print(json.dumps(config, indent=2))
-    if args.preflight or args.dry_run or args.write_scripts or args.write_resume_scripts_from_floorplan or args.run_genus_elab or args.run_genus_syn or args.run_innovus_floorplan_smoke or args.run_innovus_pnr_smoke or args.run_innovus_cts_route_smoke or args.run_innovus_full or args.run_innovus_full_from_floorplan or args.run_innovus_pg_diagnostic or args.run_innovus_pg_inspection:
+    if args.preflight or args.dry_run or args.write_scripts or args.write_resume_scripts_from_floorplan or args.write_routing_scripts_from_cts or args.run_genus_elab or args.run_genus_syn or args.run_innovus_floorplan_smoke or args.run_innovus_pnr_smoke or args.run_innovus_cts_route_smoke or args.run_innovus_full or args.run_innovus_full_from_floorplan or args.run_innovus_routing_from_cts or args.run_innovus_pg_diagnostic or args.run_innovus_pg_inspection:
         print_summary(config)
         if args.dry_run:
             print(f"manifest={write_dry_run(config, errors)}")
@@ -1676,6 +1827,9 @@ def main() -> int:
         if args.write_resume_scripts_from_floorplan:
             print(f"prelaunch_summary={write_prelaunch_summary(build_full_innovus_config(config), 'innovus_full_from_floorplan_script_generation')}")
             print(f"resume_script_manifest={write_floorplan_resume_scripts(config)}")
+        if args.write_routing_scripts_from_cts:
+            print(f"prelaunch_summary={write_prelaunch_summary(build_full_innovus_config(config), 'innovus_routing_from_cts_script_generation')}")
+            print(f"routing_resume_script_manifest={write_routing_resume_scripts_from_cts(config)}")
         if args.run_genus_elab:
             print(f"genus_elab_manifest={run_genus_elab(config)}")
         if args.run_genus_syn:
@@ -1693,6 +1847,9 @@ def main() -> int:
         if args.run_innovus_full_from_floorplan:
             print(f"prelaunch_summary={write_prelaunch_summary(build_full_innovus_config(config), 'innovus_full_from_floorplan')}")
             print(f"innovus_full_from_floorplan_manifest={run_innovus_full_from_floorplan(config)}")
+        if args.run_innovus_routing_from_cts:
+            print(f"prelaunch_summary={write_prelaunch_summary(build_full_innovus_config(config), 'innovus_routing_from_cts')}")
+            print(f"innovus_routing_from_cts_manifest={run_innovus_routing_from_cts(config)}")
         if args.run_innovus_pg_diagnostic:
             print(f"prelaunch_summary={write_prelaunch_summary(build_full_innovus_config(config), 'innovus_pg_diagnostic')}")
             print(f"innovus_pg_diagnostic_manifest={run_innovus_pg_diagnostic(config)}")
@@ -1701,7 +1858,7 @@ def main() -> int:
             print(f"innovus_pg_inspection_manifest={run_innovus_pg_inspection(config)}")
         print("preflight_ok=True")
         return 0
-    print("No action requested. Use --preflight, --dry-run, --write-scripts, --write-resume-scripts-from-floorplan, --run-genus-elab, --run-genus-syn, --run-innovus-floorplan-smoke, --run-innovus-pnr-smoke, --run-innovus-cts-route-smoke, --run-innovus-full, --run-innovus-full-from-floorplan, --run-innovus-pg-diagnostic, or --print-config.")
+    print("No action requested. Use --preflight, --dry-run, --write-scripts, --write-resume-scripts-from-floorplan, --write-routing-scripts-from-cts, --run-genus-elab, --run-genus-syn, --run-innovus-floorplan-smoke, --run-innovus-pnr-smoke, --run-innovus-cts-route-smoke, --run-innovus-full, --run-innovus-full-from-floorplan, --run-innovus-routing-from-cts, --run-innovus-pg-diagnostic, or --print-config.")
     return 0
 
 

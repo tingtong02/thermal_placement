@@ -813,7 +813,7 @@ optDesign -postCTS -hold
 # NanoRoute Mode setting
 # -------------------------------------------------------------
 setMultiCpuUsage -localCpu %d
-setAnalysisMode -analysisType onChipVariation
+setAnalysisMode -analysisType %s
 setDesignMode -topRoutingLayer %s
 setDesignMode -bottomRoutingLayer %s
 
@@ -826,6 +826,7 @@ setNanoRouteMode -quiet -drouteMinSlackForWireOptimization %.3f
 setDelayCalMode -engine %s -siAware %s
 """ % (
     self.configs.get('route_max_threads', self.configs.get('max_threads', 8)),
+    self.configs.get('route_analysis_type', 'single'),
     self.configs.get('route_max_layer'),
     self.configs.get('route_min_layer'),
     self.configs.get('droute_end_iteration', 20),
@@ -842,12 +843,28 @@ setDelayCalMode -engine %s -siAware %s
 # -------------------------------------------------------------
 routeDesign -globalDetail
 """
-        
-        codes += """
+
+        if self.configs.get('route_save_after_route_design', True):
+            codes += """
+# -------------------------------------------------------------
+# Save detailed-route checkpoint before post-route reporting
+# -------------------------------------------------------------
+saveDesign %s
+""" % os.path.join(self.data_dir, 'routing.enc')
+
+        if self.configs.get('route_run_postroute_opt', False):
+            codes += """
 # -------------------------------------------------------------
 # post routing opt
 # -------------------------------------------------------------
 optDesign -postRoute -setup
+"""
+        else:
+            codes += """
+# -------------------------------------------------------------
+# post routing opt skipped
+# -------------------------------------------------------------
+puts {TP_INFO: skipping optDesign -postRoute -setup; routeDesign checkpoint was saved before reporting}
 """
         codes += self.generate_timing_report_code(stage='postRoute')
         codes += self.generate_area_report_code(stage='postRoute')
