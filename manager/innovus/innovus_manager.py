@@ -120,6 +120,20 @@ class InnovusManager(BaseManager):
                 'drc_report': os.path.join(self.report_dir, 'postRoute_drc.rpt'),
                 'connectivity_report': os.path.join(self.report_dir, 'postRoute_connectivity.rpt'),
             },
+            'export_routing': {
+                'checkpoint': os.path.join(self.data_dir, 'export_routing.enc'),
+                'source_routing_checkpoint': os.path.join(self.data_dir, 'routing.enc'),
+                'routed_def': self.routed_def_path,
+                'routed_verilog': self.routed_verilog_path,
+                'routed_sdf': self.routed_sdf_path,
+                'routed_spef': self.routed_spef_path,
+                'gds': self.routed_gds_path,
+                'timing_dir': os.path.join(self.report_dir, 'postRoute_timing'),
+                'area_report': os.path.join(self.report_dir, 'postRoute_area.rpt'),
+                'power_report': os.path.join(self.report_dir, 'postRoute_power.rpt'),
+                'drc_report': os.path.join(self.report_dir, 'postRoute_drc.rpt'),
+                'connectivity_report': os.path.join(self.report_dir, 'postRoute_connectivity.rpt'),
+            },
         }
         return mapping.get(step_name, {})
 
@@ -145,7 +159,7 @@ class InnovusManager(BaseManager):
             return {'status': 'complete', 'reason': 'expected artifacts exist'}
         if step_name == 'powerplan':
             return {'status': 'pg_connectivity_check_required', 'reason': 'powerplan acceptance requires zero special-net opens'}
-        if step_name == 'routing':
+        if step_name in {'routing', 'export_routing'}:
             return {'status': 'post_route_artifact_gate', 'reason': 'routing acceptance requires routed DEF/Verilog/SDF/SPEF/GDS and reports'}
         if error:
             return {'status': 'failed', 'reason': error}
@@ -176,6 +190,8 @@ class InnovusManager(BaseManager):
             return self.generate_cts_code()
         elif name == 'routing':
             return self.generate_routing_code()
+        elif name == 'export_routing':
+            return self.generate_export_routing_code()
         else:
             raise NotImplementedError("Script %s is not implemented" % name)
 
@@ -869,14 +885,23 @@ puts {TP_INFO: skipping optDesign -postRoute -setup; routeDesign checkpoint was 
         codes += self.generate_timing_report_code(stage='postRoute')
         codes += self.generate_area_report_code(stage='postRoute')
         codes += self.generate_power_report_code(stage='postRoute')
-        codes += """
+        codes += self.generate_postroute_artifact_export_code()
+
+        return codes
+
+    def generate_postroute_artifact_export_code(self) -> str:
+        sdf_args = self.configs.get('sdf_export_args', '').strip()
+        sdf_suffix = (' ' + sdf_args) if sdf_args else ''
+        spef_args = self.configs.get('spef_export_args', '').strip()
+        spef_suffix = (' ' + spef_args) if spef_args else ''
+        return """
 # -------------------------------------------------------------
 # Export routed implementation artifacts
 # -------------------------------------------------------------
 defOut -routing %s
 saveNetlist %s
-write_sdf %s
-rcOut -spef %s
+write_sdf %s%s
+rcOut -spef %s%s
 verify_drc -report %s
 verifyConnectivity -type all -error 1000 -warning 50 -report %s
 streamOut %s -mapFile %s -merge { %s } -mode ALL
@@ -884,7 +909,9 @@ streamOut %s -mapFile %s -merge { %s } -mode ALL
             self.routed_def_path,
             self.routed_verilog_path,
             self.routed_sdf_path,
+            sdf_suffix,
             self.routed_spef_path,
+            spef_suffix,
             os.path.join(self.report_dir, 'postRoute_drc.rpt'),
             os.path.join(self.report_dir, 'postRoute_connectivity.rpt'),
             self.routed_gds_path,
@@ -892,7 +919,29 @@ streamOut %s -mapFile %s -merge { %s } -mode ALL
             self.get_file_list('gds_files'),
         )
 
-
+    def generate_export_routing_code(self) -> str:
+        codes = """
+# -------------------------------------------------------------
+# Export/report-only recovery from an already routed checkpoint
+# -------------------------------------------------------------
+setMultiCpuUsage -localCpu %d
+setAnalysisMode -analysisType %s
+setDesignMode -topRoutingLayer %s
+setDesignMode -bottomRoutingLayer %s
+setDelayCalMode -SIAware %s
+""" % (
+            self.configs.get('route_max_threads', self.configs.get('max_threads', 8)),
+            self.configs.get('route_analysis_type', 'single'),
+            self.configs.get('route_max_layer'),
+            self.configs.get('route_min_layer'),
+            'true' if self.configs.get('route_si_aware', False) else 'false',
+        )
+        if self.configs.get('export_run_timing_report', False):
+            codes += self.generate_timing_report_code(stage='postRoute')
+        if self.configs.get('export_run_area_power_reports', True):
+            codes += self.generate_area_report_code(stage='postRoute')
+            codes += self.generate_power_report_code(stage='postRoute')
+        codes += self.generate_postroute_artifact_export_code()
         return codes
 
     def generate_timing_report_code(self, stage: str) -> str:

@@ -92,6 +92,10 @@ def build_config() -> dict:
         "droute_fix_antenna": os.environ.get("TP_STAGE2_DROUTE_FIX_ANTENNA", "true").lower() in {"1", "true", "yes", "on"},
         "droute_multicut_via_effort": os.environ.get("TP_STAGE2_DROUTE_MULTICUT_VIA_EFFORT", "medium"),
         "droute_min_slack_for_wire_optimization": float(os.environ.get("TP_STAGE2_DROUTE_MIN_SLACK", "0.1")),
+        "sdf_export_args": os.environ.get("TP_STAGE2_SDF_EXPORT_ARGS", ""),
+        "spef_export_args": os.environ.get("TP_STAGE2_SPEF_EXPORT_ARGS", ""),
+        "export_run_timing_report": os.environ.get("TP_STAGE2_EXPORT_RUN_TIMING", "false").lower() in {"1", "true", "yes", "on"},
+        "export_run_area_power_reports": os.environ.get("TP_STAGE2_EXPORT_RUN_AREA_POWER", "true").lower() in {"1", "true", "yes", "on"},
         "place_global_timing_effort": os.environ.get("TP_STAGE2_PLACE_TIMING_EFFORT", "medium"),
         "place_global_cong_effort": os.environ.get("TP_STAGE2_PLACE_CONG_EFFORT", "auto"),
         "place_detail_wire_length_opt_effort": os.environ.get("TP_STAGE2_PLACE_DETAIL_WIRE_EFFORT", "medium"),
@@ -239,7 +243,14 @@ def write_prelaunch_summary(config: dict, profile: str) -> Path:
             "analysis_type": config.get("route_analysis_type"),
             "run_postroute_opt": config.get("route_run_postroute_opt"),
             "save_after_route_design": config.get("route_save_after_route_design"),
+            "droute_end_iteration": config.get("droute_end_iteration"),
             "m10_policy": "classify ASAP7 M10 IMPTR messages separately; do not route through M10 in this plan",
+        },
+        "export": {
+            "sdf_export_args": config.get("sdf_export_args"),
+            "spef_export_args": config.get("spef_export_args"),
+            "run_timing_report": config.get("export_run_timing_report"),
+            "run_area_power_reports": config.get("export_run_area_power_reports"),
         },
         "pg": {
             "stripe_width": config.get("stripe_width"),
@@ -1117,6 +1128,174 @@ def write_routing_resume_scripts_from_cts(config: dict) -> Path:
     return out
 
 
+
+def find_innovus_routing_checkpoint(config: dict) -> Path:
+    explicit = os.environ.get("TP_STAGE2_ROUTING_SOURCE_ENC")
+    if explicit:
+        candidate = Path(explicit)
+        if not candidate.is_file():
+            raise FileNotFoundError(f"TP_STAGE2_ROUTING_SOURCE_ENC does not exist: {candidate}")
+        return candidate.resolve()
+
+    source_tag = os.environ.get("TP_STAGE2_ROUTING_SOURCE_RUN_TAG")
+    if source_tag:
+        candidate = RESULT_ROOT / source_tag / "innovus" / "data" / "routing.enc"
+        if not candidate.is_file():
+            raise FileNotFoundError(f"source routing checkpoint does not exist: {candidate}")
+        return candidate.resolve()
+
+    candidates = sorted(RESULT_ROOT.glob("*/innovus/data/routing.enc"), key=lambda path: path.stat().st_mtime)
+    if not candidates:
+        raise FileNotFoundError("no Innovus routing.enc checkpoint found under physical/*/innovus/data")
+    return candidates[-1].resolve()
+
+
+def source_innovus_rundir_from_checkpoint(checkpoint: Path) -> Path:
+    if checkpoint.parent.name != "data" or checkpoint.parent.parent.name != "innovus":
+        raise ValueError(f"expected .../innovus/data/<checkpoint>.enc path, got {checkpoint}")
+    return checkpoint.parent.parent
+
+
+def copy_report_tree_if_missing(source_innovus: Path, target_innovus: Path, relative_path: str) -> dict[str, str] | None:
+    source = source_innovus / relative_path
+    target = target_innovus / relative_path
+    if not source.exists() or target.exists():
+        return None
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if source.is_dir():
+        shutil.copytree(source, target)
+    else:
+        shutil.copy2(source, target)
+    return {"source": str(source), "target": str(target)}
+
+
+def seed_routing_export_inputs(source_routing: Path, innovus_rundir: Path) -> dict[str, Any]:
+    seed_status: dict[str, Any] = {
+        "routing": seed_innovus_checkpoint(source_routing, innovus_rundir, "routing")
+    }
+    source_data_dir = source_routing.parent
+    source_cts = source_data_dir / "cts.enc"
+    if source_cts.is_file() and source_cts.with_name("cts.enc.dat").is_dir():
+        seed_status["cts"] = seed_innovus_checkpoint(source_cts, innovus_rundir, "cts")
+    else:
+        sibling_cts = find_innovus_cts_checkpoint({})
+        seed_status["cts"] = seed_innovus_checkpoint(sibling_cts, innovus_rundir, "cts")
+        seed_status["cts"]["fallback_reason"] = "source routing run did not contain a sibling cts.enc"
+    return seed_status
+
+
+def copy_export_report_fallbacks(source_innovus: Path, target_innovus: Path) -> list[dict[str, str]]:
+    copied: list[dict[str, str]] = []
+    for relative in (
+        "reports/postRoute_timing",
+        "reports/postRoute_area.rpt",
+        "reports/postRoute_power.rpt",
+    ):
+        result = copy_report_tree_if_missing(source_innovus, target_innovus, relative)
+        if result:
+            copied.append(result)
+    return copied
+
+
+def write_routing_export_scripts_from_routing(config: dict) -> Path:
+    full_config = build_full_innovus_config(config)
+    source_routing = find_innovus_routing_checkpoint(full_config)
+    genus_rundir = find_genus_synthesis_run(full_config)
+    genus_output = build_genus_output_from_run(full_config, genus_rundir)
+    innovus_config = build_innovus_config(
+        full_config,
+        genus_output,
+        runmode="script_only",
+        steps=["export_routing"],
+    )
+    innovus_config["start_prev_checkpoint"] = "routing"
+    innovus_manager = InnovusManager(innovus_config)
+    innovus_output = innovus_manager.run()
+
+    startup_dir = Path(full_config["rundir"]) / "startup"
+    startup_dir.mkdir(parents=True, exist_ok=True)
+    manifest = {
+        "stage": "phase2_innovus_export_from_routing_script_generation",
+        "quality_level": "PG-open thermal proxy" if not full_config.get("require_pg_clean", True) else "PG-clean requested",
+        "source_genus_rundir": str(genus_rundir),
+        "source_routing_checkpoint": str(source_routing),
+        "innovus_rundir": innovus_manager.rundir,
+        "innovus_output": innovus_output,
+        "sdf_export_args": full_config.get("sdf_export_args"),
+        "spef_export_args": full_config.get("spef_export_args"),
+        "export_run_timing_report": full_config.get("export_run_timing_report"),
+        "export_run_area_power_reports": full_config.get("export_run_area_power_reports"),
+        "scripts": {
+            "mmmc": innovus_manager.mmmc_script_path,
+            "export_routing": str(Path(innovus_manager.script_dir) / "export_routing.tcl"),
+        },
+        "notes": [
+            "Script generation only; Cadence is not launched and the source routing checkpoint is not copied yet.",
+            "The real launch will seed the selected routing checkpoint into this clean run tag before executing export_routing.tcl.",
+        ],
+    }
+    out = startup_dir / "innovus_export_from_routing_script_manifest.json"
+    out.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    return out
+
+
+def run_innovus_export_from_routing(config: dict) -> Path:
+    full_config = build_full_innovus_config(config)
+    ensure_clean_launch_area(full_config, "innovus")
+    source_routing = find_innovus_routing_checkpoint(full_config)
+    source_innovus = source_innovus_rundir_from_checkpoint(source_routing)
+    genus_rundir = find_genus_synthesis_run(full_config)
+    genus_output = build_genus_output_from_run(full_config, genus_rundir)
+    innovus_config = build_innovus_config(
+        full_config,
+        genus_output,
+        runmode="normal",
+        steps=["export_routing"],
+    )
+    innovus_config["start_prev_checkpoint"] = "routing"
+    innovus_manager = InnovusManager(innovus_config)
+    seed_status = seed_routing_export_inputs(source_routing, Path(innovus_manager.rundir))
+    innovus_output = innovus_manager.run()
+    copied_reports = copy_export_report_fallbacks(source_innovus, Path(innovus_manager.rundir))
+
+    required_artifacts = stage2_required_artifacts(innovus_output, Path(innovus_manager.rundir))
+    gate_status = evaluate_artifact_gates(required_artifacts)
+    startup_dir = Path(full_config["rundir"]) / "startup"
+    startup_dir.mkdir(parents=True, exist_ok=True)
+    manifest = {
+        "stage": "phase2_innovus_export_from_routing",
+        "quality_level": "PG-open thermal proxy" if not full_config.get("require_pg_clean", True) else "PG-clean requested",
+        "ok": gate_status["ok"],
+        "notes": [
+            "Cadence Innovus export/report recovered through the Python manager from a seeded routing checkpoint.",
+            "This route does not rerun routeDesign; it only exports final artifacts and reports from an existing routed database.",
+            "Nonzero PG opens or routed DRC violations must be reported as non-signoff thermal proxy limitations.",
+        ],
+        "source_genus_rundir": str(genus_rundir),
+        "source_routing_checkpoint": str(source_routing),
+        "seed_status": seed_status,
+        "copied_report_fallbacks": copied_reports,
+        "genus_output": genus_output,
+        "innovus_rundir": innovus_manager.rundir,
+        "innovus_output": innovus_output,
+        "gate_status": gate_status,
+        "prelaunch_summary": str(startup_dir / "prelaunch_config_summary.json"),
+        "sdf_export_args": full_config.get("sdf_export_args"),
+        "spef_export_args": full_config.get("spef_export_args"),
+        "export_run_timing_report": full_config.get("export_run_timing_report"),
+        "export_run_area_power_reports": full_config.get("export_run_area_power_reports"),
+        "scripts": {
+            "mmmc": innovus_manager.mmmc_script_path,
+            "export_routing": str(Path(innovus_manager.script_dir) / "export_routing.tcl"),
+        },
+    }
+    out = startup_dir / "innovus_export_from_routing_manifest.json"
+    out.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    if not manifest["ok"]:
+        raise RuntimeError(f"Innovus export-from-routing artifact gate failed; see {out}")
+    return out
+
+
 def run_innovus_routing_from_cts(config: dict) -> Path:
     full_config = build_full_innovus_config(config)
     ensure_clean_launch_area(full_config, "innovus")
@@ -1793,6 +1972,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--write-scripts", action="store_true", help="Generate Genus/Innovus Tcl through manager/ without launching commercial tools")
     parser.add_argument("--write-resume-scripts-from-floorplan", action="store_true", help="Generate floorplan-resume Innovus scripts only; do not launch Cadence")
     parser.add_argument("--write-routing-scripts-from-cts", action="store_true", help="Generate CTS-resume Innovus routing script only; do not launch Cadence")
+    parser.add_argument("--write-export-scripts-from-routing", action="store_true", help="Generate routing-checkpoint export/report script only; do not launch Cadence")
     parser.add_argument("--run-genus-elab", action="store_true", help="Launch a Python-managed Genus frontend/elaboration smoke without synthesis")
     parser.add_argument("--run-genus-syn", action="store_true", help="Launch Python-managed Genus synthesis and reports without Innovus")
     parser.add_argument("--run-innovus-floorplan-smoke", action="store_true", help="Launch Python-managed Innovus init/floorplan smoke from a completed Genus synthesis run")
@@ -1801,6 +1981,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-innovus-full", action="store_true", help="Launch non-smoke Python-managed Innovus full implementation from a completed Genus synthesis run")
     parser.add_argument("--run-innovus-full-from-floorplan", action="store_true", help="Resume non-smoke Innovus full implementation from an existing floorplan.enc checkpoint")
     parser.add_argument("--run-innovus-routing-from-cts", action="store_true", help="Resume non-smoke Innovus routing/export from an existing cts.enc checkpoint")
+    parser.add_argument("--run-innovus-export-from-routing", action="store_true", help="Resume non-smoke Innovus export/report from an existing routing.enc checkpoint")
     parser.add_argument("--run-innovus-pg-diagnostic", action="store_true", help="Run checkpoint-level Innovus PG diagnostic variants from an existing floorplan.enc")
     parser.add_argument("--run-innovus-pg-inspection", action="store_true", help="Run read-only Innovus PG inspection from an existing PG checkpoint")
     parser.add_argument("--print-config", action="store_true", help="Print resolved startup config as JSON")
@@ -1813,7 +1994,7 @@ def main() -> int:
     ok, errors = preflight(config)
     if args.print_config:
         print(json.dumps(config, indent=2))
-    if args.preflight or args.dry_run or args.write_scripts or args.write_resume_scripts_from_floorplan or args.write_routing_scripts_from_cts or args.run_genus_elab or args.run_genus_syn or args.run_innovus_floorplan_smoke or args.run_innovus_pnr_smoke or args.run_innovus_cts_route_smoke or args.run_innovus_full or args.run_innovus_full_from_floorplan or args.run_innovus_routing_from_cts or args.run_innovus_pg_diagnostic or args.run_innovus_pg_inspection:
+    if args.preflight or args.dry_run or args.write_scripts or args.write_resume_scripts_from_floorplan or args.write_routing_scripts_from_cts or args.write_export_scripts_from_routing or args.run_genus_elab or args.run_genus_syn or args.run_innovus_floorplan_smoke or args.run_innovus_pnr_smoke or args.run_innovus_cts_route_smoke or args.run_innovus_full or args.run_innovus_full_from_floorplan or args.run_innovus_routing_from_cts or args.run_innovus_export_from_routing or args.run_innovus_pg_diagnostic or args.run_innovus_pg_inspection:
         print_summary(config)
         if args.dry_run:
             print(f"manifest={write_dry_run(config, errors)}")
@@ -1830,6 +2011,9 @@ def main() -> int:
         if args.write_routing_scripts_from_cts:
             print(f"prelaunch_summary={write_prelaunch_summary(build_full_innovus_config(config), 'innovus_routing_from_cts_script_generation')}")
             print(f"routing_resume_script_manifest={write_routing_resume_scripts_from_cts(config)}")
+        if args.write_export_scripts_from_routing:
+            print(f"prelaunch_summary={write_prelaunch_summary(build_full_innovus_config(config), 'innovus_export_from_routing_script_generation')}")
+            print(f"routing_export_script_manifest={write_routing_export_scripts_from_routing(config)}")
         if args.run_genus_elab:
             print(f"genus_elab_manifest={run_genus_elab(config)}")
         if args.run_genus_syn:
@@ -1850,6 +2034,9 @@ def main() -> int:
         if args.run_innovus_routing_from_cts:
             print(f"prelaunch_summary={write_prelaunch_summary(build_full_innovus_config(config), 'innovus_routing_from_cts')}")
             print(f"innovus_routing_from_cts_manifest={run_innovus_routing_from_cts(config)}")
+        if args.run_innovus_export_from_routing:
+            print(f"prelaunch_summary={write_prelaunch_summary(build_full_innovus_config(config), 'innovus_export_from_routing')}")
+            print(f"innovus_export_from_routing_manifest={run_innovus_export_from_routing(config)}")
         if args.run_innovus_pg_diagnostic:
             print(f"prelaunch_summary={write_prelaunch_summary(build_full_innovus_config(config), 'innovus_pg_diagnostic')}")
             print(f"innovus_pg_diagnostic_manifest={run_innovus_pg_diagnostic(config)}")
@@ -1858,7 +2045,7 @@ def main() -> int:
             print(f"innovus_pg_inspection_manifest={run_innovus_pg_inspection(config)}")
         print("preflight_ok=True")
         return 0
-    print("No action requested. Use --preflight, --dry-run, --write-scripts, --write-resume-scripts-from-floorplan, --write-routing-scripts-from-cts, --run-genus-elab, --run-genus-syn, --run-innovus-floorplan-smoke, --run-innovus-pnr-smoke, --run-innovus-cts-route-smoke, --run-innovus-full, --run-innovus-full-from-floorplan, --run-innovus-routing-from-cts, --run-innovus-pg-diagnostic, or --print-config.")
+    print("No action requested. Use --preflight, --dry-run, --write-scripts, --write-resume-scripts-from-floorplan, --write-routing-scripts-from-cts, --write-export-scripts-from-routing, --run-genus-elab, --run-genus-syn, --run-innovus-floorplan-smoke, --run-innovus-pnr-smoke, --run-innovus-cts-route-smoke, --run-innovus-full, --run-innovus-full-from-floorplan, --run-innovus-routing-from-cts, --run-innovus-export-from-routing, --run-innovus-pg-diagnostic, or --print-config.")
     return 0
 
 
