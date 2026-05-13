@@ -913,6 +913,17 @@ saveNetlist %s
         elif not export_sdf:
             codes += "puts {TP_INFO: skipping write_sdf because TP_STAGE2_EXPORT_SDF is false}\n"
 
+        if self.configs.get('export_extract_rc', True):
+            codes += """# Run native RC extraction before SPEF export.
+setExtractRCMode -engine postRoute -effortLevel %s -localCpu %d
+extractRC
+""" % (
+                self.configs.get('export_extract_rc_effort', 'low'),
+                self.configs.get('route_max_threads', self.configs.get('max_threads', 1)),
+            )
+        else:
+            codes += "puts {TP_INFO: skipping extractRC because TP_STAGE2_EXPORT_EXTRACT_RC is false}\n"
+
         codes += """rcOut -spef %s%s
 verify_drc -report %s
 verifyConnectivity -type all -error 1000 -warning 50 -report %s
