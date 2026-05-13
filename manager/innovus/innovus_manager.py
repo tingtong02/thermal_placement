@@ -918,7 +918,7 @@ saveNetlist %s
 setExtractRCMode -engine postRoute -effortLevel %s -localCpu %d
 extractRC
 """ % (
-                self.configs.get('export_extract_rc_effort', 'low'),
+                self.configs.get('export_extract_rc_effort', 'medium'),
                 self.configs.get('route_max_threads', self.configs.get('max_threads', 1)),
             )
         else:
