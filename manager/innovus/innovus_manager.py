@@ -894,22 +894,30 @@ puts {TP_INFO: skipping optDesign -postRoute -setup; routeDesign checkpoint was 
         sdf_suffix = (' ' + sdf_args) if sdf_args else ''
         spef_args = self.configs.get('spef_export_args', '').strip()
         spef_suffix = (' ' + spef_args) if spef_args else ''
-        return """
+        export_sdf = self.configs.get('export_sdf', True)
+        export_sdf_last = self.configs.get('export_sdf_last', False)
+        sdf_code = "write_sdf %s%s\n" % (self.routed_sdf_path, sdf_suffix)
+
+        codes = """
 # -------------------------------------------------------------
 # Export routed implementation artifacts
 # -------------------------------------------------------------
 defOut -routing %s
 saveNetlist %s
-write_sdf %s%s
-rcOut -spef %s%s
+""" % (
+            self.routed_def_path,
+            self.routed_verilog_path,
+        )
+        if export_sdf and not export_sdf_last:
+            codes += sdf_code
+        elif not export_sdf:
+            codes += "puts {TP_INFO: skipping write_sdf because TP_STAGE2_EXPORT_SDF is false}\n"
+
+        codes += """rcOut -spef %s%s
 verify_drc -report %s
 verifyConnectivity -type all -error 1000 -warning 50 -report %s
 streamOut %s -mapFile %s -merge { %s } -mode ALL
 """ % (
-            self.routed_def_path,
-            self.routed_verilog_path,
-            self.routed_sdf_path,
-            sdf_suffix,
             self.routed_spef_path,
             spef_suffix,
             os.path.join(self.report_dir, 'postRoute_drc.rpt'),
@@ -918,6 +926,14 @@ streamOut %s -mapFile %s -merge { %s } -mode ALL
             self.configs.get('stream_layer_map'),
             self.get_file_list('gds_files'),
         )
+        if export_sdf and export_sdf_last:
+            codes += """
+# -------------------------------------------------------------
+# Export SDF after physical artifacts
+# -------------------------------------------------------------
+"""
+            codes += sdf_code
+        return codes
 
     def generate_export_routing_code(self) -> str:
         codes = """

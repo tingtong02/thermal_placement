@@ -94,6 +94,8 @@ def build_config() -> dict:
         "droute_min_slack_for_wire_optimization": float(os.environ.get("TP_STAGE2_DROUTE_MIN_SLACK", "0.1")),
         "sdf_export_args": os.environ.get("TP_STAGE2_SDF_EXPORT_ARGS", ""),
         "spef_export_args": os.environ.get("TP_STAGE2_SPEF_EXPORT_ARGS", ""),
+        "export_sdf": os.environ.get("TP_STAGE2_EXPORT_SDF", "true").lower() in {"1", "true", "yes", "on"},
+        "export_sdf_last": os.environ.get("TP_STAGE2_EXPORT_SDF_LAST", "false").lower() in {"1", "true", "yes", "on"},
         "export_run_timing_report": os.environ.get("TP_STAGE2_EXPORT_RUN_TIMING", "false").lower() in {"1", "true", "yes", "on"},
         "export_run_area_power_reports": os.environ.get("TP_STAGE2_EXPORT_RUN_AREA_POWER", "true").lower() in {"1", "true", "yes", "on"},
         "place_global_timing_effort": os.environ.get("TP_STAGE2_PLACE_TIMING_EFFORT", "medium"),
