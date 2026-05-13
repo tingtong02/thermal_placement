@@ -135,7 +135,12 @@ class InnovusManager(BaseManager):
                 'connectivity_report': os.path.join(self.report_dir, 'postRoute_connectivity.rpt'),
             },
         }
-        return mapping.get(step_name, {})
+        expected = mapping.get(step_name, {})
+        if step_name in {'routing', 'export_routing'} and not self.configs.get('export_sdf', True):
+            expected = dict(expected)
+            expected.pop('routed_sdf', None)
+            expected['routed_sdf_waiver_report'] = os.path.join(self.report_dir, 'routed_sdf_waiver.md')
+        return expected
 
     def write_step_manifest(self, step_name: str, ok: bool, error: str | None = None) -> None:
         expected = self.expected_step_artifacts(step_name)
@@ -160,7 +165,7 @@ class InnovusManager(BaseManager):
         if step_name == 'powerplan':
             return {'status': 'pg_connectivity_check_required', 'reason': 'powerplan acceptance requires zero special-net opens'}
         if step_name in {'routing', 'export_routing'}:
-            return {'status': 'post_route_artifact_gate', 'reason': 'routing acceptance requires routed DEF/Verilog/SDF/SPEF/GDS and reports'}
+            return {'status': 'post_route_artifact_gate', 'reason': 'routing acceptance requires routed DEF/Verilog/SPEF/GDS, reports, and either routed SDF or a routed-SDF waiver report'}
         if error:
             return {'status': 'failed', 'reason': error}
         return {'status': 'incomplete', 'reason': 'one or more expected artifacts are missing'}
@@ -889,6 +894,19 @@ puts {TP_INFO: skipping optDesign -postRoute -setup; routeDesign checkpoint was 
 
         return codes
 
+    def generate_sdf_waiver_report_code(self) -> str:
+        report_path = os.path.join(self.report_dir, 'routed_sdf_waiver.md')
+        return """puts {TP_INFO: skipping write_sdf because TP_STAGE2_EXPORT_SDF is false}
+set sdf_waiver_report \"%s\"
+set sdf_waiver_fp [open $sdf_waiver_report w]
+puts $sdf_waiver_fp {# Routed SDF Waiver}
+puts $sdf_waiver_fp {}
+puts $sdf_waiver_fp {Decision: routed SDF is waived for this Stage 2 thermal-proxy handoff after the 2026-05-13 user decision.}
+puts $sdf_waiver_fp {Required label: PG-open / DRC-open / routed-SDF-waived thermal proxy.}
+puts $sdf_waiver_fp {Do not claim routed-SDF-complete, SDF timing simulation, timing signoff, PG-clean, DRC-clean, IR/EM-clean, LVS-clean, or foundry/signoff-clean.}
+close $sdf_waiver_fp
+""" % report_path
+
     def generate_postroute_artifact_export_code(self) -> str:
         sdf_args = self.configs.get('sdf_export_args', '').strip()
         sdf_suffix = (' ' + sdf_args) if sdf_args else ''
@@ -911,7 +929,7 @@ saveNetlist %s
         if export_sdf and not export_sdf_last:
             codes += sdf_code
         elif not export_sdf:
-            codes += "puts {TP_INFO: skipping write_sdf because TP_STAGE2_EXPORT_SDF is false}\n"
+            codes += self.generate_sdf_waiver_report_code()
 
         if self.configs.get('export_extract_rc', True):
             codes += """# Run native RC extraction before SPEF export.

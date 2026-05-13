@@ -198,13 +198,57 @@ def write_dry_run(config: dict, errors: list[str]) -> Path:
     return out
 
 
-def stage2_required_artifacts(innovus_output: dict, innovus_rundir: Path) -> dict[str, str]:
-    return {
+def sdf_is_waived(config: dict) -> bool:
+    return not config.get("export_sdf", True)
+
+
+def stage2_quality_level(config: dict) -> str:
+    if config.get("require_pg_clean", True) and not sdf_is_waived(config):
+        return "PG-clean requested"
+    labels = []
+    labels.append("PG-open" if not config.get("require_pg_clean", True) else "PG-clean requested")
+    labels.append("DRC-open")
+    if sdf_is_waived(config):
+        labels.append("routed-SDF-waived")
+    return " / ".join(labels) + " thermal proxy"
+
+
+def write_routed_sdf_waiver_report(config: dict, innovus_output: dict, innovus_rundir: Path, stage: str) -> Path | None:
+    if not sdf_is_waived(config):
+        return None
+    report_dir = innovus_rundir / "reports"
+    report_dir.mkdir(parents=True, exist_ok=True)
+    out = report_dir / "routed_sdf_waiver.md"
+    lines = [
+        "# Routed SDF Waiver",
+        "",
+        f"Stage: `{stage}`",
+        "",
+        "Decision: routed SDF is waived for the current Stage 2 thermal-proxy handoff after the 2026-05-13 user decision.",
+        "",
+        "Required label: `PG-open / DRC-open / routed-SDF-waived thermal proxy`.",
+        "",
+        "Do not claim routed-SDF-complete, SDF timing simulation, timing signoff, PG-clean, DRC-clean, IR/EM-clean, LVS-clean, or foundry/signoff-clean.",
+        "",
+        "Evidence path attempted by the flow:",
+        "",
+        f"- Routed SDF path: `{innovus_output.get('sdf_file')}`",
+        f"- `TP_STAGE2_EXPORT_SDF`: `{config.get('export_sdf')}`",
+        f"- `TP_STAGE2_EXPORT_SDF_LAST`: `{config.get('export_sdf_last')}`",
+        f"- SDF export args: `{config.get('sdf_export_args', '')}`",
+        "",
+        "Current handoff relies on routed DEF, routed Verilog, SPEF, GDS, Innovus checkpoints, and post-route timing/area/power/DRC/connectivity reports.",
+    ]
+    out.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return out
+
+
+def stage2_required_artifacts(config: dict, innovus_output: dict, innovus_rundir: Path, stage: str) -> dict[str, str]:
+    artifacts = {
         "cts_checkpoint": str(innovus_rundir / "data" / "cts.enc"),
         "routing_checkpoint": innovus_output["routing_checkpoint"],
         "routed_def": innovus_output["def_file"],
         "routed_verilog": innovus_output["routed_verilog_file"],
-        "routed_sdf": innovus_output["sdf_file"],
         "routed_spef": innovus_output["spef_file"],
         "gds": innovus_output["gds_file"],
         "post_route_timing_dir": innovus_output["post_route_timing_dir"],
@@ -213,6 +257,12 @@ def stage2_required_artifacts(innovus_output: dict, innovus_rundir: Path) -> dic
         "post_route_drc_report": innovus_output["post_route_drc_report"],
         "post_route_connectivity_report": innovus_output["post_route_connectivity_report"],
     }
+    waiver_report = write_routed_sdf_waiver_report(config, innovus_output, innovus_rundir, stage)
+    if waiver_report is not None:
+        artifacts["routed_sdf_waiver_report"] = str(waiver_report)
+    else:
+        artifacts["routed_sdf"] = innovus_output["sdf_file"]
+    return artifacts
 
 
 def evaluate_artifact_gates(required_artifacts: dict[str, str]) -> dict[str, Any]:
@@ -255,6 +305,11 @@ def write_prelaunch_summary(config: dict, profile: str) -> Path:
             "spef_export_args": config.get("spef_export_args"),
             "run_timing_report": config.get("export_run_timing_report"),
             "run_area_power_reports": config.get("export_run_area_power_reports"),
+            "export_sdf": config.get("export_sdf"),
+            "export_sdf_last": config.get("export_sdf_last"),
+            "export_extract_rc": config.get("export_extract_rc"),
+            "export_extract_rc_effort": config.get("export_extract_rc_effort"),
+            "sdf_waiver_policy": "routed SDF may be replaced by a documented waiver when TP_STAGE2_EXPORT_SDF is false",
         },
         "pg": {
             "stripe_width": config.get("stripe_width"),
@@ -294,7 +349,7 @@ def write_prelaunch_summary(config: dict, profile: str) -> Path:
             "routing.enc",
             "routed DEF",
             "routed Verilog",
-            "routed SDF",
+            "routed SDF or routed-SDF waiver report",
             "SPEF",
             "GDS",
             "post-route timing/area/power/DRC/connectivity reports",
@@ -943,7 +998,7 @@ def run_innovus_full(config: dict) -> Path:
         full_config.get("fake_sram_macro_cells", ["mem_ext", "mem_0_ext"]),
         full_config.get("expected_fake_sram_macro_instances", 6),
     )
-    required_artifacts = stage2_required_artifacts(innovus_output, Path(innovus_manager.rundir))
+    required_artifacts = stage2_required_artifacts(full_config, innovus_output, Path(innovus_manager.rundir), "phase2_innovus_full")
     gate_status = evaluate_artifact_gates(required_artifacts)
 
     startup_dir = Path(full_config["rundir"]) / "startup"
@@ -1000,7 +1055,7 @@ def write_floorplan_resume_scripts(config: dict) -> Path:
     startup_dir.mkdir(parents=True, exist_ok=True)
     manifest = {
         "stage": "phase2_innovus_full_from_floorplan_script_generation",
-        "quality_level": "PG-open thermal proxy" if not full_config.get("require_pg_clean", True) else "PG-clean requested",
+        "quality_level": stage2_quality_level(full_config),
         "source_genus_rundir": str(genus_rundir),
         "source_floorplan_checkpoint": str(source_floorplan),
         "innovus_rundir": innovus_manager.rundir,
@@ -1051,14 +1106,14 @@ def run_innovus_full_from_floorplan(config: dict) -> Path:
         full_config.get("fake_sram_macro_cells", ["mem_ext", "mem_0_ext"]),
         full_config.get("expected_fake_sram_macro_instances", 6),
     )
-    required_artifacts = stage2_required_artifacts(innovus_output, Path(innovus_manager.rundir))
+    required_artifacts = stage2_required_artifacts(full_config, innovus_output, Path(innovus_manager.rundir), "phase2_innovus_full_from_floorplan")
     gate_status = evaluate_artifact_gates(required_artifacts)
 
     startup_dir = Path(full_config["rundir"]) / "startup"
     startup_dir.mkdir(parents=True, exist_ok=True)
     manifest = {
         "stage": "phase2_innovus_full_from_floorplan",
-        "quality_level": "PG-open thermal proxy" if not full_config.get("require_pg_clean", True) else "PG-clean requested",
+        "quality_level": stage2_quality_level(full_config),
         "ok": gate_status["ok"] and pin_status.get("ok", False) and macro_status.get("ok", False),
         "notes": [
             "Cadence Innovus full implementation resumed through the Python manager from a seeded floorplan checkpoint.",
@@ -1110,7 +1165,7 @@ def write_routing_resume_scripts_from_cts(config: dict) -> Path:
     startup_dir.mkdir(parents=True, exist_ok=True)
     manifest = {
         "stage": "phase2_innovus_routing_from_cts_script_generation",
-        "quality_level": "PG-open thermal proxy" if not full_config.get("require_pg_clean", True) else "PG-clean requested",
+        "quality_level": stage2_quality_level(full_config),
         "source_genus_rundir": str(genus_rundir),
         "source_cts_checkpoint": str(source_cts),
         "innovus_rundir": innovus_manager.rundir,
@@ -1220,7 +1275,7 @@ def write_routing_export_scripts_from_routing(config: dict) -> Path:
     startup_dir.mkdir(parents=True, exist_ok=True)
     manifest = {
         "stage": "phase2_innovus_export_from_routing_script_generation",
-        "quality_level": "PG-open thermal proxy" if not full_config.get("require_pg_clean", True) else "PG-clean requested",
+        "quality_level": stage2_quality_level(full_config),
         "source_genus_rundir": str(genus_rundir),
         "source_routing_checkpoint": str(source_routing),
         "innovus_rundir": innovus_manager.rundir,
@@ -1262,13 +1317,15 @@ def run_innovus_export_from_routing(config: dict) -> Path:
     innovus_output = innovus_manager.run()
     copied_reports = copy_export_report_fallbacks(source_innovus, Path(innovus_manager.rundir))
 
-    required_artifacts = stage2_required_artifacts(innovus_output, Path(innovus_manager.rundir))
+    required_artifacts = stage2_required_artifacts(full_config, innovus_output, Path(innovus_manager.rundir), "phase2_innovus_export_from_routing")
     gate_status = evaluate_artifact_gates(required_artifacts)
+    if gate_status["ok"]:
+        innovus_manager.write_step_manifest("export_routing", True)
     startup_dir = Path(full_config["rundir"]) / "startup"
     startup_dir.mkdir(parents=True, exist_ok=True)
     manifest = {
         "stage": "phase2_innovus_export_from_routing",
-        "quality_level": "PG-open thermal proxy" if not full_config.get("require_pg_clean", True) else "PG-clean requested",
+        "quality_level": stage2_quality_level(full_config),
         "ok": gate_status["ok"],
         "notes": [
             "Cadence Innovus export/report recovered through the Python manager from a seeded routing checkpoint.",
@@ -1317,13 +1374,13 @@ def run_innovus_routing_from_cts(config: dict) -> Path:
     seed_status = seed_innovus_checkpoint(source_cts, Path(innovus_manager.rundir), "cts")
     innovus_output = innovus_manager.run()
 
-    required_artifacts = stage2_required_artifacts(innovus_output, Path(innovus_manager.rundir))
+    required_artifacts = stage2_required_artifacts(full_config, innovus_output, Path(innovus_manager.rundir), "phase2_innovus_routing_from_cts")
     gate_status = evaluate_artifact_gates(required_artifacts)
     startup_dir = Path(full_config["rundir"]) / "startup"
     startup_dir.mkdir(parents=True, exist_ok=True)
     manifest = {
         "stage": "phase2_innovus_routing_from_cts",
-        "quality_level": "PG-open thermal proxy" if not full_config.get("require_pg_clean", True) else "PG-clean requested",
+        "quality_level": stage2_quality_level(full_config),
         "ok": gate_status["ok"],
         "notes": [
             "Cadence Innovus routing resumed through the Python manager from a seeded CTS checkpoint.",
