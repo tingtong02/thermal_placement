@@ -1,0 +1,10 @@
+2026-05-03 regenerate Stage4 ATSim artifacts after PACT coordinate fix
+
+Command:
+/home/lisihang/miniconda3/envs/thermal_placement/bin/python thermal/atsim3d_v1_proxy_stage4_tiled_matmul_os_baseline/scripts/generate_atsim_stage4_artifacts.py
+
+Result summary:
+- Primary comparison uses artifacts/stage4/pact_steady_layer0_grid.csv, corrected to DEF physical y-up coordinates.
+- Raw PACT row-order comparison is diagnostic only and uses artifacts/stage4/pact_steady_layer0_grid_pact_raw_order.csv.
+- ATSim vs corrected PACT: corr=0.972618931, abs_mean=1.326155691 K, rms=1.679745032 K.
+- ATSim vs PACT raw row order: corr=-0.141279496, abs_mean=2.771164102 K, rms=3.371622051 K.

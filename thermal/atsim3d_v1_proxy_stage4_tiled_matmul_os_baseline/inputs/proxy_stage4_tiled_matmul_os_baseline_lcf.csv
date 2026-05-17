@@ -1,0 +1,2 @@
+Layer,Main_compo,Thickness (m),FloorplanFile,PowerFile,Clip_num_x,Clip_num_y,Clip_num_z
+0,Si,0.0001,/home/lisihang/thermal_placement/thermal/atsim3d_v1_proxy_stage4_tiled_matmul_os_baseline/inputs/proxy_stage4_tiled_matmul_os_baseline_flp.csv,/home/lisihang/thermal_placement/thermal/atsim3d_v1_proxy_stage4_tiled_matmul_os_baseline/inputs/proxy_stage4_tiled_matmul_os_baseline_power.csv,64,64,1

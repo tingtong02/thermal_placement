@@ -1,0 +1,11 @@
+chipStack length 0.003373864, width 0.003373864
+Grids num: 64 x 64 ; grid length and width: 5.2716625e-05 5.2716625e-05
+Size of Sparse matrix:  8192
+Coarse solve takes 0.62 s.
+Fine solve takes 216.46 s.
+memory usage:  1483390976
+Total memory:  1622807842816
+memory percent:  2.6
+number of CPUs: 512
+Res of the Layer0 saved to /home/lisihang/thermal_placement/thermal/atsim3d_v1_proxy_stage4_tiled_matmul_os_baseline/inputs/proxy_stage4_tiled_matmul_os_baseline_lcf.layer0.res!
+Total takes 265.10 s

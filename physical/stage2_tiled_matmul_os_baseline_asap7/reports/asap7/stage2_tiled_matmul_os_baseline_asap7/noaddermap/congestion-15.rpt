@@ -1,0 +1,52 @@
+violation type: Horizontal congestion
+	srcs: net:spad/_acc_mems_0_io_adder_op1_11_0\[28\] net:spad/_acc_mems_0_io_adder_op1_7_0\[9\] net:net134502 net:net102000
+	comment: capacity:3 usage:4 overflow:1
+	bbox = (1292.2200, 2480.7600) - (1292.7600, 2481.3000) on Layer -
+violation type: Horizontal congestion
+	srcs: net:net93625 net:net93156 net:spad/_acc_mems_0_io_adder_op1_6_0\[24\] net:net134918
+	comment: capacity:3 usage:4 overflow:1
+	bbox = (1292.7600, 2476.4400) - (1293.3000, 2476.9800) on Layer -
+violation type: Horizontal congestion
+	srcs: net:net92816 net:spad/_acc_mems_0_io_adder_op1_5_0\[21\] net:spad/acc_adders/m_4/_223_ net:net135684
+	comment: capacity:3 usage:4 overflow:1
+	bbox = (1292.7600, 2486.7000) - (1293.3000, 2487.2400) on Layer -
+violation type: Horizontal congestion
+	srcs: net:net92816 net:spad/_acc_mems_0_io_adder_op1_5_0\[21\] net:spad/acc_adders/m_4/_223_ net:net135684
+	comment: capacity:3 usage:4 overflow:1
+	bbox = (1293.3000, 2486.7000) - (1293.8400, 2487.2400) on Layer -
+violation type: Horizontal congestion
+	srcs: net:net91188 net:net93471 net:net134977 net:net134721
+	comment: capacity:3 usage:4 overflow:1
+	bbox = (1296.0000, 2468.8800) - (1296.5400, 2469.4200) on Layer -
+violation type: Horizontal congestion
+	srcs: net:clknet_6_25_0_clock net:spad/acc_mems_0/_0226_ net:net134903 net:net116626
+	comment: capacity:3 usage:4 overflow:1
+	bbox = (1392.1200, 2478.6000) - (1392.6600, 2479.1400) on Layer -
+violation type: Horizontal congestion
+	srcs: net:spad/acc_mems_1/_1830_ net:net135076 net:net119393
+	comment: capacity:2 usage:3 overflow:1
+	bbox = (1506.6000, 2450.5200) - (1507.1400, 2451.0600) on Layer -
+violation type: Horizontal congestion
+	srcs: net:spad/_acc_mems_1_io_adder_op1_5_0\[29\] net:spad/_acc_mems_1_io_adder_op1_6_0\[2\] net:net134789 net:net134501
+	comment: capacity:3 usage:4 overflow:1
+	bbox = (1560.6000, 2487.7800) - (1561.1400, 2488.3200) on Layer -
+violation type: Horizontal congestion
+	srcs: net:clknet_leaf_4317_clock net:net134752 net:net119391 net:net8440
+	comment: capacity:3 usage:4 overflow:1
+	bbox = (1578.9600, 2492.6400) - (1579.5000, 2493.1800) on Layer -
+violation type: Horizontal congestion
+	srcs: net:net92359 net:net92034 net:spad/_07012_ net:spad/_11754_
+	comment: capacity:3 usage:4 overflow:1
+	bbox = (1581.6600, 2555.2800) - (1582.2000, 2555.8200) on Layer -
+violation type: Horizontal congestion
+	srcs: net:net55721 net:net51351 net:spad/acc_mems_0/q/_2607_ net:net101687
+	comment: capacity:3 usage:4 overflow:1
+	bbox = (1585.4400, 2468.8800) - (1585.9800, 2469.4200) on Layer -
+violation type: Horizontal congestion
+	srcs: net:net51351 net:spad/_acc_mems_1_io_adder_op1_5_0\[16\] net:spad/acc_mems_0/q/_2607_ net:net135088
+	comment: capacity:3 usage:4 overflow:1
+	bbox = (1587.0600, 2468.8800) - (1587.6000, 2469.4200) on Layer -
+violation type: Horizontal congestion
+	srcs: net:net91869 net:spad/_acc_mems_1_io_adder_op1_0_0\[13\] net:spad/_acc_mems_1_io_adder_op1_7_0\[28\] net:net10365
+	comment: capacity:3 usage:4 overflow:1
+	bbox = (1597.3200, 2455.3800) - (1597.8600, 2455.9200) on Layer -
