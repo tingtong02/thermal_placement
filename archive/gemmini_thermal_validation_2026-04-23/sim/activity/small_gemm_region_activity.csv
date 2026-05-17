@@ -1,0 +1,9 @@
+workload,region,signal_count,toggle_count,avg_normalized_activity,time_steps,last_time_ps
+small_gemm,accumulator,0,0,0.0,1131735,565825500
+small_gemm,controller,521,1148836,7.797955819825734e-05,1131735,565825500
+small_gemm,gemmini_other,0,0,0.0,1131735,565825500
+small_gemm,load_store_dma,30,0,0.0,1131735,565825500
+small_gemm,non_gemmini_context,2133,13120949,0.00034686975276998093,1131735,565825500
+small_gemm,pe_array,3394,13567362,0.0002200770881941929,1131735,565825500
+small_gemm,scratchpad,0,0,0.0,1131735,565825500
+small_gemm,tl_soc_glue,4533,39306858,0.0003793091399710178,1131735,565825500

@@ -1,0 +1,8 @@
+quantile,temperature_k,method
+0.01,324.989195,histogram_midpoint_approx
+0.05,325.225922,histogram_midpoint_approx
+0.25,325.876923,histogram_midpoint_approx
+0.50,326.646287,histogram_midpoint_approx
+0.75,328.007470,histogram_midpoint_approx
+0.95,329.309472,histogram_midpoint_approx
+0.99,329.605381,histogram_midpoint_approx

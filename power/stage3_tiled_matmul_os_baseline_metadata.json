@@ -1,0 +1,32 @@
+{
+  "active_components": 1333998,
+  "counts": {
+    "raw_components": 4565776,
+    "region_clock_tree": 23198,
+    "region_controller": 56261,
+    "region_gemmini_other": 291752,
+    "region_load_store_dma": 30420,
+    "region_pe_array": 462375,
+    "region_scratchpad": 317024,
+    "region_unmapped_standard_cell": 152968,
+    "skipped_physical_fill_tap_decap_tie": 3231778
+  },
+  "diearea_dbu": [
+    0,
+    0,
+    13495456,
+    13495456
+  ],
+  "grid": 64,
+  "proxy_total_power_w": 1.0,
+  "region_power_w": {
+    "clock_tree": 0.009176490144614963,
+    "controller": 0.038414562534119456,
+    "gemmini_other": 0.40850387643040365,
+    "load_store_dma": 0.0033739437762388097,
+    "pe_array": 0.25261747061567164,
+    "scratchpad": 0.1645989798321433,
+    "unmapped_standard_cell": 0.12331467666680819
+  },
+  "target_bin_csv": "sim/activity/stage1_tiled_matmul_os_baseline_20260423_target_window_bins.csv"
+}

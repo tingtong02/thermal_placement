@@ -1,0 +1,1 @@
+/home/lisihang/thermal_placement/sim/waves/GemminiRocketConfig/mvin_mvout-baremetal.smoke_recheck_fst16_skipfix.fst

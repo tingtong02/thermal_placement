@@ -1,0 +1,75 @@
+{
+  "coordinate_view": "PACT main comparison uses DEF physical y-up grid; raw-order comparison is diagnostic only",
+  "created": "2026-05-03",
+  "generated_files": [
+    "artifacts/stage4/atsim3d_v1_proxy/README.md",
+    "artifacts/stage4/atsim3d_v1_proxy/atsim_minus_pact_64_grid.csv",
+    "artifacts/stage4/atsim3d_v1_proxy/atsim_minus_pact_raw_order_64_grid.csv",
+    "artifacts/stage4/atsim3d_v1_proxy/atsim_pact_coordinate_delta_comparison.csv",
+    "artifacts/stage4/atsim3d_v1_proxy/atsim_pact_delta_summary.csv",
+    "artifacts/stage4/atsim3d_v1_proxy/atsim_pact_hotspot_summary_bar.png",
+    "artifacts/stage4/atsim3d_v1_proxy/atsim_pact_hotspot_temperature_distribution.png",
+    "artifacts/stage4/atsim3d_v1_proxy/atsim_pact_raw_order_delta_summary.csv",
+    "artifacts/stage4/atsim3d_v1_proxy/atsim_proxy_downsample_256_grid.csv",
+    "artifacts/stage4/atsim3d_v1_proxy/atsim_proxy_downsample_64_grid.csv",
+    "artifacts/stage4/atsim3d_v1_proxy/atsim_proxy_histogram.csv",
+    "artifacts/stage4/atsim3d_v1_proxy/atsim_proxy_hotspot_rank.csv",
+    "artifacts/stage4/atsim3d_v1_proxy/atsim_proxy_quantiles.csv",
+    "artifacts/stage4/atsim3d_v1_proxy/atsim_proxy_vs_pact_hotspot_summary.csv",
+    "artifacts/stage4/atsim3d_v1_proxy/atsim_public_example_summary.csv",
+    "artifacts/stage4/atsim3d_v1_proxy/atsim_public_examples_heatmaps.png",
+    "artifacts/stage4/atsim3d_v1_proxy/atsim_public_examples_summary_bar.png",
+    "artifacts/stage4/atsim3d_v1_proxy/heatmap_atsim_minus_pact_64.png",
+    "artifacts/stage4/atsim3d_v1_proxy/heatmap_atsim_minus_pact_raw_order_64.png",
+    "artifacts/stage4/atsim3d_v1_proxy/heatmap_atsim_proxy_downsample_256.png",
+    "artifacts/stage4/atsim3d_v1_proxy/heatmap_atsim_proxy_downsample_64.png",
+    "artifacts/stage4/atsim3d_v1_proxy/manifest.json"
+  ],
+  "hotspot_stats": "artifacts/stage4/hotspot_transient_stats.csv",
+  "output_dir": "artifacts/stage4/atsim3d_v1_proxy",
+  "pact_grid": "artifacts/stage4/pact_steady_layer0_grid.csv",
+  "pact_raw_grid": "artifacts/stage4/pact_steady_layer0_grid_pact_raw_order.csv",
+  "proxy_result": "thermal/atsim3d_v1_proxy_stage4_tiled_matmul_os_baseline/inputs/proxy_stage4_tiled_matmul_os_baseline_lcf.layer0.res",
+  "source_run_dir": "thermal/atsim3d_v1_proxy_stage4_tiled_matmul_os_baseline",
+  "summary": {
+    "atsim": {
+      "delta_k": 4.734549634295831,
+      "max_k": 329.6349717980204,
+      "mean_k": 326.97120263873273,
+      "min_k": 324.90042216372456,
+      "std_k": 1.311100715679835
+    },
+    "delta": {
+      "abs_mean_k": 1.3261556906167127,
+      "corr": 0.9726189310722494,
+      "max_k": 3.004252378317119,
+      "mean_k": -0.0315537089397388,
+      "min_k": -4.136682414484028,
+      "rms_k": 1.679745032152747,
+      "std_k": 1.679448640624053
+    },
+    "delta_raw_order": {
+      "abs_mean_k": 2.771164101528262,
+      "corr": -0.141279496343301,
+      "max_k": 5.947506417771308,
+      "mean_k": -0.031553708939738634,
+      "min_k": -7.283837766584611,
+      "rms_k": 3.3716220508138472,
+      "std_k": 3.3714743980914816
+    },
+    "hotspot": {
+      "final_max_block": "other_context",
+      "final_max_k": 318.21,
+      "peak_block": "other_context",
+      "peak_k": 318.23,
+      "samples": 64
+    },
+    "pact": {
+      "delta_k": 11.670000000000016,
+      "max_k": 333.72,
+      "mean_k": 327.00275634765626,
+      "min_k": 322.05,
+      "std_k": 2.926532016527162
+    }
+  }
+}

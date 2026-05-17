@@ -1,0 +1,261 @@
+[05/13 11:10:04      0s] 
+[05/13 11:10:04      0s] Cadence Innovus(TM) Implementation System.
+[05/13 11:10:04      0s] Copyright 2024 Cadence Design Systems, Inc. All rights reserved worldwide.
+[05/13 11:10:04      0s] 
+[05/13 11:10:04      0s] Version:	v23.14-s088_1, built Fri Feb 28 12:25:44 PST 2025
+[05/13 11:10:04      0s] Options:	-no_gui -execute help write_sdf; exit 
+[05/13 11:10:04      0s] Date:		Wed May 13 11:10:04 2026
+[05/13 11:10:04      0s] Host:		pc-MZ73-LM1-000 (x86_64 w/Linux 6.8.0-106-generic) (128cores*512cpus*AMD EPYC 9754 128-Core Processor 1024KB)
+[05/13 11:10:04      0s] OS:		Ubuntu 22.04.5 LTS
+[05/13 11:10:04      0s] 
+[05/13 11:10:04      0s] License:
+[05/13 11:10:04      0s] 		[11:10:04.394041] Configured Lic search path (23.02-s006): /opt/eda/Cadence_DDI_23.14/license/license.dat
+
+[05/13 11:10:04      0s] 		invs	Innovus Implementation System	23.1	checkout succeeded
+[05/13 11:10:04      0s] 		8 CPU jobs allowed with the current license(s). Use setMultiCpuUsage to set your required CPU count.
+[05/13 11:10:17     26s] Memory management switch to non-aggressive memory release mode.
+[05/13 11:10:17     26s] 
+[05/13 11:10:17     26s] OS Mmap count monitoring thread starts. Limit of OS Mmap count is 65530
+[05/13 11:10:17     26s] 
+[05/13 11:10:19     28s] Reset Parastics called with the command setExtractRCMode -reset@(#)CDS: Innovus v23.14-s088_1 (64bit) 02/28/2025 12:25 (Linux 3.10.0-693.el7.x86_64)
+[05/13 11:10:21     30s] @(#)CDS: NanoRoute 23.14-s088_1 NR250219-0822/23_14-UB (database version 18.20.661) {superthreading v2.20}
+[05/13 11:10:21     30s] @(#)CDS: AAE 23.14-s018 (64bit) 02/28/2025 (Linux 3.10.0-693.el7.x86_64)
+[05/13 11:10:21     30s] @(#)CDS: CTE 23.14-s036_1 () Feb 22 2025 01:17:26 ( )
+[05/13 11:10:21     30s] @(#)CDS: SYNTECH 23.14-s010_1 () Feb 19 2025 23:56:49 ( )
+[05/13 11:10:21     30s] @(#)CDS: CPE v23.14-s082
+[05/13 11:10:21     30s] @(#)CDS: IQuantus/TQuantus 23.1.1-s336 (64bit) Mon Jan 20 22:11:00 PST 2025 (Linux 3.10.0-693.el7.x86_64)
+[05/13 11:10:21     30s] @(#)CDS: OA 22.61-p020 Fri Nov  1 12:14:48 2024
+[05/13 11:10:21     30s] @(#)CDS: SGN 23.10-d005 (03-Oct-2023) (64 bit executable, TkQt5.15.9)
+[05/13 11:10:21     30s] @(#)CDS: RCDB 11.15.0
+[05/13 11:10:21     30s] @(#)CDS: STYLUS 23.16-e002_1 (01/09/2025 16:47 PST)
+[05/13 11:10:21     30s] @(#)CDS: IntegrityPlanner-23.14-17034 (23.14) (2025-02-20 15:50:05+0800)
+[05/13 11:10:21     30s] @(#)CDS: SYNTHESIS_ENGINE 23.14-s090
+[05/13 11:10:21     30s] Create and set the environment variable TMPDIR to /home/lisihang/thermal_placement/innovus_temp_532258_0d554e83-9ade-4ba3-8af8-63d8b4b35c77_pc-MZ73-LM1-000_lisihang_wN8Xnx.
+
+[05/13 11:10:21     30s] Change the soft stacksize limit to 0.2%RAM (3095 mbytes). Set global soft_stack_size_limit to change the value.
+[05/13 11:10:22     31s] Info: Process UID = 532258 / 0d554e83-9ade-4ba3-8af8-63d8b4b35c77 / oWm0f6Jppm
+[05/13 11:10:22     31s] 
+[05/13 11:10:22     31s] **INFO:  MMMC transition support version v31-84 
+[05/13 11:10:22     31s] 
+[05/13 11:10:22     31s] <CMD> set_global _enable_mmmc_by_default_flow      $CTE::mmmc_default
+[05/13 11:10:22     31s] <CMD> suppressMessage ENCEXT-2799
+[05/13 11:10:22     31s] Executing cmd 'help write_sdf; exit' ...
+[05/13 11:10:22     31s] <CMD> help write_sdf
+[05/13 11:10:22     31s] 
+[05/13 11:10:22     31s] Usage: write_sdf [-help] <file_name> [-abstracted_model]
+[05/13 11:10:22     31s]                  [-adjust_setuphold_for_zero_hold_slack] [-base_delay]
+[05/13 11:10:22     31s]                  [-celltiming {all none nochecks}] [-collapse_internal_pins]
+[05/13 11:10:22     31s]                  [-condelse] [-delimiter <char>] [-delta_delay]
+[05/13 11:10:22     31s]                  [-edges {edged library noedge check_edge}]
+[05/13 11:10:22     31s]                  [-exclude_cells <cell_list>] [-exclude_cells_keep_io_nets]
+[05/13 11:10:22     31s]                  [-exclude_cells_keep_top_level_nets] [-exclude_disabled_arcs]
+[05/13 11:10:22     31s]                  [-exclude_disabled_modes] [-exclude_whatif_arcs] [-filter]
+[05/13 11:10:22     31s]                  [-ideal_clock_network] [-include_variation]
+[05/13 11:10:22     31s]                  [-interconn {all none noport noinport nooutport}]
+[05/13 11:10:22     31s]                  [-map_file {file1 file2 ...}] [-max_view <viewName>]
+[05/13 11:10:22     31s]                  [-merge_arcs] [-min_period_edges {posedge negedge both none}]
+[05/13 11:10:22     31s]                  [-min_view <viewName>] [-no_condition] [-no_derate]
+[05/13 11:10:22     31s]                  [-no_escape] [-nonegchecks] [-precision <non_neg_integer>]
+[05/13 11:10:22     31s]                  [-process <string>] [-recompute_delay_calc]
+[05/13 11:10:22     31s]                  [-recompute_parallel_arcs]
+[05/13 11:10:22     31s]                  [-recrem {merge_always split merge_when_paired}] [-remashold]
+[05/13 11:10:22     31s]                  [-resort_values_min_to_max] [-scale <float>]
+[05/13 11:10:22     31s]                  [-setuphold {merge_always split merge_when_paired}]
+[05/13 11:10:22     31s]                  [-splitrecrem] [-splitsetuphold]
+[05/13 11:10:22     31s]                  [-target_application {sta verilog}] [-temperature <string>]
+[05/13 11:10:22     31s]                  [-timingcheck {order}] [-transform_out_to_out_arcs]
+[05/13 11:10:22     31s]                  [-typ_view <viewName>] [-version {2.1 3.0}] [-view <viewName>]
+[05/13 11:10:22     31s]                  [-voltage <string>]
+[05/13 11:10:22     31s] 
+[05/13 11:10:22     31s] -help                                  # Prints out the command usage
+<file_name>                            # Specifies the name of the SDF output
+                                       # file. (string, required)
+-abstracted_model                      # Writes out a special SDF file for the
+                                       # Gate Level Simulation flow.
+                                       # (bool, optional)
+-adjust_setuphold_for_zero_hold_slack  # Adjust hold timing check to meet
+                                       # non-negative slack. (bool, optional)
+-base_delay                            # Writes delay values that do not
+                                       # include the delta (SI cross-talk)
+                                       # delay component. By default, SDF
+                                       # delays include the base and delta
+                                       # components plus any applied derating.
+                                       # (bool, optional)
+-celltiming {all none nochecks}        # Specifies which cell delays and timing
+                                       # checks to write out (enum, optional)
+-collapse_internal_pins                # Collapses arcs across internal pins to
+                                       # a single primary input to primary
+                                       # output arc (bool, optional)
+-condelse                              # Writes CONDELSE constructs with the
+                                       # default value when a COND construct is
+                                       # written (bool, optional)
+-delimiter <char>                      # Specifies the hierarchy divider
+                                       # character to use in the output file
+                                       # (string, optional)
+-delta_delay                           # Writes out only delta delay (SI
+                                       # cross-talk) values to the SDF file.
+                                       # (bool, optional)
+-edges {edged library noedge check_edge}
+                                       # Specifies the edges values (enum, optional)
+-exclude_cells <cell_list>             # Specifies a list of leaf-cell or
+                                       # hierarchical instances whose timing
+                                       # data will be excluded from the the SDF
+                                       # file (string, optional)
+-exclude_cells_keep_io_nets            # By default, when the -exclude_cells
+                                       # option is used, any annotations within
+                                       # the excluded cell and any annotations
+                                       # to or from the excluded cell are
+                                       # filtered from the SDF.  Using the
+                                       # -exclude_cells_keep_io_nets will
+                                       # restrict the filtering to just the
+                                       # annotations which are completely
+                                       # enclosed by the cell. Annotations to
+                                       # or from the cell will be preserved.
+                                       # (bool, optional)
+-exclude_cells_keep_top_level_nets     # The -exclude_cells_keep_top_level_nets
+                                       # allows you to configure the handling
+                                       # of top-level interconnect annotations
+                                       # to an instance that has been excluded
+                                       # from the SDF via the -exclude _cells
+                                       # option.  By default, no interconnect
+                                       # arcs to the instance are included. 
+                                       # When
+                                       # -exclude_cells_keep_top_level_nets  is
+                                       # specified, interconnect arcs which
+                                       # span to the ports of the instance will
+                                       # be included in the SDF. The delay
+                                       # annotated will be the worst-case
+                                       # delays of the top-level nets to/from
+                                       # the first level sink/source pins
+                                       # within the block that traverse a given
+                                       # input/output port of the instance
+                                       # respectively. See also the
+                                       # -exclude_cells_keep_io_nets option.
+                                       # (bool, optional)
+-exclude_disabled_arcs                 # Excludes disabled arcs in the SDF file
+                                       # (bool, optional)
+-exclude_disabled_modes                # Excludes timing arcs that have been
+                                       # disabled due to an active library mode
+                                       # setting from appearing in the SDF file
+                                       # (bool, optional)
+-exclude_whatif_arcs                   # Excludes IO path arcs created by
+                                       # WhatIf commands (bool, optional)
+-filter                                # Converts all negative IOPATH delays to
+                                       # zero (bool, optional)
+-ideal_clock_network                   # Marks delays of delay arcs, that are
+                                       # on the ideal clock networks, as 0 in
+                                       # the SDF file (bool, optional)
+-include_variation                     # When the selected analysis type is
+                                       # SOCV, the -include_variation option
+                                       # can be used to export SDF delay and
+                                       # check values with the variation
+                                       # component. By default, SDF delays and
+                                       # check values will not have the mean +
+                                       # N*sigma value. (bool, optional)
+-interconn {all none noport noinport nooutport}
+                                       # Specifies which interconnect delays to
+                                       # write (enum, optional)
+-map_file {file1 file2 ...}            # Specifies a list of sdf map files
+                                       # (string, optional)
+-max_view <viewName>                   # Uses the late delay from the specified
+                                       # analysis view to populate the SDF max
+                                       # slot, when in multi-mode multi-corner
+                                       # analysis mode. (string, optional)
+-merge_arcs                            # Merges two arcs that are related to
+                                       # the same internal pin and forms one
+                                       # timing arc (bool, optional)
+-min_period_edges {posedge negedge both none}
+                                       # Specifies how to write out minimum
+                                       # PERIOD checks. Default: both.
+                                       # (enum, optional)
+-min_view <viewName>                   # Uses the early delay from the
+                                       # specified analysis view to populate
+                                       # the SDF min slot, when in multi-mode
+                                       # multi-corner analysis mode.
+                                       # (string, optional)
+-no_condition                          # Suppresses the COND statements in the
+                                       # SDF file (bool, optional)
+-no_derate                             # Writes non-derated delays to the
+                                       # Standard Delay Format (SDF) file. By
+                                       # default, the set_timing_derate command
+                                       # writes scaled delays to the SDF file.
+                                       # (bool, optional)
+-no_escape                             # Writes out object names without
+                                       # escaping hierarchical dividers
+                                       # (bool, optional)
+-nonegchecks                           # Converts all negative timing check
+                                       # values to 0.0 (bool, optional)
+-precision <non_neg_integer>           # Controls the number of digits
+                                       # appearing after the decimal point in
+                                       # the output SDF file. The default
+                                       # precision is the value of the
+                                       # report_precision. The maximum
+                                       # precision that can be specified is 8.
+                                       # (int, optional)
+-process <string>                      # Specifies one or a combination of the
+                                       # following process names that will
+                                       # appear in the header of the generated
+                                       # SDF file (string, optional)
+-recompute_delay_calc                  # Specifying the option
+                                       # -recompute_delay_calc  instructs the
+                                       # software to recompute any necessary
+                                       # data required for a complete SDF file
+                                       # before exporting. (bool, optional)
+-recompute_parallel_arcs               # Instructs the software to temporarily
+                                       # recompute delays with separate delay
+                                       # calculation for parallel arcs. This is
+                                       # recommended for SDF being used for
+                                       # simulation. (bool, optional)
+-recrem {merge_always split merge_when_paired}
+                                       # Specifies whether Recovery and Removal
+                                       # constraints are merged into a unified
+                                       # RECREM construct - or kept as separate
+                                       # checks. Default: merge_always.
+                                       # (enum, optional)
+-remashold                             # Converts the SDF v2.1 unsupported
+                                       # REMOVAL to HOLD checks when used with
+                                       # the -version 2.1 option (bool, optional)
+-resort_values_min_to_max              # Sorts values in the SDF delay triplets
+                                       # into ascending order (bool, optional)
+-scale <float>                         # Specifies a multiplier to the delay
+                                       # values used in the SDF file
+                                       # (float, optional)
+-setuphold {merge_always split merge_when_paired}
+                                       # Determines how SETUP and HOLD timing
+                                       # checks are written (enum, optional)
+-splitrecrem                           # Splits the RECREM checks into a
+                                       # RECOVERY check and a REMOVAL check
+                                       # (bool, optional)
+-splitsetuphold                        # Splits the SETUPHOLD timing checks
+                                       # into separate SETUP and HOLD checks
+                                       # (bool, optional)
+-target_application {sta verilog}      # Allows customization of the SDF output
+                                       # for use with STA or Verilog
+                                       # applications (enum, optional)
+-temperature <string>                  # Defines the temperature values that
+                                       # will appear in the header of the
+                                       # generated SDF file (string, optional)
+-timingcheck {order}                   # Sorts the check delays in OCV analysis
+                                       # (enum, optional)
+-transform_out_to_out_arcs             # Writes out all output-to-output timing
+                                       # arcs as input-to-output arcs
+                                       # (bool, optional)
+-typ_view <viewName>                   # Uses the late delay from the specified
+                                       # analysis view to populate the SDF typ
+                                       # slot (string, optional)
+-version {2.1 3.0}                     # Specifies whether to generate the SDF
+                                       # V2.1 or V3.0 (enum, optional)
+-view <viewName>                       # Uses the early and late delays for the
+                                       # specified analysis view to populate
+                                       # the min and max SDF triplet slots
+                                       # (string, optional)
+-voltage <string>                      # Defines the voltage values that will
+                                       # appear in the header of the generated
+                                       # SDF file (string, optional)
+
+[05/13 11:10:22     31s] 
+[05/13 11:10:22     31s] 
+[05/13 11:10:22     31s] *** Memory Usage v#2 (Current mem = 1718.922M, initial mem = 839.754M) ***
+[05/13 11:10:22     31s] *** Message Summary: 0 warning(s), 0 error(s)
+[05/13 11:10:22     31s] 
+[05/13 11:10:22     31s] --- Ending "Innovus" (totcpu=0:00:31.5, real=0:00:18.0, mem=1718.9M) ---

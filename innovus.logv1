@@ -1,0 +1,153 @@
+[05/13 11:10:04      0s] 
+[05/13 11:10:04      0s] Cadence Innovus(TM) Implementation System.
+[05/13 11:10:04      0s] Copyright 2024 Cadence Design Systems, Inc. All rights reserved worldwide.
+[05/13 11:10:04      0s] 
+[05/13 11:10:04      0s] Version:	v23.14-s088_1, built Fri Feb 28 12:25:44 PST 2025
+[05/13 11:10:04      0s] Options:	-no_gui -execute help rcOut; help streamOut; exit 
+[05/13 11:10:04      0s] Date:		Wed May 13 11:10:04 2026
+[05/13 11:10:04      0s] Host:		pc-MZ73-LM1-000 (x86_64 w/Linux 6.8.0-106-generic) (128cores*512cpus*AMD EPYC 9754 128-Core Processor 1024KB)
+[05/13 11:10:04      0s] OS:		Ubuntu 22.04.5 LTS
+[05/13 11:10:04      0s] 
+[05/13 11:10:04      0s] License:
+[05/13 11:10:04      0s] 		[11:10:04.394041] Configured Lic search path (23.02-s006): /opt/eda/Cadence_DDI_23.14/license/license.dat
+
+[05/13 11:10:04      0s] 		invs	Innovus Implementation System	23.1	checkout succeeded
+[05/13 11:10:04      0s] 		8 CPU jobs allowed with the current license(s). Use setMultiCpuUsage to set your required CPU count.
+[05/13 11:10:17     26s] Memory management switch to non-aggressive memory release mode.
+[05/13 11:10:17     26s] 
+[05/13 11:10:17     26s] OS Mmap count monitoring thread starts. Limit of OS Mmap count is 65530
+[05/13 11:10:17     26s] 
+[05/13 11:10:19     27s] Reset Parastics called with the command setExtractRCMode -reset@(#)CDS: Innovus v23.14-s088_1 (64bit) 02/28/2025 12:25 (Linux 3.10.0-693.el7.x86_64)
+[05/13 11:10:21     30s] @(#)CDS: NanoRoute 23.14-s088_1 NR250219-0822/23_14-UB (database version 18.20.661) {superthreading v2.20}
+[05/13 11:10:21     30s] @(#)CDS: AAE 23.14-s018 (64bit) 02/28/2025 (Linux 3.10.0-693.el7.x86_64)
+[05/13 11:10:21     30s] @(#)CDS: CTE 23.14-s036_1 () Feb 22 2025 01:17:26 ( )
+[05/13 11:10:21     30s] @(#)CDS: SYNTECH 23.14-s010_1 () Feb 19 2025 23:56:49 ( )
+[05/13 11:10:21     30s] @(#)CDS: CPE v23.14-s082
+[05/13 11:10:21     30s] @(#)CDS: IQuantus/TQuantus 23.1.1-s336 (64bit) Mon Jan 20 22:11:00 PST 2025 (Linux 3.10.0-693.el7.x86_64)
+[05/13 11:10:21     30s] @(#)CDS: OA 22.61-p020 Fri Nov  1 12:14:48 2024
+[05/13 11:10:21     30s] @(#)CDS: SGN 23.10-d005 (03-Oct-2023) (64 bit executable, TkQt5.15.9)
+[05/13 11:10:21     30s] @(#)CDS: RCDB 11.15.0
+[05/13 11:10:21     30s] @(#)CDS: STYLUS 23.16-e002_1 (01/09/2025 16:47 PST)
+[05/13 11:10:21     30s] @(#)CDS: IntegrityPlanner-23.14-17034 (23.14) (2025-02-20 15:50:05+0800)
+[05/13 11:10:21     30s] @(#)CDS: SYNTHESIS_ENGINE 23.14-s090
+[05/13 11:10:21     30s] Create and set the environment variable TMPDIR to /home/lisihang/thermal_placement/innovus_temp_532548_88b96c8d-a685-4a1c-920c-71e5041c4033_pc-MZ73-LM1-000_lisihang_Qq3Zpm.
+
+[05/13 11:10:21     30s] Change the soft stacksize limit to 0.2%RAM (3095 mbytes). Set global soft_stack_size_limit to change the value.
+[05/13 11:10:22     31s] Info: Process UID = 532548 / 88b96c8d-a685-4a1c-920c-71e5041c4033 / LGWg12uPXr
+[05/13 11:10:22     31s] 
+[05/13 11:10:22     31s] **INFO:  MMMC transition support version v31-84 
+[05/13 11:10:22     31s] 
+[05/13 11:10:22     31s] <CMD> set_global _enable_mmmc_by_default_flow      $CTE::mmmc_default
+[05/13 11:10:22     31s] <CMD> suppressMessage ENCEXT-2799
+[05/13 11:10:22     31s] Executing cmd 'help rcOut; help streamOut; exit' ...
+[05/13 11:10:22     31s] <CMD> help rcOut
+[05/13 11:10:22     31s] 
+[05/13 11:10:22     31s] Usage: rcOut [-help] [-excludeIlm] [-noRes] [-useEEQCellWithLibertyInfo] {{{-spef <string>} [-excNetFile <string> | -net <string> | -netName <string>] } } [-view <string> | -rc_corner <string>] [-cUnit {pF fF}]
+[05/13 11:10:22     31s] 
+[05/13 11:10:22     31s] -help                               # Prints out the command usage
+-cUnit {pF fF}                      # Specifies the unit of capacitance as fF
+                                    # or pF in the output SPEF file.
+                                    # (enum, optional)
+-excNetFile <string>                # Specifies the name of the file that
+                                    # contains nets to be excluded from the
+                                    # output file (string, optional)
+-excludeIlm                         # Writes out only top spef in rc out.
+                                    # (bool, optional)
+-net <string>                       # Specifies the name of the input file that
+                                    # contains the net names to be extracted.
+                                    # The default is to Extracts all net names.
+                                    # (string, optional)
+-netName <string>                   # Specify the name of the net to be written
+                                    # in spef file. The default is to write all
+                                    # nets. (string, optional)
+-noRes                              # Generates a SPEF file without the
+                                    # resistance information. The SPEF file
+                                    # generated by this parameter can only be
+                                    # used to improve the performance of
+                                    # third-party simulator tools in early
+                                    # stages of the design. (bool, optional)
+-rc_corner <string>                 # Specifies the RC corner that is used to
+                                    # generate the output SPEF file in the
+                                    # multi-corner flow. (string, optional)
+-spef <string>                      # Specifies the name of the SPEF output
+                                    # file. (string, optional)
+-useEEQCellWithLibertyInfo          # Writes EEQ master cell in case EEQ cells
+                                    # are present (bool, optional)
+-view <string>                      # Specifies that the RC corner associated
+                                    # with the specified view is used to
+                                    # generate the output SPEF file in the
+                                    # multi-corner flow. (string, optional)
+
+[05/13 11:10:22     31s] 
+[05/13 11:10:22     31s] <CMD> help streamOut
+[05/13 11:10:22     31s] 
+[05/13 11:10:22     31s] Usage: streamOut [-help] <fileName> [-attachNetProp <string>]
+[05/13 11:10:22     31s]                  [-dieAreaAsBoundary] [-extraMapFile <string>]
+[05/13 11:10:22     31s]                  [-ignoreSubtype {NETTYPE SHAPE}] [-libName <string>]
+[05/13 11:10:22     31s]                  [-mapFile <string>] [-mergeViaCellMapFile <string>]
+[05/13 11:10:22     31s]                  [-mode {ALL FILLONLY NOFILL NOINSTANCES}] [-noStructureName]
+[05/13 11:10:22     31s]                  [-offset {x y}] [-outputCriticalNetColorFromFileOnly <string>]
+[05/13 11:10:22     31s]                  [-outputMacros] [-probe_pin_label <string>]
+[05/13 11:10:22     31s]                  [-reportFile <string>] [-signoff_fill]
+[05/13 11:10:22     31s]                  [-structureName <string>] [-units <integer>] [-merge <string> [-noTSV <tsv_name_list>] [-uniquifyCellNames ]] [{-area {x1 y1 x2 y2} } [-strict ] [-enclosed_instances_only ]] [-format {stream oasis} [-outputInstanceName <string>] [-outputNetName <string>]] [-attachInstanceName <integer> | -outputInstanceName <string>] [-attachNetName <integer> | -outputNetName <string>]
+[05/13 11:10:22     31s] 
+[05/13 11:10:22     31s] -help                             # Prints out the command usage
+<fileName>                        # <fileName> (list, required)
+-area {x1 y1 x2 y2}               # -area x1 y1 x2 y2 (box, optional)
+-attachInstanceName <integer>     # -attachInstanceName <attrNumber>
+                                  # (int, optional)
+-attachNetName <integer>          # -attachNetName <attrNumber> (int, optional)
+-attachNetProp <string>           # -attachNetProp { {<prop_name> <attr_num>}
+                                  # ... } (string, optional)
+-dieAreaAsBoundary                # output die area as boundary
+                                  # (bool, optional)
+-enclosed_instances_only          # Only stream out the instances whose shapes
+                                  # are fully enclosed by specified area.
+                                  # (bool, optional)
+-extraMapFile <string>            # specify extra map file. (string, optional)
+-format {stream oasis}            # Specify tape out file format
+                                  # (enum, optional)
+-ignoreSubtype {NETTYPE SHAPE}    # Ignore the map file line with subtype
+                                  # keywords (enum_list, optional)
+-libName <string>                 # -libName libraryName (string, optional)
+-mapFile <string>                 # -mapFile mapFile (string, optional)
+-merge <string>                   # -merge {list of external Stream files}
+                                  # (string, optional)
+-mergeViaCellMapFile <string>     # Specify the cell list which need merge via
+                                  # cell from external file. (string, optional)
+-mode {ALL FILLONLY NOFILL NOINSTANCES}    # output mode type (enum, optional)
+-noStructureName                  # merge GDSII file withOut loading design
+                                  # (bool, optional)
+-noTSV <tsv_name_list>            # A list of TSV via names that should be from
+                                  # merge file not be written out from design.
+                                  # (string, optional)
+-offset {x y}                     # -offset x y (point, optional)
+-outputCriticalNetColorFromFileOnly <string>
+                                  # Specify the net list and layer range which
+                                  # need output color to gds file.
+                                  # (string, optional)
+-outputInstanceName <string>      # Write the instance name string to oasis
+                                  # file. (string, optional)
+-outputMacros                     # output macros (bool, optional)
+-outputNetName <string>           # Write the net name string to oasis file.
+                                  # (string, optional)
+-probe_pin_label <string>         # User specify probe label string, default
+                                  # PROBE_PIN (string, optional)
+-reportFile <string>              # -reportFile fileName (string, optional)
+-signoff_fill                     # Merge the signoff fill data attached to the
+                                  # current DB into the output gds file.
+                                  # (bool, optional)
+-strict                           # Truncate the object outside the area
+                                  # (bool, optional)
+-structureName <string>           # top structure name (string, optional)
+-uniquifyCellNames                # uniquify conflict cell name in merge file
+                                  # (bool, optional)
+-units <integer>                  # -units
+                                  # {100|200|400|800|1000|2000|4000|8000|10000|20000} (int, optional)
+
+[05/13 11:10:22     31s] 
+[05/13 11:10:22     31s] 
+[05/13 11:10:22     31s] *** Memory Usage v#2 (Current mem = 1718.812M, initial mem = 839.754M) ***
+[05/13 11:10:22     31s] *** Message Summary: 0 warning(s), 0 error(s)
+[05/13 11:10:22     31s] 
+[05/13 11:10:22     31s] --- Ending "Innovus" (totcpu=0:00:31.3, real=0:00:18.0, mem=1718.8M) ---

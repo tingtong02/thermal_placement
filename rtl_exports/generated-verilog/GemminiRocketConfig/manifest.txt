@@ -6,4 +6,4 @@ gemmini_commit=6ad65b9
 source_build_dir=/home/lisihang/thermal_placement/third_party/chipyard/sims/verilator/generated-src/chipyard.harness.TestHarness.GemminiRocketConfig
 source_gen_collateral_dir=/home/lisihang/thermal_placement/third_party/chipyard/sims/verilator/generated-src/chipyard.harness.TestHarness.GemminiRocketConfig/gen-collateral
 export_dir=/home/lisihang/thermal_placement/rtl_exports/generated-verilog/GemminiRocketConfig
-generated_at_utc=2026-04-20T04:02:45Z
+generated_at_utc=2026-04-23T10:03:43Z

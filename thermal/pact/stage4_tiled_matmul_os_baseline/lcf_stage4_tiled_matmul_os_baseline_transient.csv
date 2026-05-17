@@ -1,0 +1,2 @@
+Layer,FloorplanFile,Thickness (m),PtraceFile,LateralHeatFlow
+0,/home/lisihang/thermal_placement/thermal/pact/stage4_tiled_matmul_os_baseline/flp_stage4_tiled_matmul_os_baseline.csv,0.0001,/home/lisihang/thermal_placement/thermal/pact/stage4_tiled_matmul_os_baseline/ptrace_stage4_tiled_matmul_os_baseline_transient.csv,True

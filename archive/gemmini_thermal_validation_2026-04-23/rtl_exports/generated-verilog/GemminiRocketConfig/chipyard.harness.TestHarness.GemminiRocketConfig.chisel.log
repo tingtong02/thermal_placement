@@ -1,0 +1,324 @@
+(3,List(UInt<7>(123)))
+unified shared memory size: 4096x16x4
+L2 InclusiveCache Client Map:
+	0 <= debug
+	1 <= serial_tl_0_0
+	2 <= serial_tl_0_1
+	3 <= serial_tl_0_2
+	4 <= serial_tl_0_3
+	5 <= stream-reader
+	6 <= stream-writer
+	7 <= Core 0 DCache
+	8 <= Core 0 ICache
+
+Interrupt map (2 harts 1 interrupts):
+  [1, 1] => uart_0
+
+[31m
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+WARNING: YOU ARE USING A DEADLOCKING DECOUPLED
+SERIAL PHY. THIS SHOULD ONLY BE USED IF YOU ARE
+CERTAIN THIS LINK WILL NOT BE HEAVILY LOADED.
+
+USE CreditedSourceSyncSerialPhyParams INSTEAD IF
+DEADLOCK-FREEDOM IS NECESSARY.
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+[0m
+Clock sbus_0: using diplomatically specified frequency of 500.0.
+Clock pbus_0: using diplomatically specified frequency of 500.0.
+Clock fbus_0: using diplomatically specified frequency of 500.0.
+Clock mbus_0: using diplomatically specified frequency of 500.0.
+Clock cbus_0: using diplomatically specified frequency of 500.0.
+Leaving clock group uncore with synchronous reset
+/dts-v1/;
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
+	compatible = "ucb-bar,chipyard-dev";
+	model = "ucb-bar,chipyard";
+	L3: aliases {
+		serial0 = &L26;
+	};
+	L18: chosen {
+		stdout-path = &L26;
+	};
+	L2: cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		timebase-frequency = <500000>;
+		L13: cpu@0 {
+			clock-frequency = <0>;
+			compatible = "sifive,rocket0", "riscv";
+			d-cache-block-size = <64>;
+			d-cache-sets = <64>;
+			d-cache-size = <32768>;
+			d-tlb-sets = <1>;
+			d-tlb-size = <32>;
+			device_type = "cpu";
+			hardware-exec-breakpoint-count = <1>;
+			i-cache-block-size = <64>;
+			i-cache-sets = <64>;
+			i-cache-size = <32768>;
+			i-tlb-sets = <1>;
+			i-tlb-size = <32>;
+			mmu-type = "riscv,sv39";
+			next-level-cache = <&L10>;
+			reg = <0x0>;
+			riscv,isa = "rv64imafdcbzicsr_zifencei_zihpm_zfh_zba_zbb_zbs_xrocket";
+			riscv,pmpgranularity = <4>;
+			riscv,pmpregions = <8>;
+			status = "okay";
+			timebase-frequency = <500000>;
+			tlb-split;
+			L11: interrupt-controller {
+				#interrupt-cells = <1>;
+				compatible = "riscv,cpu-intc";
+				interrupt-controller;
+			};
+		};
+	};
+	L29: htif {
+		compatible = "ucb,htif0";
+	};
+	L24: memory@8000000 {
+		device_type = "memory";
+		reg = <0x8000000 0x10000>;
+		status = "disabled";
+	};
+	L21: memory@80000000 {
+		device_type = "memory";
+		reg = <0x80000000 0x10000000>;
+	};
+	L1: soc {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "ucb-bar,chipyard-soc", "simple-bus";
+		ranges;
+		L25: boot-address-reg@1000 {
+			reg = <0x1000 0x1000>;
+			reg-names = "control";
+		};
+		L10: cache-controller@2010000 {
+			cache-block-size = <64>;
+			cache-level = <2>;
+			cache-sets = <1024>;
+			cache-size = <524288>;
+			cache-unified;
+			compatible = "sifive,inclusivecache0", "cache";
+			next-level-cache = <&L21 &L24>;
+			reg = <0x2010000 0x1000>;
+			reg-names = "control";
+			sifive,mshr-count = <12>;
+		};
+		L7: cbus_clock {
+			#clock-cells = <0>;
+			clock-frequency = <500000000>;
+			clock-output-names = "cbus_clock";
+			compatible = "fixed-clock";
+		};
+		L14: clint@2000000 {
+			compatible = "riscv,clint0";
+			interrupts-extended = <&L11 3 &L11 7>;
+			reg = <0x2000000 0x10000>;
+			reg-names = "control";
+		};
+		L27: clock-gater@100000 {
+			reg = <0x100000 0x1000>;
+			reg-names = "control";
+		};
+		L16: debug-controller@0 {
+			compatible = "sifive,debug-013", "riscv,debug-013";
+			debug-attach = "jtag";
+			interrupts-extended = <&L11 65535>;
+			reg = <0x0 0x1000>;
+			reg-names = "control";
+		};
+		L8: error-device@3000 {
+			compatible = "sifive,error0";
+			reg = <0x3000 0x1000>;
+		};
+		L6: fbus_clock {
+			#clock-cells = <0>;
+			clock-frequency = <500000000>;
+			clock-output-names = "fbus_clock";
+			compatible = "fixed-clock";
+		};
+		L15: interrupt-controller@c000000 {
+			#interrupt-cells = <1>;
+			compatible = "riscv,plic0";
+			interrupt-controller;
+			interrupts-extended = <&L11 11 &L11 9>;
+			reg = <0xc000000 0x4000000>;
+			reg-names = "control";
+			riscv,max-priority = <1>;
+			riscv,ndev = <1>;
+		};
+		L9: mbus_clock {
+			#clock-cells = <0>;
+			clock-frequency = <500000000>;
+			clock-output-names = "mbus_clock";
+			compatible = "fixed-clock";
+		};
+		L5: pbus_clock {
+			#clock-cells = <0>;
+			clock-frequency = <500000000>;
+			clock-output-names = "pbus_clock";
+			compatible = "fixed-clock";
+		};
+		L23: rom@10000 {
+			compatible = "sifive,rom0";
+			reg = <0x10000 0x10000>;
+			reg-names = "mem";
+		};
+		L4: sbus_clock {
+			#clock-cells = <0>;
+			clock-frequency = <500000000>;
+			clock-output-names = "sbus_clock";
+			compatible = "fixed-clock";
+		};
+		L26: serial@10020000 {
+			clocks = <&L5>;
+			compatible = "sifive,uart0";
+			interrupt-parent = <&L15>;
+			interrupts = <1>;
+			reg = <0x10020000 0x1000>;
+			reg-names = "control";
+		};
+		L28: tile-reset-setter@110000 {
+			reg = <0x110000 0x1000>;
+			reg-names = "control";
+		};
+	};
+};
+
+Generated Address Map
+	       0 -     1000 ARWX  debug-controller@0
+	    1000 -     2000 ARW   boot-address-reg@1000
+	    3000 -     4000 ARWX  error-device@3000
+	   10000 -    20000  R X  rom@10000
+	  100000 -   101000 ARW   clock-gater@100000
+	  110000 -   111000 ARW   tile-reset-setter@110000
+	 2000000 -  2010000 ARW   clint@2000000
+	 2010000 -  2011000 ARW   cache-controller@2010000
+	 8000000 -  8010000 ARWXC memory@8000000
+	 c000000 - 10000000 ARW   interrupt-controller@c000000
+	10020000 - 10021000 ARW   serial@10020000
+	80000000 - 90000000 ARWXC memory@80000000
+
+IOCells generated by IOBinders:
+  IOBinder for interface sifive.blocks.devices.uart.HasPeripheryUART generated:
+    1 X GenericDigitalInIOCell
+    1 X GenericDigitalOutIOCell
+  IOBinder for interface testchipip.boot.CanHavePeripheryCustomBootPin generated:
+    1 X GenericDigitalInIOCell
+  IOBinder for interface freechips.rocketchip.devices.debug.HasPeripheryDebug generated:
+    4 X GenericDigitalInIOCell
+    1 X GenericDigitalOutIOCell
+  IOBinder for interface chipyard.clocking.CanHaveClockTap generated:
+    1 X GenericDigitalOutIOCell
+  IOBinder for interface testchipip.serdes.CanHavePeripheryTLSerial generated:
+    35 X GenericDigitalInIOCell
+    34 X GenericDigitalOutIOCell
+
+  Total generated 78 IOCells:
+    41 X GenericDigitalInIOCell
+    37 X GenericDigitalOutIOCell
+[31m
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+WARNING: YOU ARE USING A DEADLOCKING DECOUPLED
+SERIAL PHY. THIS SHOULD ONLY BE USED IF YOU ARE
+CERTAIN THIS LINK WILL NOT BE HEAVILY LOADED.
+
+USE CreditedSourceSyncSerialPhyParams INSTEAD IF
+DEADLOCK-FREEDOM IS NECESSARY.
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+[0m
+Harness binder clock is 100.0
+[warn] generators/gemmini/src/main/scala/gemmini/DMA.scala 483:39: [W004] Dynamic index with width 7 is too wide for Vec of size 4 (expected index width 2).
+[warn]     val write_mask = write_packet.mask(beatsSent)
+[warn]                                       ^
+[warn] generators/gemmini/src/main/scala/gemmini/DMA.scala 486:70: [W004] Dynamic index with width 7 is too wide for Vec of size 4 (expected index width 2).
+[warn]     val bytes_written_this_beat = write_packet.bytes_written_per_beat(beatsSent)
+[warn]                                                                      ^
+[warn] generators/gemmini/src/main/scala/gemmini/DMA.scala 609:18: [W004] Dynamic index with width 8 is too wide for Vec of size 4 (expected index width 2).
+[warn]       data_blocks(io.req.bits.block) := io.req.bits.data
+[warn]                  ^
+[warn] generators/gemmini/src/main/scala/gemmini/CounterFile.scala 178:49: [W004] Dynamic index with width 7 is too wide for Vec of size 8 (expected index width 3).
+[warn]       val external = io.event_io.external_values(config)
+[warn]                                                 ^
+[warn] generators/gemmini/src/main/scala/gemmini/CounterFile.scala 209:37: [W004] Dynamic index with width 7 is too wide for Vec of size 45 (expected index width 6).
+[warn]       when (io.event_io.event_signal(config)) {
+[warn]                                     ^
+[warn] generators/gemmini/src/main/scala/gemmini/ReservationStation.scala 498:37: [W004] Dynamic index with width 4 is too wide for Vec of size 8 (expected index width 3).
+[warn]       entries.foreach(_.bits.deps_ld(issue_id) := false.B)
+[warn]                                     ^
+[warn] generators/gemmini/src/main/scala/gemmini/ReservationStation.scala 499:17: [W004] Dynamic index with width 4 is too wide for Vec of size 8 (expected index width 3).
+[warn]       entries_ld(issue_id).valid := false.B
+[warn]                 ^
+[warn] generators/gemmini/src/main/scala/gemmini/ReservationStation.scala 501:38: [W004] Dynamic index with width 4 is too wide for Vec of size 8 (expected index width 3).
+[warn]       conv_ld_completed := entries_ld(issue_id).bits.cmd.from_conv_fsm
+[warn]                                      ^
+[warn] generators/gemmini/src/main/scala/gemmini/ReservationStation.scala 502:40: [W004] Dynamic index with width 4 is too wide for Vec of size 8 (expected index width 3).
+[warn]       matmul_ld_completed := entries_ld(issue_id).bits.cmd.from_matmul_fsm
+[warn]                                        ^
+[warn] generators/gemmini/src/main/scala/gemmini/ReservationStation.scala 504:24: [W004] Dynamic index with width 4 is too wide for Vec of size 8 (expected index width 3).
+[warn]       assert(entries_ld(issue_id).valid)
+[warn]                        ^
+[warn] generators/gemmini/src/main/scala/gemmini/ReservationStation.scala 514:37: [W004] Dynamic index with width 4 is too wide for Vec of size 4 (expected index width 2).
+[warn]       entries.foreach(_.bits.deps_st(issue_id) := false.B)
+[warn]                                     ^
+[warn] generators/gemmini/src/main/scala/gemmini/ReservationStation.scala 515:17: [W004] Dynamic index with width 4 is too wide for Vec of size 4 (expected index width 2).
+[warn]       entries_st(issue_id).valid := false.B
+[warn]                 ^
+[warn] generators/gemmini/src/main/scala/gemmini/ReservationStation.scala 517:38: [W004] Dynamic index with width 4 is too wide for Vec of size 4 (expected index width 2).
+[warn]       conv_st_completed := entries_st(issue_id).bits.cmd.from_conv_fsm
+[warn]                                      ^
+[warn] generators/gemmini/src/main/scala/gemmini/ReservationStation.scala 518:40: [W004] Dynamic index with width 4 is too wide for Vec of size 4 (expected index width 2).
+[warn]       matmul_st_completed := entries_st(issue_id).bits.cmd.from_matmul_fsm
+[warn]                                        ^
+[warn] generators/gemmini/src/main/scala/gemmini/ReservationStation.scala 520:24: [W004] Dynamic index with width 4 is too wide for Vec of size 4 (expected index width 2).
+[warn]       assert(entries_st(issue_id).valid)
+[warn]                        ^
+[warn] generators/gemmini/src/main/scala/gemmini/LoopMatmul.scala 589:55: [W004] Dynamic index with width 16 is too wide for Vec of size 3 (expected index width 2).
+[warn]     Mux(req.act === Activation.LAYERNORM, ln_norm_cmds(ln_cmd)(1), sm_norm_cmds(ln_cmd)(1)),
+[warn]                                                       ^
+[warn] generators/gemmini/src/main/scala/gemmini/LoopMatmul.scala 589:80: [W004] Dynamic index with width 16 is too wide for Vec of size 3 (expected index width 2).
+[warn]     Mux(req.act === Activation.LAYERNORM, ln_norm_cmds(ln_cmd)(1), sm_norm_cmds(ln_cmd)(1)),
+[warn]                                                                                ^
+[warn] generators/gemmini/src/main/scala/gemmini/LoopMatmul.scala 590:55: [W004] Dynamic index with width 16 is too wide for Vec of size 3 (expected index width 2).
+[warn]     Mux(req.act === Activation.LAYERNORM, ln_norm_cmds(ln_cmd)(0), sm_norm_cmds(ln_cmd)(0)))
+[warn]                                                       ^
+[warn] generators/gemmini/src/main/scala/gemmini/LoopMatmul.scala 590:80: [W004] Dynamic index with width 16 is too wide for Vec of size 3 (expected index width 2).
+[warn]     Mux(req.act === Activation.LAYERNORM, ln_norm_cmds(ln_cmd)(0), sm_norm_cmds(ln_cmd)(0)))
+[warn]                                                                                ^
+[warn] generators/gemmini/src/main/scala/gemmini/ExecuteController.scala 141:27: [W005] Dynamic index with width 1 is too narrow for Vec of size 3 (expected index width 2).
+[warn]   val d_address_rs1 = rs1s(preload_cmd_place).asTypeOf(local_addr_t)
+[warn]                           ^
+[warn] generators/gemmini/src/main/scala/gemmini/ExecuteController.scala 142:27: [W005] Dynamic index with width 1 is too narrow for Vec of size 3 (expected index width 2).
+[warn]   val c_address_rs2 = rs2s(preload_cmd_place).asTypeOf(local_addr_t)
+[warn]                           ^
+[warn] generators/gemmini/src/main/scala/gemmini/ExecuteController.scala 158:28: [W005] Dynamic index with width 1 is too narrow for Vec of size 3 (expected index width 2).
+[warn]   val d_cols_default = rs1s(preload_cmd_place)(32 + log2Up(block_size + 1) - 1, 32) // TODO magic numbers
+[warn]                            ^
+[warn] generators/gemmini/src/main/scala/gemmini/ExecuteController.scala 159:28: [W005] Dynamic index with width 1 is too narrow for Vec of size 3 (expected index width 2).
+[warn]   val d_rows_default = rs1s(preload_cmd_place)(48 + log2Up(block_size + 1) - 1, 48) // TODO magic numbers
+[warn]                            ^
+[warn] generators/gemmini/src/main/scala/gemmini/ExecuteController.scala 167:20: [W005] Dynamic index with width 1 is too narrow for Vec of size 3 (expected index width 2).
+[warn]   val c_cols = rs2s(preload_cmd_place)(32 + log2Up(block_size + 1) - 1, 32) // TODO magic numbers
+[warn]                    ^
+[warn] generators/gemmini/src/main/scala/gemmini/ExecuteController.scala 168:20: [W005] Dynamic index with width 1 is too narrow for Vec of size 3 (expected index width 2).
+[warn]   val c_rows = rs2s(preload_cmd_place)(48 + log2Up(block_size + 1) - 1, 48) // TODO magic numbers
+[warn]                    ^
+[warn] generators/gemmini/src/main/scala/gemmini/ExecuteController.scala 793:58: [W005] Dynamic index with width 1 is too narrow for Vec of size 3 (expected index width 2).
+[warn]   mesh_cntl_signals_q.io.enq.bits.rob_id.bits := cmd.bits(preload_cmd_place).rob_id.bits
+[warn]                                                          ^
+[warn] There were 26 warning(s) during hardware elaboration.

@@ -1,0 +1,1 @@
+/home/lisihang/thermal_placement/sim/waves/GemminiRocketConfig/mvin_mvout-baremetal.bench_mvin_fst_t16.fst

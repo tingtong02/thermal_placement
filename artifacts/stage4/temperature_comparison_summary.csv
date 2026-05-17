@@ -1,0 +1,21 @@
+metric,value
+coordinate_view,"DEF physical grid_y, y=0 at die bottom"
+pact_yflip_applied,True
+pact_raw_output_order,row 0 is physical die top
+pact_steady_l0_min,322.05
+pact_steady_l0_mean,327.00275634765626
+pact_steady_l0_max,333.72
+pact_steady_l1_min,322.05
+pact_steady_l1_mean,326.935029296875
+pact_steady_l1_max,333.5
+pact_steady_hot_x,22
+pact_steady_hot_y,16
+pact_steady_raw_hot_x,22
+pact_steady_raw_hot_y,47
+pact_transient_rows,64
+pact_transient_l0_final_max,318.18
+pact_transient_l0_peak_max,318.18
+hotspot_rows,64
+hotspot_final_max_block,other_context
+hotspot_final_max,318.21
+hotspot_peak_max,318.23

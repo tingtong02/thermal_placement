@@ -1,0 +1,4 @@
+workload,window,start_ps,end_ps,selection,notes
+stage1_tiled_matmul_os_baseline_20260423,cold_start,0,1030328550,initial boot/program setup portion,coarse fraction of full RTL trace
+stage1_tiled_matmul_os_baseline_20260423,cpu_gold_reference,1030328550,9272956950,official tiled_matmul_os CPU reference phase before Gemmini marker,not the thermal target window
+stage1_tiled_matmul_os_baseline_20260423,steady_high_load,9272956950,10303285500,tail interval containing Starting gemmini matmul and accelerator completion,Stage 3 may refine this after gate/activity alignment

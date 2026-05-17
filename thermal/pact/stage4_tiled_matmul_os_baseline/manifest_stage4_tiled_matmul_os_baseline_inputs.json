@@ -1,0 +1,55 @@
+{
+  "base": "stage4_tiled_matmul_os_baseline",
+  "caveat": "Stage 4 inputs are derived from Stage 3 normalized proxy power, not signoff power.",
+  "cell_side_m": 5.2716625e-05,
+  "coarse_block_mapping": {
+    "clock_tree": "controller_execute",
+    "controller": "controller_execute",
+    "gemmini_other": "other_context",
+    "load_store_dma": "load_store_datapath",
+    "pe_array": "pe_array",
+    "scratchpad": "scratchpad_accumulator_context",
+    "unmapped_standard_cell": "other_context"
+  },
+  "coarse_block_power_w": {
+    "controller_execute": 0.04759105267881,
+    "load_store_datapath": 0.00337394377624,
+    "other_context": 0.531818553097,
+    "pe_array": 0.252617470616,
+    "scratchpad_accumulator_context": 0.164598979832
+  },
+  "die_side_m": 0.003373864,
+  "first_time_ps": 9272956950,
+  "grid": 64,
+  "hotspot": {
+    "config": "thermal/hotspot/stage4_tiled_matmul_os_baseline/stage4_tiled_matmul_os_baseline.config",
+    "flp": "thermal/hotspot/stage4_tiled_matmul_os_baseline/stage4_tiled_matmul_os_baseline.flp",
+    "ptrace": "thermal/hotspot/stage4_tiled_matmul_os_baseline/stage4_tiled_matmul_os_baseline.ptrace"
+  },
+  "hotspot_sampling_interval_s": 1.6098884e-05,
+  "last_time_ps": 10287186616,
+  "max_total_power_w": 1.0000000000003046,
+  "median_step_us": 16.098883999999998,
+  "min_total_power_w": 0.004229321702590311,
+  "pact": {
+    "config": "thermal/pact/stage4_tiled_matmul_os_baseline/config_stage4_tiled_matmul_os_baseline.config",
+    "floorplan": "thermal/pact/stage4_tiled_matmul_os_baseline/flp_stage4_tiled_matmul_os_baseline.csv",
+    "steady_lcf": "thermal/pact/stage4_tiled_matmul_os_baseline/lcf_stage4_tiled_matmul_os_baseline_steady.csv",
+    "steady_modelParams": "thermal/pact/stage4_tiled_matmul_os_baseline/modelParams_stage4_tiled_matmul_os_baseline_steady_superlu.config",
+    "steady_ptrace": "thermal/pact/stage4_tiled_matmul_os_baseline/ptrace_stage4_tiled_matmul_os_baseline_steady.csv",
+    "threading": "number_of_core=1 for formal SPICE transient because local Xyce is serial",
+    "transient_lcf": "thermal/pact/stage4_tiled_matmul_os_baseline/lcf_stage4_tiled_matmul_os_baseline_transient.csv",
+    "transient_modelParams": "thermal/pact/stage4_tiled_matmul_os_baseline/modelParams_stage4_tiled_matmul_os_baseline_transient_spice_serial.config",
+    "transient_ptrace": "thermal/pact/stage4_tiled_matmul_os_baseline/ptrace_stage4_tiled_matmul_os_baseline_transient.csv"
+  },
+  "peak_time_index": 59,
+  "peak_time_ps": 10222791082,
+  "peak_total_power_w": 1.0000000000003046,
+  "stage3_inputs": {
+    "grid_power": "power/stage3_tiled_matmul_os_baseline_grid_power.csv",
+    "metadata": "power/stage3_tiled_matmul_os_baseline_metadata.json",
+    "region_power_summary": "power/stage3_tiled_matmul_os_baseline_region_power_summary.csv",
+    "transient_ptrace": "power/stage3_tiled_matmul_os_baseline_transient_ptrace.csv"
+  },
+  "time_rows": 64
+}

@@ -1,0 +1,18 @@
+metric,value
+coordinate_convention,"DEF physical coordinates, grid_y=0 at die bottom and grid_y increases upward"
+pact_raw_output_order,PACT raw row 0 is physical die top; row index is not DEF grid_y
+fix_applied_to_user_facing_pact_artifacts,physical_grid_y = grid - 1 - pact_raw_row_y
+grid,64
+steady_raw_hot_x,22
+steady_raw_hot_row_y,47
+steady_raw_hot_temperature_k,333.72
+steady_physical_hot_x,22
+steady_physical_hot_y,16
+steady_physical_hot_temperature_k,333.72
+transient_final_raw_hot_x,18
+transient_final_raw_hot_row_y,39
+transient_final_raw_hot_temperature_k,318.18
+transient_final_physical_hot_x,24
+transient_final_physical_hot_y,8
+transient_final_physical_hot_temperature_k,318.18
+raw_artifacts_retained_with_suffix,*_pact_raw_order.*

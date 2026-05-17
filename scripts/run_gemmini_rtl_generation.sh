@@ -5,6 +5,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 CONFIG="${CONFIG:-GemminiRocketConfig}"
+RUN_ROOT="${RUN_ROOT:-}"
 MAKE_JOBS="${MAKE_JOBS:-$(nproc)}"
 BUILD_SIM="${BUILD_SIM:-0}"
 BUILD_DEBUG_SIM="${BUILD_DEBUG_SIM:-0}"
@@ -16,7 +17,18 @@ SIM_DIR="$CHIPYARD_HOME/sims/verilator"
 LONG_NAME="chipyard.harness.TestHarness.$CONFIG"
 BUILD_DIR="$SIM_DIR/generated-src/$LONG_NAME"
 GEN_COLLATERAL_DIR="$BUILD_DIR/gen-collateral"
-EXPORT_DIR="$ROOT/rtl_exports/generated-verilog/$CONFIG"
+
+if [ -n "$RUN_ROOT" ]; then
+  mkdir -p "$RUN_ROOT"
+  RUN_ROOT=$(cd "$RUN_ROOT" && pwd)
+  EXPORT_DIR="$RUN_ROOT/rtl/generated"
+  INVENTORY_MD="$RUN_ROOT/reports/config/gemmini_module_inventory.md"
+  HIERARCHY_YAML="$RUN_ROOT/rtl/hierarchy/hierarchy_map.yaml"
+else
+  EXPORT_DIR="$ROOT/rtl_exports/generated-verilog/$CONFIG"
+  INVENTORY_MD="$ROOT/reports/notes/gemmini_module_inventory.md"
+  HIERARCHY_YAML="$ROOT/configs/gemmini/hierarchy_map.yaml"
+fi
 
 run_make() {
   env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY \
@@ -56,6 +68,7 @@ done
 cat > "$EXPORT_DIR/manifest.txt" <<EOF
 config=$CONFIG
 long_name=$LONG_NAME
+run_root=$RUN_ROOT
 chipyard_home=$CHIPYARD_HOME
 chipyard_commit=$(git -C "$CHIPYARD_HOME" rev-parse --short HEAD)
 gemmini_commit=$(git -C "$GEMMINI_HOME" rev-parse --short HEAD)
@@ -76,13 +89,14 @@ if [[ "$BUILD_DEBUG_SIM" == "1" ]]; then
 fi
 
 echo "==> inspecting Gemmini module hierarchy"
+mkdir -p "$(dirname "$INVENTORY_MD")" "$(dirname "$HIERARCHY_YAML")"
 python "$ROOT/scripts/inspect_gemmini_hierarchy.py" \
   --rtl-dir "$EXPORT_DIR/gen-collateral" \
   --hierarchy-json "$EXPORT_DIR/model_module_hierarchy.uniquified.json" \
-  --out-md "$ROOT/reports/notes/gemmini_module_inventory.md" \
-  --out-yaml "$ROOT/configs/gemmini/hierarchy_map.yaml"
+  --out-md "$INVENTORY_MD" \
+  --out-yaml "$HIERARCHY_YAML"
 
 echo "Gemmini RTL generation complete"
 echo "  RTL export: $EXPORT_DIR"
-echo "  inventory: $ROOT/reports/notes/gemmini_module_inventory.md"
-echo "  hierarchy map: $ROOT/configs/gemmini/hierarchy_map.yaml"
+echo "  inventory: $INVENTORY_MD"
+echo "  hierarchy map: $HIERARCHY_YAML"

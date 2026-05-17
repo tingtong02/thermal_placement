@@ -1,0 +1,204 @@
+[05/13 11:10:52      0s] 
+[05/13 11:10:52      0s] Cadence Innovus(TM) Implementation System.
+[05/13 11:10:52      0s] Copyright 2024 Cadence Design Systems, Inc. All rights reserved worldwide.
+[05/13 11:10:52      0s] 
+[05/13 11:10:52      0s] Version:	v23.14-s088_1, built Fri Feb 28 12:25:44 PST 2025
+[05/13 11:10:52      0s] Options:	-no_gui -execute help setDelayCalMode; exit 
+[05/13 11:10:52      0s] Date:		Wed May 13 11:10:52 2026
+[05/13 11:10:52      0s] Host:		pc-MZ73-LM1-000 (x86_64 w/Linux 6.8.0-106-generic) (128cores*512cpus*AMD EPYC 9754 128-Core Processor 1024KB)
+[05/13 11:10:52      0s] OS:		Ubuntu 22.04.5 LTS
+[05/13 11:10:52      0s] 
+[05/13 11:10:52      0s] License:
+[05/13 11:10:52      0s] 		[11:10:52.394065] Configured Lic search path (23.02-s006): /opt/eda/Cadence_DDI_23.14/license/license.dat
+
+[05/13 11:10:52      0s] 		invs	Innovus Implementation System	23.1	checkout succeeded
+[05/13 11:10:52      0s] 		8 CPU jobs allowed with the current license(s). Use setMultiCpuUsage to set your required CPU count.
+[05/13 11:11:05     26s] Memory management switch to non-aggressive memory release mode.
+[05/13 11:11:05     26s] 
+[05/13 11:11:05     26s] OS Mmap count monitoring thread starts. Limit of OS Mmap count is 65530
+[05/13 11:11:05     26s] 
+[05/13 11:11:07     27s] Reset Parastics called with the command setExtractRCMode -reset@(#)CDS: Innovus v23.14-s088_1 (64bit) 02/28/2025 12:25 (Linux 3.10.0-693.el7.x86_64)
+[05/13 11:11:09     30s] @(#)CDS: NanoRoute 23.14-s088_1 NR250219-0822/23_14-UB (database version 18.20.661) {superthreading v2.20}
+[05/13 11:11:09     30s] @(#)CDS: AAE 23.14-s018 (64bit) 02/28/2025 (Linux 3.10.0-693.el7.x86_64)
+[05/13 11:11:09     30s] @(#)CDS: CTE 23.14-s036_1 () Feb 22 2025 01:17:26 ( )
+[05/13 11:11:09     30s] @(#)CDS: SYNTECH 23.14-s010_1 () Feb 19 2025 23:56:49 ( )
+[05/13 11:11:09     30s] @(#)CDS: CPE v23.14-s082
+[05/13 11:11:09     30s] @(#)CDS: IQuantus/TQuantus 23.1.1-s336 (64bit) Mon Jan 20 22:11:00 PST 2025 (Linux 3.10.0-693.el7.x86_64)
+[05/13 11:11:09     30s] @(#)CDS: OA 22.61-p020 Fri Nov  1 12:14:48 2024
+[05/13 11:11:09     30s] @(#)CDS: SGN 23.10-d005 (03-Oct-2023) (64 bit executable, TkQt5.15.9)
+[05/13 11:11:09     30s] @(#)CDS: RCDB 11.15.0
+[05/13 11:11:09     30s] @(#)CDS: STYLUS 23.16-e002_1 (01/09/2025 16:47 PST)
+[05/13 11:11:09     30s] @(#)CDS: IntegrityPlanner-23.14-17034 (23.14) (2025-02-20 15:50:05+0800)
+[05/13 11:11:09     30s] @(#)CDS: SYNTHESIS_ENGINE 23.14-s090
+[05/13 11:11:09     30s] Create and set the environment variable TMPDIR to /home/lisihang/thermal_placement/innovus_temp_536135_183add6c-4322-4c94-9611-29d28e027283_pc-MZ73-LM1-000_lisihang_4A43Q2.
+
+[05/13 11:11:09     30s] Change the soft stacksize limit to 0.2%RAM (3095 mbytes). Set global soft_stack_size_limit to change the value.
+[05/13 11:11:10     31s] Info: Process UID = 536135 / 183add6c-4322-4c94-9611-29d28e027283 / QFZ4PbNkxV
+[05/13 11:11:10     31s] 
+[05/13 11:11:10     31s] **INFO:  MMMC transition support version v31-84 
+[05/13 11:11:10     31s] 
+[05/13 11:11:10     31s] <CMD> set_global _enable_mmmc_by_default_flow      $CTE::mmmc_default
+[05/13 11:11:10     31s] <CMD> suppressMessage ENCEXT-2799
+[05/13 11:11:10     31s] Executing cmd 'help setDelayCalMode; exit' ...
+[05/13 11:11:10     31s] <CMD> help setDelayCalMode
+[05/13 11:11:10     31s] 
+[05/13 11:11:10     31s] Usage: setDelayCalMode [-help] [-reset] [-accuracy_level <level>]
+[05/13 11:11:10     31s]                        [-advanced_accuracy_mode {medium|high|ultra}]
+[05/13 11:11:10     31s]                        [-advanced_calculation_mode {medium|high}]
+[05/13 11:11:10     31s]                        [-advanced_node_pin_cap_settings {true|false}]
+[05/13 11:11:10     31s]                        [-advanced_pincap_mode {0|1|2}]
+[05/13 11:11:10     31s]                        [-combine_mmmc {none|early_late|early_late_corner}]
+[05/13 11:11:10     31s]                        [-early_irdrop_data_type {best_average|worst|best|average|worst_average}]
+[05/13 11:11:10     31s]                        [-enable_corner_based_beol {true|false}]
+[05/13 11:11:10     31s]                        [-enable_high_fanout {true|false}]
+[05/13 11:11:10     31s]                        [-enable_input_slew_sensitivity_on_constraint {true|false}]
+[05/13 11:11:10     31s]                        [-enable_quiet_receivers_for_hold {true|false}]
+[05/13 11:11:10     31s]                        [-equivalent_waveform_model {none|no_propagation|propagation}]
+[05/13 11:11:10     31s]                        [-equivalent_waveform_model_for_timing_check {true|false}]
+[05/13 11:11:10     31s]                        [-ewm_type {moments|simulation}]
+[05/13 11:11:10     31s]                        [-honorSlewPropConstraint {true|false}]
+[05/13 11:11:10     31s]                        [-ignoreNetLoad {true|false}]
+[05/13 11:11:10     31s]                        [-irdrop_data_type {best_average|worst|best|average|worst_average}]
+[05/13 11:11:10     31s]                        [-irDrop_window_based {none|late|early|both}]
+[05/13 11:11:10     31s]                        [-late_irdrop_data_type {best_average|worst|best|average|worst_average}]
+[05/13 11:11:10     31s]                        [-library_interpolation_mode {linear|non_linear|non_linear_advanced}]
+[05/13 11:11:10     31s]                        [-nonlinear_voltage_scaling_improvements {true|false}]
+[05/13 11:11:10     31s]                        [-reportOutBound {true|false}]
+[05/13 11:11:10     31s]                        [-save_set_inst_voltage_cmd {true|false}]
+[05/13 11:11:10     31s]                        [-SIAware {true|false}]
+[05/13 11:11:10     31s]                        [-signoff_alignment_settings {true|false}]
+[05/13 11:11:10     31s]                        [-skip_slew_merge_from_disabled_path {true|false}]
+[05/13 11:11:10     31s]                        [-slewOutBoundLimitHigh <value>]
+[05/13 11:11:10     31s]                        [-slewOutBoundLimitLow <value>]
+[05/13 11:11:10     31s]                        [-socv_accuracy_mode {low|medium|high|ultra}]
+[05/13 11:11:10     31s]                        [-socv_lvf_mode {moments|early_late}]
+[05/13 11:11:10     31s]                        [-socv_machine_learning_level {0|1}]
+[05/13 11:11:10     31s]                        [-socv_use_lvf_tables {all|delay|slew|constraint}]
+[05/13 11:11:10     31s]                        [-use_top_interface_delay_in_context {true|false}]
+[05/13 11:11:10     31s]                        [-voltage_scaling_compatibility_mode {true|false}]
+[05/13 11:11:10     31s]                        [-wire_variation_correlation_mode {statistical|binomial}]
+[05/13 11:11:10     31s]                        [-wire_variation_rc_correlation <value>]
+[05/13 11:11:10     31s] 
+[05/13 11:11:10     31s] -help                                     # Prints out the command usage
+[05/13 11:11:10     31s] -reset                                    # Resets all or specified options to default value
+[05/13 11:11:10     31s] -accuracy_level <level>                   # set accuracy level for delay
+[05/13 11:11:10     31s]                                           # calculation
+[05/13 11:11:10     31s]                                           # (int, default=0, min=0, max=4)
+[05/13 11:11:10     31s] -advanced_accuracy_mode {medium|high|ultra}
+[05/13 11:11:10     31s]                                           # advanced accuracy level (enums={medium high ultra}, default=medium)
+[05/13 11:11:10     31s] -advanced_calculation_mode {medium|high}
+[05/13 11:11:10     31s]                                           # Enable advanced calculation mode
+[05/13 11:11:10     31s]                                           # for base delay.
+[05/13 11:11:10     31s]                                           # (enums={medium high}, default=medium)
+[05/13 11:11:10     31s] -advanced_node_pin_cap_settings {true|false}
+[05/13 11:11:10     31s]                                           # Enable advanced node pin cap
+[05/13 11:11:10     31s]                                           # settings. (bool, default=false)
+[05/13 11:11:10     31s] -advanced_pincap_mode {0|1|2}             # Enable advanced receiver pin cap
+[05/13 11:11:10     31s]                                           # mode for base delay.
+[05/13 11:11:10     31s]                                           # (enums={0 1 2}, default=0)
+[05/13 11:11:10     31s] -combine_mmmc {none|early_late|early_late_corner}
+[05/13 11:11:10     31s]                                           # Specifies whether delay calculation
+[05/13 11:11:10     31s]                                           # runs are to be combined for delay
+[05/13 11:11:10     31s]                                           # calculation simulations
+[05/13 11:11:10     31s]                                           # (enums={none early_late early_late_corner}, default=early_late_corner)
+[05/13 11:11:10     31s] -early_irdrop_data_type {best_average|worst|best|average|worst_average}
+[05/13 11:11:10     31s]                                           # IRDrop EIV DB EivMethod for early
+[05/13 11:11:10     31s]                                           # corner
+[05/13 11:11:10     31s]                                           # (enums={best_average worst best average worst_average}, default=worst)
+[05/13 11:11:10     31s] -enable_corner_based_beol {true|false}    # Enable Anchor corner based BEOL
+[05/13 11:11:10     31s]                                           # analysis (bool, default=false)
+[05/13 11:11:10     31s] -enable_high_fanout {true|false}          # Enables the default net delay which
+[05/13 11:11:10     31s]                                           # will be annotated on high fanout
+[05/13 11:11:10     31s]                                           # nets (bool, default=false)
+[05/13 11:11:10     31s] -enable_input_slew_sensitivity_on_constraint {true|false}
+[05/13 11:11:10     31s]                                           # Enable input slew ensitivity on
+[05/13 11:11:10     31s]                                           # constraint (bool, default=false)
+[05/13 11:11:10     31s] -enable_quiet_receivers_for_hold {true|false}
+[05/13 11:11:10     31s]                                           # (bool, default=false)
+[05/13 11:11:10     31s] -equivalent_waveform_model {none|no_propagation|propagation}
+[05/13 11:11:10     31s]                                           # Controls the equivalent waveform
+[05/13 11:11:10     31s]                                           # model to be used
+[05/13 11:11:10     31s]                                           # (enums={none no_propagation propagation}, default=none)
+[05/13 11:11:10     31s] -equivalent_waveform_model_for_timing_check {true|false}
+[05/13 11:11:10     31s]                                           # Enable EWM for timing check delay. (bool, default=false)
+[05/13 11:11:10     31s] -ewm_type {moments|simulation}            # Equivalent waveform model type to
+[05/13 11:11:10     31s]                                           # be used
+[05/13 11:11:10     31s]                                           # (enums={moments simulation}, default=simulation)
+[05/13 11:11:10     31s] -honorSlewPropConstraint {true|false}     # Determines whether to propagate the
+[05/13 11:11:10     31s]                                           # slew from the disabled timing arcs
+[05/13 11:11:10     31s]                                           # to the output pin.
+[05/13 11:11:10     31s]                                           # (bool, default=true)
+[05/13 11:11:10     31s] -ignoreNetLoad {true|false}               # Uses zero-cap, zero-resistance
+[05/13 11:11:10     31s]                                           # wire-load model for estimating
+[05/13 11:11:10     31s]                                           # delays. (bool, default=false)
+[05/13 11:11:10     31s] -irdrop_data_type {best_average|worst|best|average|worst_average}
+[05/13 11:11:10     31s]                                           # IRDrop EIV DB EivMethod (enums={best_average worst best average worst_average}, default=worst)
+[05/13 11:11:10     31s] -irDrop_window_based {none|late|early|both}
+[05/13 11:11:10     31s]                                           # Fetch window based EIV values from
+[05/13 11:11:10     31s]                                           # EIV DB
+[05/13 11:11:10     31s]                                           # (enums={none late early both}, default=both)
+[05/13 11:11:10     31s] -late_irdrop_data_type {best_average|worst|best|average|worst_average}
+[05/13 11:11:10     31s]                                           # IRDrop EIV DB EivMethod for late
+[05/13 11:11:10     31s]                                           # corner
+[05/13 11:11:10     31s]                                           # (enums={best_average worst best average worst_average}, default=worst)
+[05/13 11:11:10     31s] -library_interpolation_mode {linear|non_linear|non_linear_advanced}
+[05/13 11:11:10     31s]                                           # library scaling mode for
+[05/13 11:11:10     31s]                                           # interpolation flow
+[05/13 11:11:10     31s]                                           # (enums={linear non_linear non_linear_advanced}, default=linear)
+[05/13 11:11:10     31s] -nonlinear_voltage_scaling_improvements {true|false}
+[05/13 11:11:10     31s]                                           # Enables non-linear voltage scaling
+[05/13 11:11:10     31s]                                           # improvements (bool, default=false)
+[05/13 11:11:10     31s] -reportOutBound {true|false}              # Generates a report that contains a
+[05/13 11:11:10     31s]                                           # list of index values (input
+[05/13 11:11:10     31s]                                           # transition) in the delay tables
+[05/13 11:11:10     31s]                                           # that are beyond the index range.
+[05/13 11:11:10     31s]                                           # (bool, default=false)
+[05/13 11:11:10     31s] -save_set_inst_voltage_cmd {true|false}   # Enable set_inst_voltage cmd saving
+[05/13 11:11:10     31s]                                           # in persistant db (bool, default=false)
+[05/13 11:11:10     31s] -SIAware {true|false}                     # Enables SIAware delay calculation
+[05/13 11:11:10     31s]                                           # that also includes cross-talk
+[05/13 11:11:10     31s]                                           # induced delays.
+[05/13 11:11:10     31s]                                           # (enums={true false}, default=false)
+[05/13 11:11:10     31s] -signoff_alignment_settings {true|false}
+[05/13 11:11:10     31s]                                           # Turn on/off signoff alignment
+[05/13 11:11:10     31s]                                           # settings (bool, default=false)
+[05/13 11:11:10     31s] -skip_slew_merge_from_disabled_path {true|false}
+[05/13 11:11:10     31s]                                           # Enable slew merge from disable path (bool, default=false)
+[05/13 11:11:10     31s] -slewOutBoundLimitHigh <value>            # Limits the maximum slew used in the
+[05/13 11:11:10     31s]                                           # analysis to the specified value.
+[05/13 11:11:10     31s]                                           # (float, default=3.40282346638529e+38, min=1, max=3.40282346638529e+38)
+[05/13 11:11:10     31s] -slewOutBoundLimitLow <value>             # Limits the minimum slew used in the
+[05/13 11:11:10     31s]                                           # analysis to the specified value.
+[05/13 11:11:10     31s]                                           # (float, default=0.5, min=0.001, max=1)
+[05/13 11:11:10     31s] -socv_accuracy_mode {low|medium|high|ultra}
+[05/13 11:11:10     31s]                                           # level-based-accuracy-effort in AAE
+[05/13 11:11:10     31s]                                           # for delays and slews
+[05/13 11:11:10     31s]                                           # (enums={low medium high ultra}, default=low)
+[05/13 11:11:10     31s] -socv_lvf_mode {moments|early_late}       # Controls interpretation of LVF
+[05/13 11:11:10     31s]                                           # data.
+[05/13 11:11:10     31s]                                           # (enums={moments early_late}, default=early_late)
+[05/13 11:11:10     31s] -socv_machine_learning_level {0|1}        # Enable socv machine learning mode
+[05/13 11:11:10     31s]                                           # (int, default=0)
+[05/13 11:11:10     31s] -socv_use_lvf_tables {all|delay|slew|constraint}
+[05/13 11:11:10     31s]                                           # Controls which type of variations
+[05/13 11:11:10     31s]                                           # are considered during analysis.
+[05/13 11:11:10     31s]                                           # (string, default=all)
+[05/13 11:11:10     31s] -use_top_interface_delay_in_context {true|false}
+[05/13 11:11:10     31s]                                           # Enables use of output stage delays
+[05/13 11:11:10     31s]                                           # from top analysis in block context
+[05/13 11:11:10     31s]                                           # analysis (bool, default=false)
+[05/13 11:11:10     31s] -voltage_scaling_compatibility_mode {true|false}
+[05/13 11:11:10     31s]                                           # Enables voltage scaling
+[05/13 11:11:10     31s]                                           # compatibility mode
+[05/13 11:11:10     31s]                                           # (bool, default=false)
+[05/13 11:11:10     31s] -wire_variation_correlation_mode {statistical|binomial}
+[05/13 11:11:10     31s]                                           # Specify wire variatio inter layer
+[05/13 11:11:10     31s]                                           # correlation
+[05/13 11:11:10     31s]                                           # (enums={statistical binomial}, default=statistical)
+[05/13 11:11:10     31s] -wire_variation_rc_correlation <value>    # Same layer RC correlation for wire
+[05/13 11:11:10     31s]                                           # variation (float, default=1)
+[05/13 11:11:10     31s] 
+[05/13 11:11:10     31s] *** Memory Usage v#2 (Current mem = 1718.508M, initial mem = 847.754M) ***
+[05/13 11:11:10     31s] *** Message Summary: 0 warning(s), 0 error(s)
+[05/13 11:11:10     31s] 
+[05/13 11:11:10     31s] --- Ending "Innovus" (totcpu=0:00:31.2, real=0:00:18.0, mem=1718.5M) ---

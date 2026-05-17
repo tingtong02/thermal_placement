@@ -1,0 +1,367 @@
+[05/13 23:46:24      0s] 
+[05/13 23:46:24      0s] Cadence Innovus(TM) Implementation System.
+[05/13 23:46:24      0s] Copyright 2024 Cadence Design Systems, Inc. All rights reserved worldwide.
+[05/13 23:46:24      0s] 
+[05/13 23:46:24      0s] Version:	v23.14-s088_1, built Fri Feb 28 12:25:44 PST 2025
+[05/13 23:46:24      0s] Options:	-stylus -no_gui -files /tmp/innovus_help.7wXANt.tcl 
+[05/13 23:46:24      0s] Date:		Wed May 13 23:46:24 2026
+[05/13 23:46:24      0s] Host:		pc-MZ73-LM1-000 (x86_64 w/Linux 6.8.0-106-generic) (128cores*512cpus*AMD EPYC 9754 128-Core Processor 1024KB)
+[05/13 23:46:24      0s] OS:		Ubuntu 22.04.5 LTS
+[05/13 23:46:24      0s] 
+[05/13 23:46:24      0s] License:
+[05/13 23:46:24      0s] 		[23:46:24.394153] Configured Lic search path (23.02-s006): /opt/eda/Cadence_DDI_23.14/license/license.dat
+[05/13 23:46:24      0s] 
+[05/13 23:46:24      0s] 		invs	Innovus Implementation System	23.1	checkout succeeded
+[05/13 23:46:24      0s] 		8 CPU jobs allowed with the current license(s). Use set_multi_cpu_usage to set your required CPU count.
+[05/13 23:46:37     26s] Memory management switch to non-aggressive memory release mode.
+[05/13 23:46:37     26s] 
+[05/13 23:46:37     26s] OS Mmap count monitoring thread starts. Limit of OS Mmap count is 65530
+[05/13 23:46:37     26s] 
+[05/13 23:46:37     26s] 
+[05/13 23:46:37     26s] 
+[05/13 23:46:39     28s] Reset Parastics called with the command setExtractRCMode -reset@(#)CDS: Innovus v23.14-s088_1 (64bit) 02/28/2025 12:25 (Linux 3.10.0-693.el7.x86_64)
+[05/13 23:46:41     30s] @(#)CDS: NanoRoute 23.14-s088_1 NR250219-0822/23_14-UB (database version 18.20.661) {superthreading v2.20}
+[05/13 23:46:41     30s] @(#)CDS: AAE 23.14-s018 (64bit) 02/28/2025 (Linux 3.10.0-693.el7.x86_64)
+[05/13 23:46:41     30s] @(#)CDS: CTE 23.14-s036_1 () Feb 22 2025 01:17:26 ( )
+[05/13 23:46:41     30s] @(#)CDS: SYNTECH 23.14-s010_1 () Feb 19 2025 23:56:49 ( )
+[05/13 23:46:41     30s] @(#)CDS: CPE v23.14-s082
+[05/13 23:46:41     30s] @(#)CDS: IQuantus/TQuantus 23.1.1-s336 (64bit) Mon Jan 20 22:11:00 PST 2025 (Linux 3.10.0-693.el7.x86_64)
+[05/13 23:46:41     30s] @(#)CDS: OA 22.61-p020 Fri Nov  1 12:14:48 2024
+[05/13 23:46:41     30s] @(#)CDS: SGN 23.10-d005 (03-Oct-2023) (64 bit executable, TkQt5.15.9)
+[05/13 23:46:41     30s] @(#)CDS: RCDB 11.15.0
+[05/13 23:46:41     30s] @(#)CDS: STYLUS 23.16-e002_1 (01/09/2025 16:47 PST)
+[05/13 23:46:41     30s] @(#)CDS: IntegrityPlanner-23.14-17034 (23.14) (2025-02-20 15:50:05+0800)
+[05/13 23:46:41     30s] @(#)CDS: SYNTHESIS_ENGINE 23.14-s090
+[05/13 23:46:41     30s] Create and set the environment variable TMPDIR to /home/lisihang/thermal_placement/innovus_temp_1017298_1a251d8f-d1ba-4c5f-89aa-ee39da8c577c_pc-MZ73-LM1-000_lisihang_pK3rvZ.
+
+[05/13 23:46:41     30s] Create and set the environment variable TMPDIR to /home/lisihang/thermal_placement/innovus_temp_1017298_1a251d8f-d1ba-4c5f-89aa-ee39da8c577c_pc-MZ73-LM1-000_lisihang_pK3rvZ.
+[05/13 23:46:41     30s] 
+[05/13 23:46:41     30s] Change the soft stacksize limit to 0.2%RAM (3095 mbytes). Set global soft_stack_size_limit to change the value.
+[05/13 23:46:42     31s] Info: Process UID = 1017298 / 1a251d8f-d1ba-4c5f-89aa-ee39da8c577c / SZvAwWi4tA
+[05/13 23:46:42     31s] 
+[05/13 23:46:42     31s] **INFO:  MMMC transition support version v31-84 
+[05/13 23:46:42     31s] 
+[05/13 23:46:42     31s] #@ Processing -files option
+[05/13 23:46:42     31s] @innovus 1> source /tmp/innovus_help.7wXANt.tcl
+[05/13 23:46:42     31s] #@ Begin verbose source (pre): source /tmp/innovus_help.7wXANt.tcl
+[05/13 23:46:42     31s] @file 1: help read_activity_file
+[05/13 23:46:42     31s] Command: read_activity_file:
+[05/13 23:46:42     31s] 
+[05/13 23:46:42     31s] Usage: read_activity_file [-help] [<activity_file>] [-block <string>]
+[05/13 23:46:42     31s]                           [-cell <string>] [-end <string>] [-format <string>]
+[05/13 23:46:42     31s]                           [-hierarchy_separator <string>]
+[05/13 23:46:42     31s]                           [-name_mapping_rule <string>] [-reset] [-rtl <string>]
+[05/13 23:46:42     31s]                           [-scale_time <string>] [-scope <string>]
+[05/13 23:46:42     31s]                           [-start <string>] [-start_time_shift <string>]
+[05/13 23:46:42     31s]                           [-weight <string>] [-write_net_freq {true false}]
+[05/13 23:46:42     31s]                           [-zero_delay <string>]
+[05/13 23:46:42     31s] 
+[05/13 23:46:42     31s] -help                             # Prints out the command usage
+[05/13 23:46:42     31s] <activity_file>                   # Specify the name of the activity file.
+[05/13 23:46:42     31s]                                   # (string, optional)
+[05/13 23:46:42     31s] -block <string>                   # Specifies the name of the
+[05/13 23:46:42     31s]                                   # VCD/FSDB/TCF/SHM/PHY block to map a
+[05/13 23:46:42     31s]                                   # sub-block activity file with a top level
+[05/13 23:46:42     31s]                                   # Verilog/Def file. (string, optional)
+[05/13 23:46:42     31s] -cell <string>                    # master call name (string, optional)
+[05/13 23:46:42     31s] -end <string>                     # Specifies the end time as time-value pairs
+[05/13 23:46:42     31s]                                   # to report the average power across
+[05/13 23:46:42     31s]                                   # non-overlapping multiple windows specified
+[05/13 23:46:42     31s]                                   # in the VCD/FSDB/SHM/PHY file for a block,
+[05/13 23:46:42     31s]                                   # level of hierarchy, or other part of the
+[05/13 23:46:42     31s]                                   # design. (string, optional)
+[05/13 23:46:42     31s] -format <string>                  # Specifies the net activity of the design
+[05/13 23:46:42     31s]                                   # using an activity file in VCD, TCF, FSDB,
+[05/13 23:46:42     31s]                                   # PHY or SAIF format. (string, optional)
+[05/13 23:46:42     31s] -hierarchy_separator <string>     # Specifies the separator character in the
+[05/13 23:46:42     31s]                                   # hierarchical net names, bus names, and pin
+[05/13 23:46:42     31s]                                   # names for the block or other part of the
+[05/13 23:46:42     31s]                                   # design. (string, optional)
+[05/13 23:46:42     31s] -name_mapping_rule <string>       # Specifies the input rule-based mapping to
+[05/13 23:46:42     31s]                                   # map RTL vectors to gate-level netlist.
+[05/13 23:46:42     31s]                                   # These rules will apply to all the RTL
+[05/13 23:46:42     31s]                                   # activity files specified. (string, optional)
+[05/13 23:46:42     31s] -reset                            # Specifies to reset and ignore all the
+[05/13 23:46:42     31s]                                   # previous activity files. (bool, optional)
+[05/13 23:46:42     31s] -rtl <string>                     # This option should be set when RTL vector
+[05/13 23:46:42     31s]                                   # is specified. (string, optional)
+[05/13 23:46:42     31s] -scale_time <string>              # Scales the VCD/FSDB/TCF/SHM/PHY duration
+[05/13 23:46:42     31s]                                   # value by the specified scale factor.
+[05/13 23:46:42     31s]                                   # (string, optional)
+[05/13 23:46:42     31s] -scope <string>                   # Specifies the VCD/FSDB/TCF/SHM/PHY scope,
+[05/13 23:46:42     31s]                                   # that is, the name of the module within the
+[05/13 23:46:42     31s]                                   # activity file associated with the block or
+[05/13 23:46:42     31s]                                   # other part of the design. (string, optional)
+[05/13 23:46:42     31s] -start <string>                   # Specifies the start time as time-value
+[05/13 23:46:42     31s]                                   # pairs to report the average power across
+[05/13 23:46:42     31s]                                   # non-overlapping multiple windows specified
+[05/13 23:46:42     31s]                                   # in the VCD/FSDB/SHM/PHY file for a block,
+[05/13 23:46:42     31s]                                   # level of hierarchy, or other part of the
+[05/13 23:46:42     31s]                                   # design. (string, optional)
+[05/13 23:46:42     31s] -start_time_shift <string>        # Specifies to shift the start time of the
+[05/13 23:46:42     31s]                                   # specified activity files. (string, optional)
+[05/13 23:46:42     31s] -weight <string>                  # Specifies the weight number of the TCF
+[05/13 23:46:42     31s]                                   # file. Default : 1.0 (string, optional)
+[05/13 23:46:42     31s] -write_net_freq {true false}      # This option should be set when an activity
+[05/13 23:46:42     31s]                                   # from a VCD/FSDB/TCF/SHM/PHY file needs to
+[05/13 23:46:42     31s]                                   # be used to capture net frequency for signal
+[05/13 23:46:42     31s]                                   # EM analysis.  Default : false (enum, optional)
+[05/13 23:46:42     31s] -zero_delay <string>              # This option should be set when Zero Delay
+[05/13 23:46:42     31s]                                   # Vector File is specified. (string, optional)
+[05/13 23:46:42     31s] 
+[05/13 23:46:42     31s] 
+[05/13 23:46:42     31s] 
+[05/13 23:46:42     31s] @file 2: help read_saif
+[05/13 23:46:42     31s] No help entry for read_saif
+[05/13 23:46:42     31s] 
+[05/13 23:46:42     31s] @file 3: help read_vcd
+[05/13 23:46:42     31s] No help entry for read_vcd
+[05/13 23:46:42     31s] 
+[05/13 23:46:42     31s] @file 4: help report_power
+[05/13 23:46:42     31s] Command: report_power:
+[05/13 23:46:42     31s] 
+[05/13 23:46:42     31s] Usage: report_power [-help] [-block <string>] [-cap] [-cap_unit <string>]
+[05/13 23:46:42     31s]                     [-cell <string>] [-cell_list_file <string>]
+[05/13 23:46:42     31s]                     [-cell_type <string>] [-clock_domain <string>]
+[05/13 23:46:42     31s]                     [-clock_gating_efficiency] [-clock_network <string>]
+[05/13 23:46:42     31s]                     [-cluster_gating_efficiency]
+[05/13 23:46:42     31s]                     [-combinational_sequential_power_distribution]
+[05/13 23:46:42     31s]                     [-compress <integer>] [-distribute]
+[05/13 23:46:42     31s]                     [-exclude_cells <string>] [-exclude_cells_file <string>]
+[05/13 23:46:42     31s]                     [-exclude_instances_file <string>] [-exclude_insts <string>]
+[05/13 23:46:42     31s]                     [-float_precision <double>] [-format <string>]
+[05/13 23:46:42     31s]                     [-group_type <string>] [-hierarchical_instances <string>]
+[05/13 23:46:42     31s]                     [-hierarchy <string>] [-include_sequential_in_clock]
+[05/13 23:46:42     31s]                     [-inst_list_file <string>] [-insts <string>] [-leakage]
+[05/13 23:46:42     31s]                     [-net] [-no_wrap] [-nworst <string>] [-out_dir <string>]
+[05/13 23:46:42     31s]                     [-out_dir <string>] [-out_file <string>] [-pg_net <string>]
+[05/13 23:46:42     31s]                     [-pg_pin] [-power_db_directory <string>]
+[05/13 23:46:42     31s]                     [-power_density_tiles <string>]
+[05/13 23:46:42     31s]                     [-power_density_tiles_row_column <string>]
+[05/13 23:46:42     31s]                     [-power_density_tiles_size <string>]
+[05/13 23:46:42     31s]                     [-power_domain <string>] [-power_unit <string>]
+[05/13 23:46:42     31s]                     [-print_memory_power] [-register_gating_efficiency]
+[05/13 23:46:42     31s]                     [-report_prefix <string>] [-sort <string>] [-stat]
+[05/13 23:46:42     31s]                     [-thermal_conductivity_inputs <string>]
+[05/13 23:46:42     31s]                     [-thermal_leakage_temperature <string>]
+[05/13 23:46:42     31s]                     [-thermal_leakage_temperature_scale_table <string>]
+[05/13 23:46:42     31s]                     [-thermal_leakage_temperature_scale_table_file <string>]
+[05/13 23:46:42     31s]                     [-thermal_material_file <string>]
+[05/13 23:46:42     31s]                     [-thermal_power_map_bottom_layer <string>]
+[05/13 23:46:42     31s]                     [-thermal_power_map_density_table_tiles <string>]
+[05/13 23:46:42     31s]                     [-thermal_power_map_file <string>]
+[05/13 23:46:42     31s]                     [-thermal_power_map_format <string>]
+[05/13 23:46:42     31s]                     [-thermal_power_map_format_version <string>]
+[05/13 23:46:42     31s]                     [-thermal_power_map_header_include_file <string>]
+[05/13 23:46:42     31s]                     [-thermal_power_map_power_table_tiles <string>]
+[05/13 23:46:42     31s]                     [-thermal_power_map_si_unit <string>]
+[05/13 23:46:42     31s]                     [-thermal_power_map_tiles <string>]
+[05/13 23:46:42     31s]                     [-thermal_power_map_top_layer <string>]
+[05/13 23:46:42     31s]                     [-threshold <string>] [-threshold_voltage_group <string>]
+[05/13 23:46:42     31s]                     [-time_based_report] [-time_unit <string>] [-toggle_rate]
+[05/13 23:46:42     31s]                     [-use_geometry_cell_size <string>] [-view <string>]
+[05/13 23:46:42     31s] 
+[05/13 23:46:42     31s] -help                                    # Prints out the command usage
+[05/13 23:46:42     31s] -block <string>                          # create power reports for block
+[05/13 23:46:42     31s]                                          # <block_name> (string, optional)
+[05/13 23:46:42     31s] -cap                                     # report net cap and pin cap
+[05/13 23:46:42     31s]                                          # (bool, optional)
+[05/13 23:46:42     31s] -cap_unit <string>                       # capacitance unit (string, optional)
+[05/13 23:46:42     31s] -cell <string>                           # cells to report (string, optional)
+[05/13 23:46:42     31s] -cell_list_file <string>                 # cell list in file to report
+[05/13 23:46:42     31s]                                          # (string, optional)
+[05/13 23:46:42     31s] -cell_type <string>                      # Specifies the cell type to include
+[05/13 23:46:42     31s]                                          # in the power report. Default : all
+[05/13 23:46:42     31s]                                          # (string, optional)
+[05/13 23:46:42     31s] -clock_domain <string>                   # Specify clock domains in power
+[05/13 23:46:42     31s]                                          # reports. (string, optional)
+[05/13 23:46:42     31s] -clock_gating_efficiency                 # Generates a report that includes the
+[05/13 23:46:42     31s]                                          # Clock Gating Efficiency (CGE) for
+[05/13 23:46:42     31s]                                          # all clock gating instances as well
+[05/13 23:46:42     31s]                                          # as different hierarchies in the
+[05/13 23:46:42     31s]                                          # design. (bool, optional)
+[05/13 23:46:42     31s] -clock_network <string>                  # Reports the power consumption of the
+[05/13 23:46:42     31s]                                          # clock network, including the power
+[05/13 23:46:42     31s]                                          # for generated clocks. Default : all.
+[05/13 23:46:42     31s]                                          # (string, optional)
+[05/13 23:46:42     31s] -cluster_gating_efficiency               # Specifies to generate the cluster
+[05/13 23:46:42     31s]                                          # efficiency report in the RGE report.
+[05/13 23:46:42     31s]                                          # (bool, optional)
+[05/13 23:46:42     31s] -combinational_sequential_power_distribution
+[05/13 23:46:42     31s]                                          # Specifies to generate a report that
+[05/13 23:46:42     31s]                                          # gives the ratio of combinational
+[05/13 23:46:42     31s]                                          # versus sequential power for all
+[05/13 23:46:42     31s]                                          # modules of a given hierarchy.
+[05/13 23:46:42     31s]                                          # (bool, optional)
+[05/13 23:46:42     31s] -compress <integer>                      # compressed power report generation
+[05/13 23:46:42     31s]                                          # (int, optional)
+[05/13 23:46:42     31s] -distribute                              # create distributed power analysis
+[05/13 23:46:42     31s]                                          # setup (bool, optional)
+[05/13 23:46:42     31s] -exclude_cells <string>                  # -exclude_cells <cell_list>
+[05/13 23:46:42     31s]                                          # (string, optional)
+[05/13 23:46:42     31s] -exclude_cells_file <string>             # -exclude_cells_file <cell_list_file>
+[05/13 23:46:42     31s]                                          # (string, optional)
+[05/13 23:46:42     31s] -exclude_instances_file <string>         # -exclude_instances_file
+[05/13 23:46:42     31s]                                          # <instance_list_file> (string, optional)
+[05/13 23:46:42     31s] -exclude_insts <string>                  # -exclude_instances <inst_list>
+[05/13 23:46:42     31s]                                          # (string, optional)
+[05/13 23:46:42     31s] -float_precision <double>                # floating number precision control
+[05/13 23:46:42     31s]                                          # (double, optional)
+[05/13 23:46:42     31s] -format <string>                         # Specifies the type of report summary
+[05/13 23:46:42     31s]                                          # required for static power reporting.
+[05/13 23:46:42     31s]                                          # Valid Values are {simple |
+[05/13 23:46:42     31s]                                          # detailed}, (string, optional)
+[05/13 23:46:42     31s] -group_type <string>                     # user-defined cell group based power
+[05/13 23:46:42     31s]                                          # summary (string, optional)
+[05/13 23:46:42     31s] -hierarchical_instances <string>         # Specifies to report all the power
+[05/13 23:46:42     31s]                                          # content for the specified
+[05/13 23:46:42     31s]                                          # hierarchical instances/ blocks.
+[05/13 23:46:42     31s]                                          # (string, optional)
+[05/13 23:46:42     31s] -hierarchy <string>                      # Specifies the hierarchy level that
+[05/13 23:46:42     31s]                                          # is included in the power report.
+[05/13 23:46:42     31s]                                          # (string, optional)
+[05/13 23:46:42     31s] -include_sequential_in_clock             # include seqnential elements in clock
+[05/13 23:46:42     31s]                                          # power (bool, optional)
+[05/13 23:46:42     31s] -inst_list_file <string>                 # instance list in file to report
+[05/13 23:46:42     31s]                                          # (string, optional)
+[05/13 23:46:42     31s] -insts <string>                          # Specifies the instances to include
+[05/13 23:46:42     31s]                                          # in the power report. (string, optional)
+[05/13 23:46:42     31s] -leakage                                 # Reports only leakage power of the
+[05/13 23:46:42     31s]                                          # design. (bool, optional)
+[05/13 23:46:42     31s] -net                                     # Reports the net switching power, as
+[05/13 23:46:42     31s]                                          # well as the load capacitance, toggle
+[05/13 23:46:42     31s]                                          # rate, and switching values for each
+[05/13 23:46:42     31s]                                          # net in the design. (bool, optional)
+[05/13 23:46:42     31s] -no_wrap                                 # no wrapping for long lines
+[05/13 23:46:42     31s]                                          # (bool, optional)
+[05/13 23:46:42     31s] -nworst <string>                         # Reports the number of nets with the
+[05/13 23:46:42     31s]                                          # highest net switching power.
+[05/13 23:46:42     31s]                                          # (string, optional)
+[05/13 23:46:42     31s] -out_dir <string>                        # Specifies the name of the power
+[05/13 23:46:42     31s]                                          # analysis output directory that saves
+[05/13 23:46:42     31s]                                          # the power reports. (string, optional)
+[05/13 23:46:42     31s] -out_dir <string>                        # Output Directory (string, optional)
+[05/13 23:46:42     31s] -out_file <string>                       # Specifies the name of the report
+[05/13 23:46:42     31s]                                          # file in which the top-level summary
+[05/13 23:46:42     31s]                                          # of the power consumption information
+[05/13 23:46:42     31s]                                          # is written. (string, optional)
+[05/13 23:46:42     31s] -pg_net <string>                         # Reports the power consumed by each
+[05/13 23:46:42     31s]                                          # instance that is connected to the
+[05/13 23:46:42     31s]                                          # specified list of power nets.
+[05/13 23:46:42     31s]                                          # Default : all. (string, optional)
+[05/13 23:46:42     31s] -pg_pin                                  # include supply pin name in power
+[05/13 23:46:42     31s]                                          # report (bool, optional)
+[05/13 23:46:42     31s] -power_db_directory <string>             # power DB directory path
+[05/13 23:46:42     31s]                                          # (string, optional)
+[05/13 23:46:42     31s] -power_density_tiles <string>            # number of power density tiles
+[05/13 23:46:42     31s]                                          # (string, optional)
+[05/13 23:46:42     31s] -power_density_tiles_row_column <string>
+[05/13 23:46:42     31s]                                          # number of tiles in X/Y dimensions to
+[05/13 23:46:42     31s]                                          # partition the specified region
+[05/13 23:46:42     31s]                                          # (string, optional)
+[05/13 23:46:42     31s] -power_density_tiles_size <string>       # tile size for partitioning the
+[05/13 23:46:42     31s]                                          # specified region (string, optional)
+[05/13 23:46:42     31s] -power_domain <string>                   # power domain list to report
+[05/13 23:46:42     31s]                                          # (string, optional)
+[05/13 23:46:42     31s] -power_unit <string>                     # power number unit (string, optional)
+[05/13 23:46:42     31s] -print_memory_power                      # print memory power as seperate
+[05/13 23:46:42     31s]                                          # category (bool, optional)
+[05/13 23:46:42     31s] -register_gating_efficiency              # Generates a report that includes the
+[05/13 23:46:42     31s]                                          # Register Gating Efficiency (RGE) and
+[05/13 23:46:42     31s]                                          # Data Aware Gating Efficiency (DAGE)
+[05/13 23:46:42     31s]                                          # for all sequential cell instances as
+[05/13 23:46:42     31s]                                          # well as different hierarchies in the
+[05/13 23:46:42     31s]                                          # design. (bool, optional)
+[05/13 23:46:42     31s] -report_prefix <string>                  # Specifies a prefix for the report in
+[05/13 23:46:42     31s]                                          # which the top-level summary of the
+[05/13 23:46:42     31s]                                          # power consumption information is
+[05/13 23:46:42     31s]                                          # written. (string, optional)
+[05/13 23:46:42     31s] -sort <string>                           # Sorts the instance-based power
+[05/13 23:46:42     31s]                                          # consumption data by internal ,
+[05/13 23:46:42     31s]                                          # switching , leakage , or total
+[05/13 23:46:42     31s]                                          # power. Default : total
+[05/13 23:46:42     31s]                                          # (string, optional)
+[05/13 23:46:42     31s] -stat                                    # report net statistics
+[05/13 23:46:42     31s]                                          # (bool, optional)
+[05/13 23:46:42     31s] -thermal_conductivity_inputs <string>    # Specifies a file containing the
+[05/13 23:46:42     31s]                                          # thermal conductivity value for
+[05/13 23:46:42     31s]                                          # layers. (string, optional)
+[05/13 23:46:42     31s] -thermal_leakage_temperature <string>    # Defines the temperature to calculate
+[05/13 23:46:42     31s]                                          # leakage for the power map file.
+[05/13 23:46:42     31s]                                          # (string, optional)
+[05/13 23:46:42     31s] -thermal_leakage_temperature_scale_table <string>
+[05/13 23:46:42     31s]                                          # Defines global leakage power scaling
+[05/13 23:46:42     31s]                                          # factors on each temperature point.
+[05/13 23:46:42     31s]                                          # (string, optional)
+[05/13 23:46:42     31s] -thermal_leakage_temperature_scale_table_file <string>
+[05/13 23:46:42     31s]                                          # Defines library/cell/instance based
+[05/13 23:46:42     31s]                                          # leakage power scaling factors on
+[05/13 23:46:42     31s]                                          # each temperature point.
+[05/13 23:46:42     31s]                                          # (string, optional)
+[05/13 23:46:42     31s] -thermal_material_file <string>          # Specifies a file to allow layer
+[05/13 23:46:42     31s]                                          # thickness set by user.
+[05/13 23:46:42     31s]                                          # (string, optional)
+[05/13 23:46:42     31s] -thermal_power_map_bottom_layer <string>
+[05/13 23:46:42     31s]                                          # report zero metal density lower than
+[05/13 23:46:42     31s]                                          # this layer (string, optional)
+[05/13 23:46:42     31s] -thermal_power_map_density_table_tiles <string>
+[05/13 23:46:42     31s]                                          # Defines metal density table tile
+[05/13 23:46:42     31s]                                          # number in the X and Y direction. By
+[05/13 23:46:42     31s]                                          # default 10*10 will be used.
+[05/13 23:46:42     31s]                                          # (string, optional)
+[05/13 23:46:42     31s] -thermal_power_map_file <string>         # Generates the power map file with
+[05/13 23:46:42     31s]                                          # the specified name in the output
+[05/13 23:46:42     31s]                                          # directory. (string, optional)
+[05/13 23:46:42     31s] -thermal_power_map_format <string>       # Generates a tile-based power map
+[05/13 23:46:42     31s]                                          # file in the simple or stack format
+[05/13 23:46:42     31s]                                          # to perform accurate thermal
+[05/13 23:46:42     31s]                                          # analysis. (string, optional)
+[05/13 23:46:42     31s] -thermal_power_map_format_version <string>
+[05/13 23:46:42     31s]                                          # Version tag in power map file for
+[05/13 23:46:42     31s]                                          # different format. (string, optional)
+[05/13 23:46:42     31s] -thermal_power_map_header_include_file <string>
+[05/13 23:46:42     31s]                                          # Specifies a file for adding extra
+[05/13 23:46:42     31s]                                          # line in power map file header.
+[05/13 23:46:42     31s]                                          # (string, optional)
+[05/13 23:46:42     31s] -thermal_power_map_power_table_tiles <string>
+[05/13 23:46:42     31s]                                          # Defines power table tile number in
+[05/13 23:46:42     31s]                                          # the X and Y direction. By default
+[05/13 23:46:42     31s]                                          # 10*10 will be used. (string, optional)
+[05/13 23:46:42     31s] -thermal_power_map_si_unit <string>      # use SI unit for Thermal Conductivity
+[05/13 23:46:42     31s]                                          # (string, optional)
+[05/13 23:46:42     31s] -thermal_power_map_tiles <string>        # Defines the tile number in the X and
+[05/13 23:46:42     31s]                                          # Y direction. By default 10*10 will
+[05/13 23:46:42     31s]                                          # be used. (string, optional)
+[05/13 23:46:42     31s] -thermal_power_map_top_layer <string>    # report zero metal density higher
+[05/13 23:46:42     31s]                                          # than this layer (string, optional)
+[05/13 23:46:42     31s] -threshold <string>                      # Filters out the instances whose
+[05/13 23:46:42     31s]                                          # total power dissipation is less than
+[05/13 23:46:42     31s]                                          # the specified value. Default : 0.
+[05/13 23:46:42     31s]                                          # (string, optional)
+[05/13 23:46:42     31s] -threshold_voltage_group <string>        # Reports leakage by voltage threshold
+[05/13 23:46:42     31s]                                          # group in the power report. Default :
+[05/13 23:46:42     31s]                                          # all. (string, optional)
+[05/13 23:46:42     31s] -time_based_report                       # write out detailed VCD profiling
+[05/13 23:46:42     31s]                                          # report (bool, optional)
+[05/13 23:46:42     31s] -time_unit <string>                      # time unit (string, optional)
+[05/13 23:46:42     31s] -toggle_rate                             # Specifies to dump out instance-based
+[05/13 23:46:42     31s]                                          # activity to the outfile. If multiple
+[05/13 23:46:42     31s]                                          # clocks are reaching the instance,
+[05/13 23:46:42     31s]                                          # then the fastest clock is used as a
+[05/13 23:46:42     31s]                                          # reference. (bool, optional)
+[05/13 23:46:42     31s] -use_geometry_cell_size <string>         # specify using gepmoetry or placement
+[05/13 23:46:42     31s]                                          # for sclp PGV cell size
+[05/13 23:46:42     31s]                                          # (string, optional)
+[05/13 23:46:42     31s] -view <string>                           # Power analysis is performed for the
+[05/13 23:46:42     31s]                                          # specified view. Default : Uses
+[05/13 23:46:42     31s]                                          # current view in Tempus.
+[05/13 23:46:42     31s]                                          # (string, optional)
+[05/13 23:46:42     31s] 
+[05/13 23:46:42     31s] 
+[05/13 23:46:42     31s] 
+[05/13 23:46:42     31s] @file 5: exit
+[05/13 23:46:42     31s] 
+[05/13 23:46:42     31s] *** Memory Usage v#2 (Current mem = 1733.070M, initial mem = 855.754M) ***
+[05/13 23:46:42     31s] *** Message Summary: 0 warning(s), 0 error(s)
+[05/13 23:46:42     31s] 
+[05/13 23:46:42     31s] --- Ending "Innovus" (totcpu=0:00:31.6, real=0:00:18.0, mem=1733.1M) ---

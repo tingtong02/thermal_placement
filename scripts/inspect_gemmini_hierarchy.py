@@ -16,12 +16,12 @@ import yaml
 MODULE_RE = re.compile(r"^\s*module\s+([A-Za-z_][A-Za-z0-9_$]*)\b", re.MULTILINE)
 
 CATEGORY_RULES: list[tuple[str, str, tuple[str, ...]]] = [
-    ("pe_array", "PE array / mesh / compute datapath", ("mesh", "tile", "pe", "mac", "systolic")),
+    ("pe_array", "PE array / mesh / compute datapath", ("mesh", "meshwithdelays", "pe", "pe_", "macunit", "systolic", "accpipe", "scalepipe")),
     ("scratchpad", "Scratchpad / local buffer", ("scratchpad", "spad", "sp_bank", "spadmem")),
-    ("accumulator", "Accumulator / partial-sum storage", ("accumulator", "accumulator", "acc_", "accbank")),
+    ("accumulator", "Accumulator / partial-sum storage", ("accumulator", "accumulatormem", "accumulatorscale", "accbank")),
     ("load_store_dma", "Load/store DMA and memory movement", ("dma", "streamreader", "streamwriter", "loadcontroller", "storecontroller")),
-    ("controller", "Command, execute, loop, and scheduling control", ("controller", "cmd", "reservationstation", "scheduler", "fsm", "unroller", "rob")),
-    ("tl_soc_glue", "TileLink / RoCC / SoC glue", ("tl", "tilelink", "rocc", "frontend", "memport", "ptw")),
+    ("controller", "Command, execute, loop, and scheduling control", ("executecontroller", "countercontroller", "gemminicmd", "reservationstation", "loopmatmul", "unroller", "rob")),
+    ("tl_soc_glue", "TileLink / RoCC / SoC glue", ("tilelink", "rocc", "frontend", "memport", "ptw")),
 ]
 
 
@@ -45,10 +45,20 @@ def read_modules(rtl_dir: Path) -> dict[str, list[str]]:
     return dict(modules)
 
 
+def keyword_matches(module_name: str, keyword: str) -> bool:
+    lowered = module_name.lower()
+    keyword = keyword.lower()
+    if keyword == "pe":
+        return lowered == "pe" or lowered.startswith("pe_")
+    if keyword.endswith("_"):
+        return lowered.startswith(keyword)
+    return keyword in lowered
+
+
 def category_for(module_name: str) -> str:
     lowered = module_name.lower()
     for category, _description, keywords in CATEGORY_RULES:
-        if any(keyword in lowered for keyword in keywords):
+        if any(keyword_matches(module_name, keyword) for keyword in keywords):
             return category
     if "gemmini" in lowered:
         return "gemmini_other"

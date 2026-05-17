@@ -1,0 +1,6 @@
+rank,block,peak_temperature_k,final_temperature_k,peak_delta_over_ambient_k
+1,other_context,318.230000,318.210000,0.080000
+2,scratchpad_accumulator_context,318.160000,318.160000,0.010000
+3,controller_execute,318.160000,318.160000,0.010000
+4,pe_array,318.160000,318.160000,0.010000
+5,load_store_datapath,318.150000,318.150000,0.000000

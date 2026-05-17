@@ -36,6 +36,11 @@ check_required_paths() {
     "$HOTSPOT_HOME/hotspot"
     "$OPENROAD_EXE"
     "$YOSYS_EXE"
+    "$PACT_ENTRY"
+    "$XYCE_EXE"
+    "$SLANG_HOME/bin/slang"
+    "$SV2V_HOME/bin/sv2v"
+    "$YOSYS_SLANG_PLUGIN"
   )
 
   for path in "${paths[@]}"; do
@@ -109,6 +114,49 @@ check_hotspot() {
   hotfloorplan -h >/dev/null 2>&1 || true
 }
 
+check_xyce() {
+  cat > "$TMP_DIR/xyce_smoke.cir" <<'SPICE'
+* Xyce smoke
+V1 1 0 DC 1
+R1 1 0 1k
+.OP
+.PRINT DC V(1)
+.END
+SPICE
+  Xyce "$TMP_DIR/xyce_smoke.cir" >/dev/null
+}
+
+check_openmpi() {
+  mpicc --showme:version >/dev/null
+  mpirun -np 2 /bin/hostname >/dev/null
+}
+
+check_systemverilog_frontends() {
+  cat > "$TMP_DIR/toolcheck.sv" <<'SV'
+module toolcheck(input logic a, output logic y);
+  assign y = a;
+endmodule
+SV
+  slang "$TMP_DIR/toolcheck.sv" >/dev/null
+  sv2v "$TMP_DIR/toolcheck.sv" >/dev/null
+  yosys -q -m slang -p "read_slang $TMP_DIR/toolcheck.sv; hierarchy -top toolcheck; proc; stat"
+}
+
+check_pact_superlu() {
+  python "$PACT_ENTRY" --help >/dev/null
+  (
+    cd "$PACT_HOME/src"
+    python PACT.py \
+      ../Example/lcf_files/10mm_lcf_UniformPD_50Wcm2.csv \
+      ../Example/config_files/default_htc_1e4_10mm.config \
+      ../Example/modelParams_files/modelParams10mm.config_40x40 \
+      --gridSteadyFile "$TMP_DIR/pact_superlu.grid.steady" \
+      >/dev/null
+  )
+  test -s "$TMP_DIR/pact_superlu.grid.steady.layer0"
+  test -s "$TMP_DIR/pact_superlu.grid.steady.layer1"
+}
+
 run "required paths" check_required_paths
 run "Chipyard required submodules" check_chipyard_submodules
 run "Python analysis packages and VCD parser" python "$ROOT/scripts/check_python_env.py"
@@ -127,5 +175,9 @@ run "OpenROAD version" openroad -version
 run "OpenROAD Tcl smoke" check_openroad
 run_shell "ORFS tool checks" "make -C '$FLOW_HOME' check-yosys check-openroad"
 run "HotSpot thermal smoke" check_hotspot
+run "Xyce SPICE smoke" check_xyce
+run "OpenMPI smoke" check_openmpi
+run "slang/sv2v/yosys-slang smoke" check_systemverilog_frontends
+run "PACT SuperLU thermal smoke" check_pact_superlu
 
 echo "environment check passed"

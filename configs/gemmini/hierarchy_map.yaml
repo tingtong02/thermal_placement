@@ -14,13 +14,16 @@ categories:
     modules:
     - CounterController
     - ExecuteController
-    - InclusiveCacheBankScheduler
-    - JtagTapController
+    - LoopMatmul
+    - LoopMatmulExecute
+    - LoopMatmulLdA
+    - LoopMatmulLdB
+    - LoopMatmulLdD
+    - LoopMatmulStC
     - ProbePicker
     - Queue2_GemminiCmd
     - Queue8_GemminiCmd
     - ReservationStation
-    - TLInterconnectCoupler_mbus_to_memory_controller_port_named_axi4
     - TransposePreloadUnroller
   gemmini_other:
     include_in_thermal_study: true
@@ -29,6 +32,8 @@ categories:
   load_store_dma:
     include_in_thermal_study: true
     modules:
+    - DMACommandTracker
+    - DMACommandTracker_1
     - LoadController
     - StoreController
     - StreamReader
@@ -42,15 +47,21 @@ categories:
     - AXI4UserYanker
     - AlwaysOutTransposer
     - Arbiter2_HellaCacheReq
+    - Arbiter2_TLBundleAWithInfo
     - Arbiter3_LLWB
+    - Arbiter3_TLBundleAWithInfo
     - Arbiter3_UInt6
     - AsyncQueue
     - AsyncQueueSink_DebugInternalBundle
     - AsyncQueueSink_Phit
     - AsyncQueueSink_Phit_TestHarness_UNIQUIFIED
+    - AsyncQueueSink_TLBundleA_a9d32s1k1z2u
+    - AsyncQueueSink_TLBundleD_a9d32s1k1z2u
     - AsyncQueueSource_DebugInternalBundle
     - AsyncQueueSource_Phit
     - AsyncQueueSource_Phit_TestHarness_UNIQUIFIED
+    - AsyncQueueSource_TLBundleA_a9d32s1k1z2u
+    - AsyncQueueSource_TLBundleD_a9d32s1k1z2u
     - AsyncQueue_TestHarness_UNIQUIFIED
     - AsyncResetRegVec_w1_i0
     - AsyncResetRegVec_w1_i1
@@ -91,13 +102,17 @@ categories:
     - ClockGroupCombiner
     - ClockGroupResetSynchronizer
     - ClockSourceAtFreqMHz
+    - CoherenceManagerWrapper
     - CompareRecFN
     - CounterFile
     - DCache
     - DCacheDataArray
+    - DMIToTL
+    - DTLB_2
     - DebugTransportModuleJTAG
     - DecoupledSerialPhy
     - DecoupledSerialPhy_TestHarness_UNIQUIFIED
+    - DecoupledTLB
     - DigitalTop
     - Directory
     - DivSqrtRawFN_small_e11_s53
@@ -109,10 +124,15 @@ categories:
     - DivSqrtRecFM_small_e11_s53
     - DivSqrtRecFM_small_e5_s11
     - DivSqrtRecFM_small_e8_s24
+    - EICG_wrapper
+    - ErrorDeviceWrapper
     - FPToFP
     - FPToInt
     - FPU
     - FPUDecoder
+    - FPUFMAPipe_l3_f16
+    - FPUFMAPipe_l3_f32
+    - FPUFMAPipe_l4_f64
     - FixedClockBroadcast_2
     - FixedClockBroadcast_3
     - FixedClockBroadcast_4
@@ -120,8 +140,20 @@ categories:
     - FlitToPhit_f32_p32
     - FlitToPhit_f32_p32_TestHarness_UNIQUIFIED
     - FrontBus
+    - GenericDeserializer_TLBeatw10_f32
+    - GenericDeserializer_TLBeatw10_f32_TestHarness_UNIQUIFIED
+    - GenericDeserializer_TLBeatw67_f32
+    - GenericDeserializer_TLBeatw67_f32_TestHarness_UNIQUIFIED
+    - GenericDeserializer_TLBeatw87_f32
+    - GenericDeserializer_TLBeatw87_f32_TestHarness_UNIQUIFIED
+    - GenericDeserializer_TLBeatw88_f32
+    - GenericDeserializer_TLBeatw88_f32_TestHarness_UNIQUIFIED
     - GenericDigitalInIOCell
     - GenericDigitalOutIOCell
+    - GenericSerializer_TLBeatw10_f32
+    - GenericSerializer_TLBeatw67_f32
+    - GenericSerializer_TLBeatw87_f32
+    - GenericSerializer_TLBeatw88_f32
     - HellaCacheArbiter
     - IBuf
     - ICache
@@ -131,8 +163,10 @@ categories:
     - INToRecFN_i64_e5_s11
     - INToRecFN_i64_e8_s24
     - INToRecFN_i8_e8_s24
+    - ITLB
     - Im2Col
     - InclusiveCache
+    - InclusiveCacheBankScheduler
     - InclusiveCacheControl
     - InferredResetSynchronizerPrimitiveShiftReg_d3_i0
     - IntSyncAsyncCrossingSink_n1x1
@@ -144,6 +178,8 @@ categories:
     - IntToFP
     - IntXbar_i4_o1
     - JtagBypassChain
+    - JtagStateMachine
+    - JtagTapController
     - LevelGateway
     - ListBuffer_PutBufferAEntry_q40_e40
     - ListBuffer_PutBufferCEntry_q2_e8
@@ -154,14 +190,12 @@ categories:
     - LoopConvLdInput
     - LoopConvLdWeight
     - LoopConvSt
-    - LoopMatmul
-    - LoopMatmulExecute
-    - LoopMatmulLdA
-    - LoopMatmulLdB
-    - LoopMatmulLdD
-    - LoopMatmulStC
     - MSHR
+    - MaxPeriodFibonacciLFSR
     - MemoryBus
+    - MulAddRecFNPipe_l2_e11_s53
+    - MulAddRecFNPipe_l2_e5_s11
+    - MulAddRecFNPipe_l2_e8_s24
     - MulAddRecFNToRaw_postMul_e11_s53
     - MulAddRecFNToRaw_postMul_e5_s11
     - MulAddRecFNToRaw_postMul_e8_s24
@@ -174,32 +208,89 @@ categories:
     - MultiHeadedQueue_1
     - NonSyncResetSynchronizerPrimitiveShiftReg_d3
     - OptimizationBarrier_PTE
+    - OptimizationBarrier_TLBEntryData
     - OptimizationBarrier_UInt
     - PLICClockSinkDomain
     - PLICFanIn
+    - PMAChecker
     - PMPChecker_s2
     - PMPChecker_s3
     - PMPChecker_s6
+    - PeripheryBus_cbus
+    - PeripheryBus_pbus
     - PhitArbiter_p32_f32_n5
     - PhitArbiter_p32_f32_n5_TestHarness_UNIQUIFIED
     - PhitDemux_p32_f32_n5
     - PhitDemux_p32_f32_n5_TestHarness_UNIQUIFIED
     - PhitToFlit_p32_f32
     - PhitToFlit_p32_f32_TestHarness_UNIQUIFIED
+    - Pipeline
+    - Pipeline_1
+    - Pipeline_2
+    - Pipeline_3
+    - Pipeline_4
+    - Pipeline_5
+    - Pipeline_6
+    - PixelRepeater
+    - PixelRepeater_1
     - PlusArgTimeout
+    - Queue12_TLBundleC_a32d64s4k3z3c
     - Queue1_AXI4BundleARW
     - Queue1_AXI4BundleW
     - Queue1_BankedStoreInnerAddress
     - Queue1_BundleMap
     - Queue1_DirectoryWrite
+    - Queue1_RegMapperInput_i23_m8
+    - Queue1_RegMapperInput_i9_m8
     - Queue1_SinkXRequest
     - Queue1_SourceXRequest
+    - Queue1_TLBundleAWithInfo
+    - Queue1_TLBundleAWithInfo_2
+    - Queue1_TLBundleAWithInfo_3
+    - Queue1_TLBundleA_a14d64s8k1z4u
+    - Queue1_TLBundleA_a26d64s12k1z2u
+    - Queue1_TLBundleA_a32d128s7k4z3c
+    - Queue1_TLBundleA_a64d64s8k8z8c
+    - Queue1_TLBundleD_a26d64s12k1z2u
+    - Queue1_TLBundleD_a32d128s7k4z3c
+    - Queue1_TLBundleD_a64d64s8k8z8c
     - Queue2_BundleMap
     - Queue2_NormalizedInput
+    - Queue2_TLBundleA_a14d64s8k1z4u
+    - Queue2_TLBundleA_a21d64s8k1z3u
+    - Queue2_TLBundleA_a28d64s5k1z3u
+    - Queue2_TLBundleA_a29d64s8k1z3u
+    - Queue2_TLBundleA_a29d64s8k1z4u
+    - Queue2_TLBundleA_a32d128s2k4z4c
+    - Queue2_TLBundleA_a32d128s4k4z4u
+    - Queue2_TLBundleA_a32d128s5k4z4u
+    - Queue2_TLBundleA_a32d64s1k4z4u
+    - Queue2_TLBundleA_a32d64s4k3z3c
+    - Queue2_TLBundleA_a32d64s4k4z4u
+    - Queue2_TLBundleA_a32d64s5k4z4u
+    - Queue2_TLBundleB_a32d128s2k4z4c
+    - Queue2_TLBundleC_a32d128s2k4z4c
+    - Queue2_TLBundleC_a32d128s7k4z3c
+    - Queue2_TLBundleD_a14d64s8k1z4u
+    - Queue2_TLBundleD_a21d64s8k1z3u
+    - Queue2_TLBundleD_a28d64s5k1z3u
+    - Queue2_TLBundleD_a29d64s8k1z3u
+    - Queue2_TLBundleD_a29d64s8k1z4u
+    - Queue2_TLBundleD_a32d128s2k4z4c
+    - Queue2_TLBundleD_a32d128s4k4z4u
+    - Queue2_TLBundleD_a32d128s5k4z4u
+    - Queue2_TLBundleD_a32d64s1k4z4u
+    - Queue2_TLBundleD_a32d64s4k3z3c
+    - Queue2_TLBundleD_a32d64s4k4z4u
+    - Queue2_TLBundleD_a32d64s5k4z4u
+    - Queue2_TLBundleD_a32d8s1k4z4u
+    - Queue2_TLBundleE_a32d128s2k4z4c
+    - Queue2_TLBundleE_a32d64s4k3z3c
     - Queue2_VectorScalarMultiplierReq
     - Queue2_VectorScalarMultiplierReq_1
     - Queue3_BankedStoreInnerDecoded
     - Queue3_UInt2
+    - Queue5_ComputeCntlSignals
     - Queue5_im2colRowSignals
     - Queue6_TagWithIdAndTotalRows
     - Queue8_Flit
@@ -216,11 +307,23 @@ categories:
     - RecFNToIN_e8_s24_i8
     - RecFNToRecFN
     - RecFNToRecFN_1
+    - Repeater_TLBundleA_a12d64s8k1z3u
+    - Repeater_TLBundleA_a13d64s8k1z3u
+    - Repeater_TLBundleA_a17d64s8k1z3u
+    - Repeater_TLBundleA_a21d64s8k1z3u
+    - Repeater_TLBundleA_a26d64s8k1z3u
+    - Repeater_TLBundleA_a28d64s5k1z3u
+    - Repeater_TLBundleA_a28d64s8k1z3u
+    - Repeater_TLBundleA_a29d128s7k1z4u
+    - Repeater_TLBundleA_a29d64s8k1z3u
+    - Repeater_TLBundleD_a32d128s5k4z4u
+    - Repeater_TLBundleD_a32d64s1k4z4u
     - ResetCatchAndSync_d3
     - ResetCatchAndSync_d3_TestHarness_UNIQUIFIED
     - ResetSynchronizerShiftReg_w1_d3_i0
     - Rocket
     - RocketALU
+    - RocketTile
     - RoundAnyRawFNToRecFN_ie11_is53_oe5_os11
     - RoundAnyRawFNToRecFN_ie11_is53_oe8_os24
     - RoundAnyRawFNToRecFN_ie11_is55_oe11_os53
@@ -234,7 +337,9 @@ categories:
     - RoundRawFNToRecFN_e11_s53
     - RoundRawFNToRecFN_e5_s11
     - RoundRawFNToRecFN_e8_s24
+    - SBToTL
     - SerialRAM
+    - SerialTL0ClockSinkDomain
     - ShiftQueue
     - SimDRAM
     - SimJTAG
@@ -255,9 +360,171 @@ categories:
     - SourceX
     - SynchronizerShiftReg_w1_d3
     - SystemBus
+    - TLAFromBeat_SerialRAM_a64d64s8k8z8c
+    - TLAFromBeat_serial_tl_0_a64d64s8k8z8c
+    - TLAToBeat_SerialRAM_a64d64s8k8z8c
+    - TLAsyncCrossingSink_a9d32s1k1z2u
+    - TLAsyncCrossingSource_a9d32s1k1z2u
+    - TLAtomicAutomata_cbus
+    - TLAtomicAutomata_pbus
+    - TLBFromBeat_SerialRAM_a64d64s8k8z8c
+    - TLBFromBeat_serial_tl_0_a64d64s8k8z8c
+    - TLBToBeat_serial_tl_0_a64d64s8k8z8c
+    - TLBuffer_a14d64s8k1z4u
+    - TLBuffer_a21d64s8k1z3u
+    - TLBuffer_a26d64s12k1z2u
+    - TLBuffer_a28d64s5k1z3u
+    - TLBuffer_a28d64s5k1z3u_1
+    - TLBuffer_a29d64s8k1z3u
+    - TLBuffer_a29d64s8k1z3u_1
+    - TLBuffer_a29d64s8k1z4u
+    - TLBuffer_a32d128s4k4z4u
+    - TLBuffer_a32d128s4k4z4u_1
+    - TLBuffer_a32d128s5k4z4u
+    - TLBuffer_a32d128s5k4z4u_2
+    - TLBuffer_a32d128s7k4z3c
+    - TLBuffer_a32d64s1k4z4u
+    - TLBuffer_a32d64s4k4z4u
+    - TLBuffer_a32d64s5k4z4u
+    - TLBusBypass
+    - TLBusBypassBar
+    - TLCFromBeat_SerialRAM_a64d64s8k8z8c
+    - TLCFromBeat_serial_tl_0_a64d64s8k8z8c
+    - TLCToBeat_SerialRAM_a64d64s8k8z8c
+    - TLCacheCork
+    - TLDFromBeat_SerialRAM_a64d64s8k8z8c
+    - TLDFromBeat_serial_tl_0_a64d64s8k8z8c
+    - TLDToBeat_serial_tl_0_a64d64s8k8z8c
+    - TLDebugModule
+    - TLDebugModuleInner
+    - TLDebugModuleInnerAsync
+    - TLDebugModuleOuter
+    - TLDebugModuleOuterAsync
+    - TLEFromBeat_SerialRAM_a64d64s8k8z8c
+    - TLEFromBeat_serial_tl_0_a64d64s8k8z8c
+    - TLEToBeat_SerialRAM_a64d64s8k8z8c
+    - TLError
+    - TLError_1
+    - TLFragmenter_BootAddrReg
+    - TLFragmenter_CLINT
+    - TLFragmenter_Debug
+    - TLFragmenter_LLCCtrl
+    - TLFragmenter_PLIC
+    - TLFragmenter_TileClockGater
+    - TLFragmenter_TileResetSetter
+    - TLFragmenter_UART
+    - TLFragmenter_bootrom
+    - TLInterconnectCoupler_cbus_to_bootrom
+    - TLInterconnectCoupler_cbus_to_clint
+    - TLInterconnectCoupler_cbus_to_debug
+    - TLInterconnectCoupler_cbus_to_l2_ctrl
+    - TLInterconnectCoupler_cbus_to_plic
+    - TLInterconnectCoupler_cbus_to_prci_ctrl
+    - TLInterconnectCoupler_fbus_from_debug_sb
+    - TLInterconnectCoupler_fbus_from_port_named_serial_tl_0_in
+    - TLInterconnectCoupler_mbus_to_memory_controller_port_named_axi4
+    - TLInterconnectCoupler_pbus_to_bootaddressreg
+    - TLInterconnectCoupler_pbus_to_device_named_uart_0
+    - TLInterconnectCoupler_sbus_from_bus_named_fbus
+    - TLInterconnectCoupler_sbus_to_bus_named_cbus
+    - TLMonitor
+    - TLMonitor_1
+    - TLMonitor_10
+    - TLMonitor_11
+    - TLMonitor_12
+    - TLMonitor_13
+    - TLMonitor_14
+    - TLMonitor_15
+    - TLMonitor_16
+    - TLMonitor_17
+    - TLMonitor_18
+    - TLMonitor_19
+    - TLMonitor_2
+    - TLMonitor_20
+    - TLMonitor_21
+    - TLMonitor_22
+    - TLMonitor_23
+    - TLMonitor_24
+    - TLMonitor_25
+    - TLMonitor_26
+    - TLMonitor_27
+    - TLMonitor_28
+    - TLMonitor_29
+    - TLMonitor_3
+    - TLMonitor_30
+    - TLMonitor_31
+    - TLMonitor_32
+    - TLMonitor_33
+    - TLMonitor_34
+    - TLMonitor_35
+    - TLMonitor_36
+    - TLMonitor_37
+    - TLMonitor_38
+    - TLMonitor_39
+    - TLMonitor_4
+    - TLMonitor_40
+    - TLMonitor_41
+    - TLMonitor_42
+    - TLMonitor_43
+    - TLMonitor_44
+    - TLMonitor_45
+    - TLMonitor_46
+    - TLMonitor_47
+    - TLMonitor_48
+    - TLMonitor_49
+    - TLMonitor_5
+    - TLMonitor_50
+    - TLMonitor_51
+    - TLMonitor_52
+    - TLMonitor_53
+    - TLMonitor_54
+    - TLMonitor_55
+    - TLMonitor_56
+    - TLMonitor_57
+    - TLMonitor_58
+    - TLMonitor_59
+    - TLMonitor_6
+    - TLMonitor_60
+    - TLMonitor_61
+    - TLMonitor_62
+    - TLMonitor_63
+    - TLMonitor_64
+    - TLMonitor_65
+    - TLMonitor_66
+    - TLMonitor_67
+    - TLMonitor_68
+    - TLMonitor_69
+    - TLMonitor_7
+    - TLMonitor_70
+    - TLMonitor_8
+    - TLMonitor_9
+    - TLPLIC
+    - TLROM
+    - TLSerdesser_SerialRAM
+    - TLSerdesser_serial_tl_0
+    - TLToAXI4
+    - TLUART
+    - TLUARTClockSinkDomain
+    - TLWidthWidget1
+    - TLWidthWidget16
+    - TLWidthWidget8
+    - TLXbar_MasterXbar_RocketTile_i2_o1_a32d128s2k4z4c
+    - TLXbar_cbus_in_i2_o1_a29d64s8k1z4u
+    - TLXbar_cbus_out_i1_o8_a29d64s8k1z4u
+    - TLXbar_dmixbar_i1_o2_a9d32s1k1z2u
+    - TLXbar_fbus_i2_o1_a32d64s5k4z4u
+    - TLXbar_i2_o1_a32d128s5k4z4u
+    - TLXbar_mbus_i1_o2_a32d64s5k1z3u
+    - TLXbar_pbus_out_i1_o2_a29d64s8k1z3u
+    - TLXbar_prcibus_i1_o2_a21d64s8k1z3u
+    - TLXbar_sbus_i3_o2_a32d128s7k4z4c
     - TagQueue
     - TestDriver
     - TestHarness
+    - Tile
+    - TileClockGater
+    - TilePRCIDomain
+    - TileResetSetter
     - TwoPortSyncMem
     - UARTAdapter
     - UARTRx
@@ -344,73 +611,6 @@ categories:
     - ram_sink_2x4
     - regfile_32x65
     - rf_31x64
-    - split_cc_banks_0_ext
-    - split_cc_dir_ext
-    - split_mem_0_ext
-    - split_mem_1_ext
-    - split_mem_ext
-    - table_512x1
-    - tail_2x3
-    - tail_36x5
-    - tail_40x6
-  pe_array:
-    include_in_thermal_study: true
-    modules:
-    - AccPipe
-    - AccPipeShared
-    - CoherenceManagerWrapper
-    - DMACommandTracker
-    - DMACommandTracker_1
-    - EICG_wrapper
-    - ErrorDeviceWrapper
-    - FPUFMAPipe_l3_f16
-    - FPUFMAPipe_l3_f32
-    - FPUFMAPipe_l4_f64
-    - JtagStateMachine
-    - MacUnit
-    - MaxPeriodFibonacciLFSR
-    - Mesh
-    - MeshWithDelays
-    - MulAddRecFNPipe_l2_e11_s53
-    - MulAddRecFNPipe_l2_e5_s11
-    - MulAddRecFNPipe_l2_e8_s24
-    - PE
-    - PE_256
-    - PMAChecker
-    - PeripheryBus_cbus
-    - PeripheryBus_pbus
-    - Pipeline
-    - Pipeline_1
-    - Pipeline_2
-    - Pipeline_3
-    - Pipeline_4
-    - Pipeline_5
-    - Pipeline_6
-    - PixelRepeater
-    - PixelRepeater_1
-    - Queue1_RegMapperInput_i23_m8
-    - Queue1_RegMapperInput_i9_m8
-    - Repeater_TLBundleA_a12d64s8k1z3u
-    - Repeater_TLBundleA_a13d64s8k1z3u
-    - Repeater_TLBundleA_a17d64s8k1z3u
-    - Repeater_TLBundleA_a21d64s8k1z3u
-    - Repeater_TLBundleA_a26d64s8k1z3u
-    - Repeater_TLBundleA_a28d64s5k1z3u
-    - Repeater_TLBundleA_a28d64s8k1z3u
-    - Repeater_TLBundleA_a29d128s7k1z4u
-    - Repeater_TLBundleA_a29d64s8k1z3u
-    - Repeater_TLBundleD_a32d128s5k4z4u
-    - Repeater_TLBundleD_a32d64s1k4z4u
-    - RocketTile
-    - ScalePipe
-    - TLFragmenter_TileClockGater
-    - TLFragmenter_TileResetSetter
-    - TLXbar_MasterXbar_RocketTile_i2_o1_a32d128s2k4z4c
-    - TSIToTileLink
-    - Tile
-    - TileClockGater
-    - TilePRCIDomain
-    - TileResetSetter
     - rockettile_dcache_data_arrays_0
     - rockettile_dcache_data_arrays_0_ext
     - rockettile_dcache_data_arrays_1
@@ -423,10 +623,30 @@ categories:
     - rockettile_icache_data_arrays_3
     - rockettile_icache_tag_array
     - rockettile_icache_tag_array_ext
+    - split_cc_banks_0_ext
+    - split_cc_dir_ext
+    - split_mem_0_ext
+    - split_mem_1_ext
+    - split_mem_ext
     - split_rockettile_dcache_data_arrays_0_ext
     - split_rockettile_dcache_tag_array_ext
     - split_rockettile_icache_data_arrays_0_ext
     - split_rockettile_icache_tag_array_ext
+    - table_512x1
+    - tail_2x3
+    - tail_36x5
+    - tail_40x6
+  pe_array:
+    include_in_thermal_study: true
+    modules:
+    - AccPipe
+    - AccPipeShared
+    - MacUnit
+    - Mesh
+    - MeshWithDelays
+    - PE
+    - PE_256
+    - ScalePipe
   scratchpad:
     include_in_thermal_study: true
     modules:
@@ -446,235 +666,15 @@ categories:
   tl_soc_glue:
     include_in_thermal_study: false
     modules:
-    - Arbiter2_TLBundleAWithInfo
-    - Arbiter3_TLBundleAWithInfo
     - Arbiter3_Valid_PTWReq
     - Arbiter5_RoCCCommand
-    - AsyncQueueSink_TLBundleA_a9d32s1k1z2u
-    - AsyncQueueSink_TLBundleD_a9d32s1k1z2u
-    - AsyncQueueSource_TLBundleA_a9d32s1k1z2u
-    - AsyncQueueSource_TLBundleD_a9d32s1k1z2u
-    - DMIToTL
-    - DTLB_2
-    - DecoupledTLB
     - Frontend
     - FrontendTLB
-    - GenericDeserializer_TLBeatw10_f32
-    - GenericDeserializer_TLBeatw10_f32_TestHarness_UNIQUIFIED
-    - GenericDeserializer_TLBeatw67_f32
-    - GenericDeserializer_TLBeatw67_f32_TestHarness_UNIQUIFIED
-    - GenericDeserializer_TLBeatw87_f32
-    - GenericDeserializer_TLBeatw87_f32_TestHarness_UNIQUIFIED
-    - GenericDeserializer_TLBeatw88_f32
-    - GenericDeserializer_TLBeatw88_f32_TestHarness_UNIQUIFIED
-    - GenericSerializer_TLBeatw10_f32
-    - GenericSerializer_TLBeatw67_f32
-    - GenericSerializer_TLBeatw87_f32
-    - GenericSerializer_TLBeatw88_f32
-    - ITLB
-    - OptimizationBarrier_TLBEntryData
     - PTW
-    - Queue12_TLBundleC_a32d64s4k3z3c
-    - Queue1_TLBundleAWithInfo
-    - Queue1_TLBundleAWithInfo_2
-    - Queue1_TLBundleAWithInfo_3
-    - Queue1_TLBundleA_a14d64s8k1z4u
-    - Queue1_TLBundleA_a26d64s12k1z2u
-    - Queue1_TLBundleA_a32d128s7k4z3c
-    - Queue1_TLBundleA_a64d64s8k8z8c
-    - Queue1_TLBundleD_a26d64s12k1z2u
-    - Queue1_TLBundleD_a32d128s7k4z3c
-    - Queue1_TLBundleD_a64d64s8k8z8c
     - Queue2_RoCCCommand
     - Queue2_RoCCResponse
-    - Queue2_TLBundleA_a14d64s8k1z4u
-    - Queue2_TLBundleA_a21d64s8k1z3u
-    - Queue2_TLBundleA_a28d64s5k1z3u
-    - Queue2_TLBundleA_a29d64s8k1z3u
-    - Queue2_TLBundleA_a29d64s8k1z4u
-    - Queue2_TLBundleA_a32d128s2k4z4c
-    - Queue2_TLBundleA_a32d128s4k4z4u
-    - Queue2_TLBundleA_a32d128s5k4z4u
-    - Queue2_TLBundleA_a32d64s1k4z4u
-    - Queue2_TLBundleA_a32d64s4k3z3c
-    - Queue2_TLBundleA_a32d64s4k4z4u
-    - Queue2_TLBundleA_a32d64s5k4z4u
-    - Queue2_TLBundleB_a32d128s2k4z4c
-    - Queue2_TLBundleC_a32d128s2k4z4c
-    - Queue2_TLBundleC_a32d128s7k4z3c
-    - Queue2_TLBundleD_a14d64s8k1z4u
-    - Queue2_TLBundleD_a21d64s8k1z3u
-    - Queue2_TLBundleD_a28d64s5k1z3u
-    - Queue2_TLBundleD_a29d64s8k1z3u
-    - Queue2_TLBundleD_a29d64s8k1z4u
-    - Queue2_TLBundleD_a32d128s2k4z4c
-    - Queue2_TLBundleD_a32d128s4k4z4u
-    - Queue2_TLBundleD_a32d128s5k4z4u
-    - Queue2_TLBundleD_a32d64s1k4z4u
-    - Queue2_TLBundleD_a32d64s4k3z3c
-    - Queue2_TLBundleD_a32d64s4k4z4u
-    - Queue2_TLBundleD_a32d64s5k4z4u
-    - Queue2_TLBundleD_a32d8s1k4z4u
-    - Queue2_TLBundleE_a32d128s2k4z4c
-    - Queue2_TLBundleE_a32d64s4k3z3c
-    - Queue5_ComputeCntlSignals
     - RoccCommandRouter
-    - SBToTL
-    - SerialTL0ClockSinkDomain
-    - TLAFromBeat_SerialRAM_a64d64s8k8z8c
-    - TLAFromBeat_serial_tl_0_a64d64s8k8z8c
-    - TLAToBeat_SerialRAM_a64d64s8k8z8c
-    - TLAsyncCrossingSink_a9d32s1k1z2u
-    - TLAsyncCrossingSource_a9d32s1k1z2u
-    - TLAtomicAutomata_cbus
-    - TLAtomicAutomata_pbus
-    - TLBFromBeat_SerialRAM_a64d64s8k8z8c
-    - TLBFromBeat_serial_tl_0_a64d64s8k8z8c
-    - TLBToBeat_serial_tl_0_a64d64s8k8z8c
-    - TLBuffer_a14d64s8k1z4u
-    - TLBuffer_a21d64s8k1z3u
-    - TLBuffer_a26d64s12k1z2u
-    - TLBuffer_a28d64s5k1z3u
-    - TLBuffer_a28d64s5k1z3u_1
-    - TLBuffer_a29d64s8k1z3u
-    - TLBuffer_a29d64s8k1z3u_1
-    - TLBuffer_a29d64s8k1z4u
-    - TLBuffer_a32d128s4k4z4u
-    - TLBuffer_a32d128s4k4z4u_1
-    - TLBuffer_a32d128s5k4z4u
-    - TLBuffer_a32d128s5k4z4u_2
-    - TLBuffer_a32d128s7k4z3c
-    - TLBuffer_a32d64s1k4z4u
-    - TLBuffer_a32d64s4k4z4u
-    - TLBuffer_a32d64s5k4z4u
-    - TLBusBypass
-    - TLBusBypassBar
-    - TLCFromBeat_SerialRAM_a64d64s8k8z8c
-    - TLCFromBeat_serial_tl_0_a64d64s8k8z8c
-    - TLCToBeat_SerialRAM_a64d64s8k8z8c
-    - TLCacheCork
-    - TLDFromBeat_SerialRAM_a64d64s8k8z8c
-    - TLDFromBeat_serial_tl_0_a64d64s8k8z8c
-    - TLDToBeat_serial_tl_0_a64d64s8k8z8c
-    - TLDebugModule
-    - TLDebugModuleInner
-    - TLDebugModuleInnerAsync
-    - TLDebugModuleOuter
-    - TLDebugModuleOuterAsync
-    - TLEFromBeat_SerialRAM_a64d64s8k8z8c
-    - TLEFromBeat_serial_tl_0_a64d64s8k8z8c
-    - TLEToBeat_SerialRAM_a64d64s8k8z8c
-    - TLError
-    - TLError_1
-    - TLFragmenter_BootAddrReg
-    - TLFragmenter_CLINT
-    - TLFragmenter_Debug
-    - TLFragmenter_LLCCtrl
-    - TLFragmenter_PLIC
-    - TLFragmenter_UART
-    - TLFragmenter_bootrom
-    - TLInterconnectCoupler_cbus_to_bootrom
-    - TLInterconnectCoupler_cbus_to_clint
-    - TLInterconnectCoupler_cbus_to_debug
-    - TLInterconnectCoupler_cbus_to_l2_ctrl
-    - TLInterconnectCoupler_cbus_to_plic
-    - TLInterconnectCoupler_cbus_to_prci_ctrl
-    - TLInterconnectCoupler_fbus_from_debug_sb
-    - TLInterconnectCoupler_fbus_from_port_named_serial_tl_0_in
-    - TLInterconnectCoupler_pbus_to_bootaddressreg
-    - TLInterconnectCoupler_pbus_to_device_named_uart_0
-    - TLInterconnectCoupler_sbus_from_bus_named_fbus
-    - TLInterconnectCoupler_sbus_to_bus_named_cbus
-    - TLMonitor
-    - TLMonitor_1
-    - TLMonitor_10
-    - TLMonitor_11
-    - TLMonitor_12
-    - TLMonitor_13
-    - TLMonitor_14
-    - TLMonitor_15
-    - TLMonitor_16
-    - TLMonitor_17
-    - TLMonitor_18
-    - TLMonitor_19
-    - TLMonitor_2
-    - TLMonitor_20
-    - TLMonitor_21
-    - TLMonitor_22
-    - TLMonitor_23
-    - TLMonitor_24
-    - TLMonitor_25
-    - TLMonitor_26
-    - TLMonitor_27
-    - TLMonitor_28
-    - TLMonitor_29
-    - TLMonitor_3
-    - TLMonitor_30
-    - TLMonitor_31
-    - TLMonitor_32
-    - TLMonitor_33
-    - TLMonitor_34
-    - TLMonitor_35
-    - TLMonitor_36
-    - TLMonitor_37
-    - TLMonitor_38
-    - TLMonitor_39
-    - TLMonitor_4
-    - TLMonitor_40
-    - TLMonitor_41
-    - TLMonitor_42
-    - TLMonitor_43
-    - TLMonitor_44
-    - TLMonitor_45
-    - TLMonitor_46
-    - TLMonitor_47
-    - TLMonitor_48
-    - TLMonitor_49
-    - TLMonitor_5
-    - TLMonitor_50
-    - TLMonitor_51
-    - TLMonitor_52
-    - TLMonitor_53
-    - TLMonitor_54
-    - TLMonitor_55
-    - TLMonitor_56
-    - TLMonitor_57
-    - TLMonitor_58
-    - TLMonitor_59
-    - TLMonitor_6
-    - TLMonitor_60
-    - TLMonitor_61
-    - TLMonitor_62
-    - TLMonitor_63
-    - TLMonitor_64
-    - TLMonitor_65
-    - TLMonitor_66
-    - TLMonitor_67
-    - TLMonitor_68
-    - TLMonitor_69
-    - TLMonitor_7
-    - TLMonitor_70
-    - TLMonitor_8
-    - TLMonitor_9
-    - TLPLIC
-    - TLROM
-    - TLSerdesser_SerialRAM
-    - TLSerdesser_serial_tl_0
-    - TLToAXI4
-    - TLUART
-    - TLUARTClockSinkDomain
-    - TLWidthWidget1
-    - TLWidthWidget16
-    - TLWidthWidget8
-    - TLXbar_cbus_in_i2_o1_a29d64s8k1z4u
-    - TLXbar_cbus_out_i1_o8_a29d64s8k1z4u
-    - TLXbar_dmixbar_i1_o2_a9d32s1k1z2u
-    - TLXbar_fbus_i2_o1_a32d64s5k4z4u
-    - TLXbar_i2_o1_a32d128s5k4z4u
-    - TLXbar_mbus_i1_o2_a32d64s5k1z3u
-    - TLXbar_pbus_out_i1_o2_a29d64s8k1z3u
-    - TLXbar_prcibus_i1_o2_a21d64s8k1z3u
-    - TLXbar_sbus_i3_o2_a32d128s7k4z4c
+    - TSIToTileLink
 all_modules:
 - AMOALU
 - AXI4IdIndexer
