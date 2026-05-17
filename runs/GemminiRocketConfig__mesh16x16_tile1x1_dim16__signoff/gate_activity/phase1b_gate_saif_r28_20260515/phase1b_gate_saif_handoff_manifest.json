@@ -1,0 +1,37 @@
+{
+  "formal_workloads": [],
+  "smoke": {
+    "boundary_map": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/smoke_mvin_mvout_100cyc/boundary_signal_map.json",
+    "boundary_vectors": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/smoke_mvin_mvout_100cyc/boundary_vectors.csv",
+    "gate_netlist": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_phase2_full_20260513_r28_export_from_routing_sdf_waived/innovus/data/Gemmini.routed.v",
+    "method": "no-compare Verilator zero-delay Gemmini boundary replay with direct SAIF trace",
+    "phase3_consumable": false,
+    "run_kind": "smoke",
+    "saif": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/smoke_mvin_mvout_100cyc/mvin_mvout.gate.saif",
+    "summary": {
+      "cycles_run": 33537,
+      "elapsed_sec": 484.206,
+      "first_trace_cycle": 33438,
+      "first_trace_time_ps": 66877000,
+      "last_time_ps": 67075000,
+      "last_trace_cycle": 33537,
+      "last_trace_time_ps": 67075000,
+      "rows_seen": 33538,
+      "run_kind": "smoke",
+      "run_log": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/smoke_mvin_mvout_100cyc/replay_run.log",
+      "run_returncode": 0,
+      "saif_bytes": 445600062,
+      "saif_path": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/smoke_mvin_mvout_100cyc/mvin_mvout.gate.saif",
+      "trace_enabled_cycles": 100,
+      "trace_end_ps": 67075550,
+      "trace_start_ps": 66875550,
+      "vector_path": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/smoke_mvin_mvout_100cyc/boundary_vectors.csv",
+      "workload": "mvin_mvout"
+    },
+    "trace_end_ps": 67075550,
+    "trace_interval": "trace_start_ps <= time_ps < trace_end_ps",
+    "trace_start_ps": 66875550,
+    "workload": "mvin_mvout"
+  },
+  "status": "stopped_after_smoke"
+}

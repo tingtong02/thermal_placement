@@ -1,0 +1,663 @@
+{
+  "run_name": "GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff",
+  "created_date": "2026-04-29",
+  "active_plan": "docs/phase0tophase4_cadence_asap7_plan.md",
+  "quality_target": "commercial-flow project validation",
+  "foundry_signoff": false,
+  "hardware_config": {
+    "chipyard_config": "GemminiRocketConfig",
+    "gemmini_config": "DefaultGemminiConfig",
+    "meshRows": 16,
+    "meshColumns": 16,
+    "tileRows": 1,
+    "tileColumns": 1,
+    "DIM": 16,
+    "input_type": "int8",
+    "weight_type": "int8",
+    "accumulator_type": "int32",
+    "spatial_output_type": "int20",
+    "dataflow": "BOTH",
+    "scratchpad_capacity": "256 KiB",
+    "accumulator_capacity": "64 KiB",
+    "scratchpad_banks": 4,
+    "accumulator_banks": 2,
+    "dma_maxbytes": 64,
+    "system_bus_width_bits": 128
+  },
+  "workloads": [
+    {
+      "name": "tiled_matmul_os",
+      "role": "output-stationary GEMM compute baseline",
+      "source": "third_party/chipyard/generators/gemmini/software/gemmini-rocc-tests/bareMetalC/tiled_matmul_os.c",
+      "dimensions": {
+        "MAT_DIM_I": 64,
+        "MAT_DIM_K": 64,
+        "MAT_DIM_J": 64
+      },
+      "check": "CHECK_RESULT=1"
+    },
+    {
+      "name": "tiled_matmul_ws",
+      "role": "weight-stationary GEMM dataflow contrast",
+      "source": "third_party/chipyard/generators/gemmini/software/gemmini-rocc-tests/bareMetalC/tiled_matmul_ws.c",
+      "dimensions": {
+        "MAT_DIM_I": 64,
+        "MAT_DIM_K": 64,
+        "MAT_DIM_J": 64
+      },
+      "check": "CHECK_RESULT=1"
+    },
+    {
+      "name": "mvin_mvout",
+      "role": "memory/control movement contrast",
+      "source": "third_party/chipyard/generators/gemmini/software/gemmini-rocc-tests/bareMetalC/mvin_mvout.c",
+      "dimensions": {
+        "N": 8,
+        "matrix_shape": "DIM x DIM",
+        "effective_matrix_shape": "16 x 16"
+      },
+      "check": "program pass/fail output"
+    }
+  ],
+  "directory_policy": {
+    "config_level_outputs": [
+      "config",
+      "rtl",
+      "physical",
+      "timing",
+      "reports/config"
+    ],
+    "workload_level_outputs": [
+      "workloads",
+      "sim",
+      "activity",
+      "gate_activity",
+      "power",
+      "thermal",
+      "reports",
+      "artifacts"
+    ]
+  },
+  "stage_status": {
+    "stage0": "completed_initial_setup",
+    "stage1": "completed_high_confidence_non_proxy",
+    "stage2": "phase2_attempt_artifacts_deleted_full_phase2_not_started",
+    "stage3": "not_started",
+    "stage4": "not_started"
+  },
+  "stop_policy": "failure_stop_no_proxy_fallback",
+  "stage0_outputs": {
+    "readme": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/README.md",
+    "hierarchy_map": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/rtl/hierarchy/hierarchy_map.yaml",
+    "module_inventory": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/reports/config/gemmini_module_inventory.md",
+    "workload_binaries": {
+      "tiled_matmul_os": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/workloads/tiled_matmul_os/tiled_matmul_os-baremetal",
+      "tiled_matmul_ws": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/workloads/tiled_matmul_ws/tiled_matmul_ws-baremetal",
+      "mvin_mvout": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/workloads/mvin_mvout/mvin_mvout-baremetal"
+    }
+  },
+  "stage1_outputs": {
+    "completed_at_utc": "2026-04-29T02:50:27Z",
+    "parallel_execution": "tiled_matmul_os and tiled_matmul_ws were allowed and run concurrently with isolated run tags/output directories; mvin_mvout completed separately.",
+    "parameters": {
+      "MAKE_JOBS": 1,
+      "VERILATOR_THREADS": 16,
+      "VCD_PARSER_WORKERS": 128,
+      "NUMACTL": 0,
+      "USE_FST": 0,
+      "EXTRACT_ACTIVITY": 1,
+      "TIMEOUT_CYCLES": 100000000
+    },
+    "acceptance": "all three workloads completed full functional RTL simulation with sim_status=0 and parseable VCD activity/window reports; no proxy/fallback result used",
+    "workloads": [
+      {
+        "workload": "tiled_matmul_os",
+        "role": "output-stationary GEMM compute baseline",
+        "run_tag": "stage1_tiled_matmul_os_signoff_20260429_r1",
+        "sim_status": 0,
+        "waveform": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/sim/tiled_matmul_os/waves/tiled_matmul_os-baremetal.stage1_tiled_matmul_os_signoff_20260429_r1.vcd",
+        "waveform_bytes": 43943100116,
+        "stdout_log": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/sim/tiled_matmul_os/logs/tiled_matmul_os-baremetal.stage1_tiled_matmul_os_signoff_20260429_r1.log",
+        "out_log": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/sim/tiled_matmul_os/logs/tiled_matmul_os-baremetal.stage1_tiled_matmul_os_signoff_20260429_r1.out",
+        "signal_activity": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/activity/tiled_matmul_os/stage1_tiled_matmul_os_signoff_20260429_r1_signal_activity.csv",
+        "region_activity": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/activity/tiled_matmul_os/stage1_tiled_matmul_os_signoff_20260429_r1_region_activity.csv",
+        "window_activity": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/activity/tiled_matmul_os/stage1_tiled_matmul_os_signoff_20260429_r1_window_activity.csv",
+        "window_report": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/reports/tiled_matmul_os/stage1_tiled_matmul_os_signoff_windows.md",
+        "activity_report": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/reports/tiled_matmul_os/stage1_tiled_matmul_os_signoff_activity_summary.md",
+        "time_steps": 20606655,
+        "last_time_ps": 10303285500,
+        "total_region_toggles": 3980952281,
+        "gemmini_target_region_toggles": 154545102,
+        "gemmini_target_region_toggle_share": 0.038821139036908744,
+        "region_toggles": {
+          "pe_array": 2390594,
+          "controller": 37074715,
+          "load_store_dma": 20424,
+          "scratchpad": 104515396,
+          "gemmini_other": 10543973,
+          "accumulator": 0
+        },
+        "primary_window": {
+          "workload": "stage1_tiled_matmul_os_signoff_20260429_r1",
+          "window": "steady_high_load",
+          "start_ps": "9272956950",
+          "end_ps": "10303285500",
+          "selection": "tail interval containing OS Gemmini matmul and accelerator completion",
+          "notes": "Stage 3 may refine this after gate/activity alignment"
+        },
+        "cycles": [
+          "Cycles taken: 2967084",
+          "Cycles taken: 3779"
+        ]
+      },
+      {
+        "workload": "tiled_matmul_ws",
+        "role": "weight-stationary GEMM dataflow contrast",
+        "run_tag": "stage1_tiled_matmul_ws_signoff_20260429_r1",
+        "sim_status": 0,
+        "waveform": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/sim/tiled_matmul_ws/waves/tiled_matmul_ws-baremetal.stage1_tiled_matmul_ws_signoff_20260429_r1.vcd",
+        "waveform_bytes": 45549298044,
+        "stdout_log": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/sim/tiled_matmul_ws/logs/tiled_matmul_ws-baremetal.stage1_tiled_matmul_ws_signoff_20260429_r1.log",
+        "out_log": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/sim/tiled_matmul_ws/logs/tiled_matmul_ws-baremetal.stage1_tiled_matmul_ws_signoff_20260429_r1.out",
+        "signal_activity": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/activity/tiled_matmul_ws/stage1_tiled_matmul_ws_signoff_20260429_r1_signal_activity.csv",
+        "region_activity": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/activity/tiled_matmul_ws/stage1_tiled_matmul_ws_signoff_20260429_r1_region_activity.csv",
+        "window_activity": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/activity/tiled_matmul_ws/stage1_tiled_matmul_ws_signoff_20260429_r1_window_activity.csv",
+        "window_report": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/reports/tiled_matmul_ws/stage1_tiled_matmul_ws_signoff_windows.md",
+        "activity_report": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/reports/tiled_matmul_ws/stage1_tiled_matmul_ws_signoff_activity_summary.md",
+        "time_steps": 21447935,
+        "last_time_ps": 10723925500,
+        "total_region_toggles": 4119793535,
+        "gemmini_target_region_toggles": 160061464,
+        "gemmini_target_region_toggle_share": 0.03885181687873104,
+        "region_toggles": {
+          "pe_array": 2191819,
+          "controller": 37829875,
+          "load_store_dma": 14998,
+          "scratchpad": 109144543,
+          "gemmini_other": 10880229,
+          "accumulator": 0
+        },
+        "primary_window": {
+          "workload": "stage1_tiled_matmul_ws_signoff_20260429_r1",
+          "window": "steady_high_load",
+          "start_ps": "1072392550",
+          "end_ps": "3753373925",
+          "selection": "early post-boot interval containing WS Gemmini matmul before CPU reference",
+          "notes": "Stage 3 may refine this after gate/activity alignment"
+        },
+        "cycles": [
+          "Cycles taken: 2279",
+          "Cycles taken: 2967054"
+        ]
+      },
+      {
+        "workload": "mvin_mvout",
+        "role": "memory/control movement contrast; not a PE compute-heavy GEMM",
+        "run_tag": "stage1_mvin_mvout_signoff_20260429_r1",
+        "sim_status": 0,
+        "waveform": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/sim/mvin_mvout/waves/mvin_mvout-baremetal.stage1_mvin_mvout_signoff_20260429_r1.vcd",
+        "waveform_bytes": 1882106374,
+        "stdout_log": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/sim/mvin_mvout/logs/mvin_mvout-baremetal.stage1_mvin_mvout_signoff_20260429_r1.log",
+        "out_log": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/sim/mvin_mvout/logs/mvin_mvout-baremetal.stage1_mvin_mvout_signoff_20260429_r1.out",
+        "signal_activity": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/activity/mvin_mvout/stage1_mvin_mvout_signoff_20260429_r1_signal_activity.csv",
+        "region_activity": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/activity/mvin_mvout/stage1_mvin_mvout_signoff_20260429_r1_region_activity.csv",
+        "window_activity": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/activity/mvin_mvout/stage1_mvin_mvout_signoff_20260429_r1_window_activity.csv",
+        "window_report": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/reports/mvin_mvout/stage1_mvin_mvout_signoff_windows.md",
+        "activity_report": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/reports/mvin_mvout/stage1_mvin_mvout_signoff_activity_summary.md",
+        "time_steps": 1337595,
+        "last_time_ps": 668755500,
+        "total_region_toggles": 123516396,
+        "gemmini_target_region_toggles": 8896241,
+        "gemmini_target_region_toggle_share": 0.07202477798979821,
+        "region_toggles": {
+          "pe_array": 272826,
+          "controller": 528322,
+          "load_store_dma": 13309,
+          "scratchpad": 7395149,
+          "gemmini_other": 686635,
+          "accumulator": 0
+        },
+        "primary_window": {
+          "workload": "stage1_mvin_mvout_signoff_20260429_r1",
+          "window": "data_movement_active",
+          "start_ps": "66875550",
+          "end_ps": "601879950",
+          "selection": "central interval for mvin/mvout data movement and control activity",
+          "notes": "no matmul marker is expected for this workload"
+        },
+        "cycles": []
+      }
+    ]
+  },
+  "stage2_plan": {
+    "preflight_report": "deleted_2026-05-11; see docs/gemmini_thermal_issue_log.md sections 0.20-0.21",
+    "python_flow_plan": "deleted_2026-05-11; historical details retained in docs/gemmini_thermal_issue_log.md",
+    "python_flow_dir": "deleted",
+    "implementation_top": "Gemmini",
+    "timing_target_mhz": 200,
+    "clock_period_ns": 5.0,
+    "backend": "Cadence Genus + Innovus",
+    "asap7_home": "/home/lisihang/asap7",
+    "asap7_stdcell_version": "asap7sc7p5t_28",
+    "asap7_lib_cache": ".cache/asap7/asap7sc7p5t_28/NLDM",
+    "fake_sram_cache": ".cache/fake_sram/asap7/Gemmini",
+    "fake_sram_macros": [
+      {
+        "cell": "mem_ext",
+        "wrapper": "mem",
+        "kind": "1rw",
+        "depth": 4096,
+        "width": 128
+      },
+      {
+        "cell": "mem_0_ext",
+        "wrapper": "mem_0",
+        "kind": "1r1w",
+        "depth": 512,
+        "width": 512
+      }
+    ],
+    "control_policy": "Python-first manager/generator; Tcl is generated execution layer except for diagnostics/recovery",
+    "genus_outputs_required": [
+      "mapped netlist",
+      "SDC",
+      "SDF if emitted",
+      "timing report",
+      "area report",
+      "power report",
+      "QoR report",
+      "database/checkpoint"
+    ],
+    "innovus_outputs_required": [
+      "routed DEF",
+      "SPEF",
+      "SDF",
+      "routed Verilog",
+      "GDS",
+      "database/checkpoint",
+      "timing report",
+      "area/utilization report",
+      "power report",
+      "route/DRC summary"
+    ],
+    "validation_gates": [
+      "semantic run directory name",
+      "preflight checks before launch",
+      "Genus frontend/elaboration smoke before full synthesis",
+      "full Genus synthesis and report pass before Innovus",
+      "all top-level pins PLACED or FIXED after floorplan",
+      "no unplaced top-level terms before accepting physical evidence",
+      "separate route DRC, PG connectivity, M10/Pad collateral, SDF/SPEF/GDS, and external DRC/LVS classification"
+    ],
+    "not_started": false,
+    "startup_flow_dir": "runs/cadence_startup",
+    "legacy_python_flow_dir_deleted": true,
+    "current_control_policy": "Python-first dacs-style startup; reduced smoke entries are diagnostic only after 2026-05-11 stop request"
+  },
+  "stage2_active_entry": "runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py",
+  "stage2_superseded_entry": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/cadence/python_flow/run_stage2_cadence.py",
+  "stage2_latest_result": {
+    "completed_at_local": "2026-05-06T16:38:26+08:00",
+    "stage": "phase2_innovus_floorplan_smoke",
+    "run_tag": "gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_innovus_floorplan_20260506",
+    "source_genus_run_tag": "gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_genus_syn_20260506",
+    "command": "source tools/env_gemmini_thermal.sh && TP_STAGE2_RUN_TAG=gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_innovus_floorplan_20260506 TP_STAGE2_GENUS_RUN_TAG=gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_genus_syn_20260506 python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --run-innovus-floorplan-smoke",
+    "result": "passed_limited_scope_with_nonblocking_error_class_messages",
+    "scope": "Innovus init and floorplan only; no powerplan/place/CTS/route/extract/streamOut",
+    "top_module": "Gemmini",
+    "inputs": {
+      "genus_mapped_verilog": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_genus_syn_20260506/genus/data/Gemmini-mapped.v",
+      "setup_sdc": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_genus_syn_20260506/genus/data/constraint_setup.sdc",
+      "hold_sdc": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_genus_syn_20260506/genus/data/constraint_hold.sdc",
+      "setup_lib_count": 17,
+      "lef_count": 7
+    },
+    "import_summary": {
+      "standard_cell_instances": 592388,
+      "macro_instances": 6,
+      "total_instances": 592394,
+      "nets": 633894,
+      "primary_io_ports": 1327,
+      "floating_top_ports": 182,
+      "floating_instance_terminals": 29,
+      "high_fanout_nets_over_50": 902
+    },
+    "preplace_timing": {
+      "wns_ns": 0.979,
+      "tns_ns": 0.0,
+      "violating_paths": 0
+    },
+    "floorplan": {
+      "die_width_um": 573.912,
+      "die_height_um": 573.876,
+      "def_pin_total": 1327,
+      "def_pin_placed": 1327,
+      "def_pin_fixed": 0,
+      "def_pin_unplaced": 0
+    },
+    "artifacts": {
+      "run_dir": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_innovus_floorplan_20260506",
+      "init_log": "innovus/log/init.log",
+      "floorplan_log": "innovus/log/floorplan.log",
+      "init_checkpoint": "innovus/data/init.enc",
+      "floorplan_checkpoint": "innovus/data/floorplan.enc",
+      "floorplan_def": "innovus/data/Gemmini.floorplan.def",
+      "check_netlist_report": "innovus/reports/check_netlist_upon_init.rpt",
+      "preplace_timing_dir": "innovus/reports/prePlace_timing",
+      "manifest": "startup/innovus_floorplan_manifest.json"
+    },
+    "nonblocking_error_or_warning_classes": [
+      "TECHLIB-1173",
+      "TECHLIB-9108",
+      "TECHLIB-1277",
+      "IMPLF-108",
+      "TCLCMD-1461",
+      "IMPDB-2136",
+      "IMPREPO-200",
+      "IMPREPO-202",
+      "IMPREPO-216",
+      "IMPREPO-218",
+      "IMPREPO-227",
+      "IMPREPO-231",
+      "IMPDC-1629",
+      "IMPTR-2101",
+      "IMPTR-2104",
+      "IMPTR-2108",
+      "IMPFP-325",
+      "IMPMF-5054",
+      "GLOBAL-100"
+    ],
+    "carry_forward_notes": [
+      "Fix or waive fake SRAM pulling_resistance_unit TECHLIB-1173 before final route/signoff-style evidence.",
+      "Keep ASAP7 M10/Pad track-collateral messages classified separately from route DRC and PG connectivity.",
+      "Clean or document Innovus SDC set_units handoff before larger Innovus acceptance.",
+      "Powerplan/place/CTS/route/extract/streamOut have not been run yet."
+    ]
+  },
+  "stage2_genus_synthesis_result": {
+    "completed_at_local": "2026-05-06T16:27:22+08:00",
+    "stage": "phase2_genus_full_synthesis",
+    "run_tag": "gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_genus_syn_20260506",
+    "command": "source tools/env_gemmini_thermal.sh && TP_STAGE2_RUN_TAG=gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_genus_syn_20260506 python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --run-genus-syn",
+    "result": "passed",
+    "clock_period_ns": 5.0,
+    "top_module": "Gemmini",
+    "rtl_file_count": 575,
+    "setup_lib_count": 17,
+    "lef_count": 7,
+    "timing": {
+      "critical_path_slack_ps": 9.3,
+      "tns_ps": 0.0,
+      "violating_paths": 0,
+      "worst_path_report": "setup path from spad/norm_unit_passthru_q_wrap_1_reg/CLK to spad/acc_scale_unit/pipe_out_p/stages_0_resp_data_1_0_reg[4]/D met by 9 ps"
+    },
+    "qor": {
+      "leaf_instance_count": 592394,
+      "sequential_instance_count": 78967,
+      "combinational_instance_count": 513427,
+      "hierarchical_instance_count": 213,
+      "cell_area": 217239.171,
+      "net_area": 33651.311,
+      "total_area": 250890.482
+    },
+    "design_rules": {
+      "max_transition": "no violations",
+      "max_capacitance": "no violations",
+      "max_fanout": "no active constraint"
+    },
+    "power": {
+      "mode": "vectorless_startup_only_not_stage3_activity_power",
+      "total_w": 0.0938252,
+      "leakage_w": 0.00680632,
+      "internal_w": 0.0533273,
+      "switching_w": 0.0336916,
+      "power_report_status": "Info=6 Warn=2 Error=0 Fatal=0"
+    },
+    "artifacts": {
+      "run_dir": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_genus_syn_20260506",
+      "syn_log": "genus/log/syn.log",
+      "report_log": "genus/log/report.log",
+      "syn_script": "genus/scripts/syn.tcl",
+      "report_script": "genus/scripts/report.tcl",
+      "mapped_verilog": "genus/data/Gemmini-mapped.v",
+      "sdf": "genus/data/Gemmini.sdf",
+      "setup_sdc": "genus/data/constraint_setup.sdc",
+      "hold_sdc": "genus/data/constraint_hold.sdc",
+      "syn_db": "genus/data/syn.db",
+      "report_db": "genus/data/report.db",
+      "timing_report": "genus/reports/timing.rpt",
+      "qor_report": "genus/reports/qor.rpt",
+      "drc_report": "genus/reports/drc.rpt",
+      "power_report": "genus/reports/power.rpt",
+      "manifest": "startup/genus_syn_manifest.json"
+    },
+    "nonfatal_warning_classes": [
+      "LBR-519",
+      "LBR-518",
+      "LBR-516",
+      "PHYS-106",
+      "PHYS-15",
+      "PHYS-12",
+      "PHYS-14",
+      "PHYS-13",
+      "PHYS-25",
+      "PHYS-279",
+      "VLOGPT-506",
+      "CDFG-508",
+      "CDFG-556",
+      "GB-12",
+      "SYNTH-33",
+      "TUI-32",
+      "WSDF-104",
+      "PWRA-0302",
+      "PWRA-0304",
+      "TIM-11"
+    ],
+    "carry_forward_notes": [
+      "TIM-11 appeared only on extra all_inputs-to-all_outputs timing report; timing_in_to_out.rpt reports No paths found.",
+      "Vectorless Genus power is startup evidence only; Stage 3 must produce activity-aware power from fixed workloads.",
+      "Proceed to Python-managed Innovus import/floorplan smoke before any full place-and-route attempt."
+    ]
+  },
+  "stage2_required_fixes_before_signoff_acceptance": [
+    {
+      "item": "genus_syn_opt_deprecation",
+      "status": "implemented_for_new_codegen_not_yet_rerun_as_accepted_genus_evidence",
+      "evidence": "Genus SYNTH-33 on bare syn_opt in generated syn.tcl",
+      "recommended_change": "Generate syn_opt -logical for the current non-physical synthesis route; reserve syn_opt -spatial for later physical-aware synthesis with floorplan input.",
+      "validation": "script-only generated fused_syn.tcl contains syn_opt -logical"
+    },
+    {
+      "item": "fake_sram_liberty_pulling_resistance_unit",
+      "status": "generator_fixed_cache_regenerated_pending_innovus_revalidation",
+      "evidence": "Innovus TECHLIB-1173 on mem_ext.lib and mem_0_ext.lib",
+      "recommended_change": "Add library-level pulling_resistance_unit and common threshold attributes in scripts/prepare_gemmini_fake_sram_collateral.py, regenerate .cache/fake_sram/asap7/Gemmini, and rerun input smoke.",
+      "validation": ".cache/fake_sram/asap7/Gemmini/lib/mem_ext.lib contains pulling_resistance_unit"
+    },
+    {
+      "item": "fake_sram_lef_signal_pin_direction",
+      "status": "generator_fixed_cache_regenerated_pending_innovus_revalidation",
+      "evidence": "Generated fake SRAM signal pins currently use DIRECTION INOUT",
+      "recommended_change": "Emit INPUT/OUTPUT for signal pins from derived RTL/Liberty port directions where Innovus accepts the syntax; keep PG pins INOUT.",
+      "validation": ".cache/fake_sram/asap7/Gemmini/lef/mem_ext.lef uses signal INPUT/OUTPUT directions and PG INOUT directions"
+    },
+    {
+      "item": "innovus_sdc_set_units_handoff",
+      "status": "still_open_clean_or_waive_before_larger_pnr_acceptance",
+      "evidence": "Innovus TCLCMD-1461 skips Genus-exported set_units lines",
+      "recommended_change": "Generate Innovus-clean setup/hold SDC or document a timing-unit check and waiver."
+    },
+    {
+      "item": "asap7_m10_pad_collateral_classification",
+      "status": "still_open_classify_before_route_signoff_claim",
+      "evidence": "Innovus IMPTR-2101/2104/2108 during init/floorplan",
+      "recommended_change": "Classify separately from route DRC/PG connectivity; do not silently edit external /home/lisihang/asap7."
+    }
+  ],
+  "stage2_remaining_not_run": [
+    "cts_postcts_timing",
+    "routing_postroute_optimization",
+    "routed_def_verilog_sdf_spef_gds_exports",
+    "postroute_timing_area_power_drc_connectivity_reports",
+    "stage2_final_acceptance_report"
+  ],
+  "stage2_reduced_pnr_smoke_plan": {
+    "status": "sparse_pg_retry_prepared_after_dense_pg_powerplan_blocker",
+    "purpose": "Run remaining Innovus stages once with reduced routing effort to expose flow blockers and artifact export issues; not final signoff.",
+    "implemented_entry": "runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --run-innovus-pnr-smoke",
+    "validation": [
+      "python -m py_compile passed for fake SRAM generator and startup Genus/Innovus managers",
+      "fake SRAM cache regenerated under .cache/fake_sram/asap7/Gemmini",
+      "preflight passed with source Genus run and TP_STAGE2_DROUTE_END_ITERATION=5",
+      "script-only generation passed; routing.tcl contains drouteEndIteration 5",
+      "generated Genus fused_syn.tcl contains syn_opt -logical"
+    ],
+    "planned_command": "source tools/env_gemmini_thermal.sh && TP_STAGE2_RUN_TAG=gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_innovus_pnr_smoke_droute5_20260506 TP_STAGE2_GENUS_RUN_TAG=gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_genus_syn_20260506 TP_STAGE2_DROUTE_END_ITERATION=5 TP_STAGE2_ROUTE_CPUS=1 TP_STAGE2_ROUTE_SI_AWARE=false python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --run-innovus-pnr-smoke",
+    "reduced_knobs": {
+      "TP_STAGE2_ROUTE_CPUS": "1",
+      "TP_STAGE2_ROUTE_SI_AWARE": "false",
+      "TP_STAGE2_DROUTE_END_ITERATION": "5",
+      "TP_STAGE2_PLACE_TIMING_EFFORT": "low by pnr smoke default unless overridden",
+      "TP_STAGE2_PLACE_CONG_EFFORT": "low by pnr smoke default unless overridden",
+      "TP_STAGE2_PLACE_DETAIL_WIRE_EFFORT": "none by pnr smoke default unless overridden",
+      "TP_STAGE2_STRIPE_DISTANCE": "20.0 for sparse-PG run-through smoke after dense 0.4um blocked powerplan"
+    },
+    "acceptance_limit": "run-through evidence only; final Stage 2 still needs normal-quality reports and explicit DRC/connectivity/timing/artifact classification",
+    "sparse_pg_retry_command": "source tools/env_gemmini_thermal.sh && TP_STAGE2_RUN_TAG=gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_innovus_pnr_smoke_droute5_sparsepg20_20260506 TP_STAGE2_GENUS_RUN_TAG=gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_genus_syn_20260506 TP_STAGE2_DROUTE_END_ITERATION=5 TP_STAGE2_STRIPE_DISTANCE=20.0 TP_STAGE2_ROUTE_CPUS=1 TP_STAGE2_ROUTE_SI_AWARE=false python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --run-innovus-pnr-smoke"
+  },
+  "stage2_reduced_pnr_smoke_first_launch": {
+    "run_tag": "gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_innovus_pnr_smoke_droute5_20260506",
+    "result": "stopped_manually_in_powerplan_via_generation",
+    "completed_steps_before_stop": [
+      "innovus_init",
+      "innovus_floorplan"
+    ],
+    "not_reached": [
+      "powerplan_checkpoint",
+      "placement",
+      "cts",
+      "routing",
+      "routed_def_verilog_sdf_spef_gds",
+      "postroute_reports"
+    ],
+    "root_cause": "powerplan default stripe_distance 0.4um created an overly dense M8/M9 stripe grid for run-through smoke",
+    "evidence": [
+      "powerplan.log repeated IMPPP-4500 during via generation",
+      "IMPPP-354/IMPPP-385 indicate stripe parameter issues",
+      "process consumed CPU for about 6.5 minutes without new log progress"
+    ],
+    "observed_fix_validation": "fake SRAM TECHLIB-1173 did not recur in observed init/floorplan output after regenerated Liberty"
+  },
+  "stage2_reduced_pnr_smoke_sparsepg20_result": {
+    "run_tag": "gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_innovus_pnr_smoke_droute5_sparsepg20_20260506",
+    "result": "failed_in_cts_after_init_floorplan_powerplan_placement_completed",
+    "completed_steps": [
+      "innovus_init",
+      "innovus_floorplan",
+      "innovus_powerplan",
+      "innovus_placement"
+    ],
+    "existing_checkpoints": [
+      "innovus/data/init.enc",
+      "innovus/data/floorplan.enc",
+      "innovus/data/powerplan.enc",
+      "innovus/data/placement.enc"
+    ],
+    "not_reached_or_missing": [
+      "innovus/data/cts.enc",
+      "innovus/data/routing.enc",
+      "routed DEF",
+      "routed Verilog",
+      "routed SDF",
+      "SPEF",
+      "GDS",
+      "post-route timing/area/power/DRC/connectivity reports"
+    ],
+    "cts_blocker": {
+      "command": "ccopt_design -cts",
+      "error": "IMPCCOPT-2440 input db is PODv2; Innovus asks to use clock_opt_design",
+      "script_abort": "IMPSYT-6692",
+      "required_fix": "Generate CTS Tcl with clock_opt_design by default, with an override knob for older flows."
+    },
+    "powerplan_observations": {
+      "stripe_distance_um": 20.0,
+      "m8_wires": 58,
+      "m9_wires": 58,
+      "pg_short_report": "0 shorts",
+      "special_connectivity": "539 VDD/VSS special-wire opens; not acceptance-clean"
+    },
+    "placement_observations": {
+      "runtime": "about 1h16m",
+      "initial_wns_ns": -18.778,
+      "initial_tns_ns": -79423.3,
+      "final_log_timing": "place_opt_design improved reported setup picture to near-zero/clean slack in placement log",
+      "warnings": "six fake SRAM macros not placed within core boundary"
+    },
+    "validated_repairs": [
+      "fake SRAM TECHLIB-1173 did not recur in observed new Innovus import logs",
+      "sparse PG avoided dense addStripe/via-generation smoke blocker"
+    ],
+    "next_retry_plan": "Add clock_opt_design CTS generation and a cts/routing resume entry that sources existing placement.enc."
+  },
+  "stage2_cts_route_resume_repair": {
+    "status": "implemented_and_script_only_validated_pending_commercial_resume_run",
+    "implemented_changes": [
+      "InnovusManager.generate_cts_code defaults to clock_opt_design through cts_command / TP_STAGE2_CTS_COMMAND",
+      "InnovusManager.run_impl supports start_prev_checkpoint for script_only and normal selected-step runs",
+      "Gemmini main.py exposes --run-innovus-cts-route-smoke to source innovus/data/placement.enc and run cts/routing only"
+    ],
+    "script_only_validation": [
+      "python -m py_compile passed for main.py and innovus_manager.py",
+      "generated innovus/scripts/cts.tcl sources placement.enc",
+      "generated innovus/scripts/cts.tcl contains clock_opt_design",
+      "generated innovus/scripts/routing.tcl retains drouteEndIteration 5"
+    ],
+    "planned_command": "source tools/env_gemmini_thermal.sh && TP_STAGE2_RUN_TAG=gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_innovus_pnr_smoke_droute5_sparsepg20_20260506 TP_STAGE2_GENUS_RUN_TAG=gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_genus_syn_20260506 TP_STAGE2_DROUTE_END_ITERATION=5 TP_STAGE2_STRIPE_DISTANCE=20.0 TP_STAGE2_ROUTE_CPUS=1 TP_STAGE2_ROUTE_SI_AWARE=false TP_STAGE2_CTS_COMMAND=clock_opt_design python runs/cadence_startup/GemminiRocketConfig/mesh16x16_tile1x1_dim16/main.py --run-innovus-cts-route-smoke"
+  },
+  "stage2_smoke_stop_review_20260511": {
+    "status": "no_active_cadence_process; reduced smoke attempts stopped by user direction",
+    "completed_evidence": [
+      "Genus synthesis at 200MHz/5ns produced netlist, SDC, SDF, DB, timing, area, power, DRC, QoR reports",
+      "Innovus floorplan placed 1327/1327 top-level pins with 0 unplaced",
+      "Sparse-PG reduced P&R smoke reached placement.enc and preCTS reports",
+      "Partial CTS resume confirmed clock_opt_design bypasses the PODv2 ccopt_design blocker"
+    ],
+    "incomplete_outputs": [
+      "cts.enc",
+      "routing.enc",
+      "routed DEF",
+      "routed Verilog",
+      "routed SDF",
+      "SPEF",
+      "GDS",
+      "post-route timing/area/power/DRC/connectivity reports"
+    ],
+    "must_fix_before_full_phase2": [
+      "Rerun Genus with generated syn_opt -logical and record a new accepted synthesis tag",
+      "Fix SRAM macro placement and SRAM/PG connectivity strategy",
+      "Eliminate or explicitly waive 539 sparse-PG VDD/VSS special-wire opens",
+      "Align CTS NDR/route layer preferences with NanoRoute route limits",
+      "Classify ASAP7 M10 IMPTR messages separately from routed-design DRC",
+      "Resolve or document Innovus set_units TCLCMD-1461 and Genus input-to-output TIM-11/No paths found warnings",
+      "Add Python artifact gates for all required final Stage 2 outputs"
+    ],
+    "diagnostic_run_tags": {
+      "genus_syn_old_syn_opt": "gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_genus_syn_20260506",
+      "dense_pg_stopped": "gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_innovus_pnr_smoke_droute5_20260506",
+      "sparse_pg_partial_cts": "gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_innovus_pnr_smoke_droute5_sparsepg20_20260506"
+    }
+  },
+  "stage2_attempt_cleanup_20260511": {
+    "deleted": [
+      "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/*",
+      "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/reports/config/stage2_cadence_asap7_migration_preflight.md",
+      "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/reports/config/stage2_cadence_python_flow_plan.md"
+    ],
+    "preserved": [
+      "Stage0/1 rtl/workloads/sim/activity/reports",
+      "runs/cadence_startup source scripts",
+      "repository-level docs recording smoke findings"
+    ],
+    "next_full_phase2_requirement": "regenerate all Genus/Innovus artifacts from a clean semantic run tag after resolving documented must-fix items"
+  }
+}

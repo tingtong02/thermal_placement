@@ -1,0 +1,20 @@
+{
+  "cycles_run": 300939,
+  "elapsed_sec": 62837.4,
+  "first_trace_cycle": 33438,
+  "first_trace_time_ps": 66877000,
+  "last_time_ps": 601879000,
+  "last_trace_cycle": 300939,
+  "last_trace_time_ps": 601879000,
+  "rows_seen": 300940,
+  "run_kind": "formal",
+  "run_log": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/mvin_mvout/replay_run.log",
+  "run_returncode": 0,
+  "saif_bytes": 457660905,
+  "saif_path": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/mvin_mvout/mvin_mvout.gate.saif",
+  "trace_enabled_cycles": 267502,
+  "trace_end_ps": 601879950,
+  "trace_start_ps": 66875550,
+  "vector_path": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/mvin_mvout/boundary_vectors.csv",
+  "workload": "mvin_mvout"
+}

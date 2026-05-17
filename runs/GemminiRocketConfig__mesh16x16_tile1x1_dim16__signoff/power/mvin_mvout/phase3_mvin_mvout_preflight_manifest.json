@@ -1,0 +1,439 @@
+{
+  "errors": [],
+  "excluded_sources": {
+    "accelerated_mvin_mvout": {
+      "directory": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/accelerate/mvin_mvout",
+      "gate_activity_manifest": {
+        "exists": false,
+        "is_dir": false,
+        "is_file": false,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/accelerate/mvin_mvout/gate_activity_manifest.json",
+        "required": false
+      },
+      "phase3_consumable": null,
+      "replay_summary": {
+        "exists": false,
+        "is_dir": false,
+        "is_file": false,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/accelerate/mvin_mvout/replay_summary.json",
+        "required": false
+      },
+      "run_returncode": null,
+      "saif": {
+        "bytes": 0,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778858905.897869,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/accelerate/mvin_mvout/mvin_mvout.gate.saif",
+        "required": false
+      },
+      "trace_enabled_cycles": null,
+      "workload": "mvin_mvout"
+    },
+    "accelerated_tiled_matmul_os": {
+      "directory": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/accelerate/tiled_matmul_os",
+      "gate_activity_manifest": {
+        "exists": false,
+        "is_dir": false,
+        "is_file": false,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/accelerate/tiled_matmul_os/gate_activity_manifest.json",
+        "required": false
+      },
+      "phase3_consumable": null,
+      "replay_summary": {
+        "exists": false,
+        "is_dir": false,
+        "is_file": false,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/accelerate/tiled_matmul_os/replay_summary.json",
+        "required": false
+      },
+      "run_returncode": null,
+      "saif": {
+        "bytes": 0,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778858905.9688704,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/accelerate/tiled_matmul_os/tiled_matmul_os.gate.saif",
+        "required": false
+      },
+      "trace_enabled_cycles": null,
+      "workload": "tiled_matmul_os"
+    },
+    "accelerated_tiled_matmul_ws": {
+      "directory": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/accelerate/tiled_matmul_ws",
+      "gate_activity_manifest": {
+        "exists": false,
+        "is_dir": false,
+        "is_file": false,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/accelerate/tiled_matmul_ws/gate_activity_manifest.json",
+        "required": false
+      },
+      "phase3_consumable": null,
+      "replay_summary": {
+        "exists": false,
+        "is_dir": false,
+        "is_file": false,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/accelerate/tiled_matmul_ws/replay_summary.json",
+        "required": false
+      },
+      "run_returncode": null,
+      "saif": {
+        "bytes": 0,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778858905.9288697,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/accelerate/tiled_matmul_ws/tiled_matmul_ws.gate.saif",
+        "required": false
+      },
+      "trace_enabled_cycles": null,
+      "workload": "tiled_matmul_ws"
+    },
+    "mainline_tiled_matmul_os": {
+      "directory": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/tiled_matmul_os",
+      "gate_activity_manifest": {
+        "exists": false,
+        "is_dir": false,
+        "is_file": false,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/tiled_matmul_os/gate_activity_manifest.json",
+        "required": false
+      },
+      "phase3_consumable": null,
+      "replay_summary": {
+        "exists": false,
+        "is_dir": false,
+        "is_file": false,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/tiled_matmul_os/replay_summary.json",
+        "required": false
+      },
+      "run_returncode": null,
+      "saif": {
+        "bytes": 0,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778855776.0717869,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/tiled_matmul_os/tiled_matmul_os.gate.saif",
+        "required": false
+      },
+      "trace_enabled_cycles": null,
+      "workload": "tiled_matmul_os"
+    },
+    "mainline_tiled_matmul_ws": {
+      "directory": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/tiled_matmul_ws",
+      "gate_activity_manifest": {
+        "exists": false,
+        "is_dir": false,
+        "is_file": false,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/tiled_matmul_ws/gate_activity_manifest.json",
+        "required": false
+      },
+      "phase3_consumable": null,
+      "replay_summary": {
+        "exists": false,
+        "is_dir": false,
+        "is_file": false,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/tiled_matmul_ws/replay_summary.json",
+        "required": false
+      },
+      "run_returncode": null,
+      "saif": {
+        "bytes": 0,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778855776.0687869,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/tiled_matmul_ws/tiled_matmul_ws.gate.saif",
+        "required": false
+      },
+      "trace_enabled_cycles": null,
+      "workload": "tiled_matmul_ws"
+    },
+    "old_r2_compare_validation": {
+      "directory": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_mvin_mvout_boundary_replay_20260513_t1_j64_split1k_cfunc50_clang_notiming_refcells_udp_full",
+      "excluded_reason": "historical r2 compare validation only; not a Phase3 activity handoff"
+    },
+    "smoke": {
+      "directory": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/smoke_mvin_mvout_100cyc",
+      "gate_activity_manifest": {
+        "bytes": 2213,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778835736.7887304,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/smoke_mvin_mvout_100cyc/gate_activity_manifest.json",
+        "required": false
+      },
+      "phase3_consumable": false,
+      "replay_summary": {
+        "bytes": 981,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778835736.7887304,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/smoke_mvin_mvout_100cyc/replay_summary.json",
+        "required": false
+      },
+      "run_returncode": 0,
+      "saif": {
+        "exists": false,
+        "is_dir": false,
+        "is_file": false,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/smoke_mvin_mvout_100cyc/smoke_mvin_mvout_100cyc.gate.saif",
+        "required": false
+      },
+      "trace_enabled_cycles": 100,
+      "workload": "smoke_mvin_mvout_100cyc"
+    }
+  },
+  "expected_outputs": {
+    "activity_handoff_manifest": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/power/mvin_mvout/phase3_mvin_mvout_activity_handoff_manifest.json",
+    "cadence_power_dir": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/power/mvin_mvout/cadence",
+    "grid_power_csv": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/power/mvin_mvout/phase3_mvin_mvout_grid_power.csv",
+    "instance_power_report": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/power/mvin_mvout/reports/phase3_mvin_mvout_instance_power.rpt",
+    "instance_to_grid_map": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/power/mvin_mvout/phase3_mvin_mvout_instance_to_grid_map.csv",
+    "method_report": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/power/mvin_mvout/phase3_mvin_mvout_method_report.md",
+    "preflight_manifest": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/power/mvin_mvout/phase3_mvin_mvout_preflight_manifest.json",
+    "preflight_report": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/power/mvin_mvout/phase3_mvin_mvout_preflight_report.md",
+    "region_power_summary": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/power/mvin_mvout/phase3_mvin_mvout_region_power_summary.csv",
+    "saif_annotation_coverage_report": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/power/mvin_mvout/reports/phase3_mvin_mvout_saif_annotation_coverage.rpt",
+    "top_power_instances": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/power/mvin_mvout/phase3_mvin_mvout_top_power_instances.csv",
+    "transient_power_trace": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/power/mvin_mvout/phase3_mvin_mvout_transient_power_trace.csv"
+  },
+  "generated_at_utc": "2026-05-16T11:31:20.294083+00:00",
+  "inputs": {
+    "activity_manifest_summary": {
+      "method": "no-compare Verilator zero-delay Gemmini boundary replay with direct SAIF trace",
+      "phase3_consumable": true,
+      "run_kind": "formal",
+      "trace_end_ps": 601879950,
+      "trace_start_ps": 66875550
+    },
+    "phase1b_mvin_mvout": {
+      "boundary_signal_map": {
+        "bytes": 56608,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778835777.4136796,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/mvin_mvout/boundary_signal_map.json",
+        "required": true
+      },
+      "boundary_vectors_manifest": {
+        "bytes": 1071,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778835831.8686857,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/mvin_mvout/boundary_vectors_manifest.json",
+        "required": true
+      },
+      "gate_activity_manifest": {
+        "bytes": 2146,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778918623.4618096,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/mvin_mvout/gate_activity_manifest.json",
+        "required": true
+      },
+      "global_handoff_manifest": {
+        "bytes": 2353,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778835736.7987304,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/phase1b_gate_saif_handoff_manifest.json",
+        "required": false
+      },
+      "method_report": {
+        "bytes": 1575,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778835736.7987304,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/phase1b_gate_saif_method_report.md",
+        "required": false
+      },
+      "replay_summary": {
+        "bytes": 952,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778918623.4618096,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/mvin_mvout/replay_summary.json",
+        "required": true
+      },
+      "saif": {
+        "bytes": 457660905,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778918623.253807,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/mvin_mvout/mvin_mvout.gate.saif",
+        "required": true
+      },
+      "workload_dir": {
+        "exists": true,
+        "is_dir": true,
+        "is_file": false,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/mvin_mvout",
+        "required": true
+      }
+    },
+    "phase1b_root": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515",
+    "phase2_artifacts": {
+      "cts_checkpoint": {
+        "bytes": 772,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778601571.2006106,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_phase2_full_20260513_r28_export_from_routing_sdf_waived/innovus/data/cts.enc",
+        "required": true
+      },
+      "export_checkpoint": {
+        "bytes": 812,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778688152.1139765,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_phase2_full_20260513_r28_export_from_routing_sdf_waived/innovus/data/export_routing.enc",
+        "required": true
+      },
+      "gds": {
+        "bytes": 556307892,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778688130.4736948,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_phase2_full_20260513_r28_export_from_routing_sdf_waived/innovus/data/Gemmini.gds",
+        "required": true
+      },
+      "postroute_area_report": {
+        "bytes": 61266,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778641339.2586074,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_phase2_full_20260513_r28_export_from_routing_sdf_waived/innovus/reports/postRoute_area.rpt",
+        "required": true
+      },
+      "postroute_connectivity_report": {
+        "bytes": 77440,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778688124.0866122,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_phase2_full_20260513_r28_export_from_routing_sdf_waived/innovus/reports/postRoute_connectivity.rpt",
+        "required": true
+      },
+      "postroute_drc_report": {
+        "bytes": 105883,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778688104.8133645,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_phase2_full_20260513_r28_export_from_routing_sdf_waived/innovus/reports/postRoute_drc.rpt",
+        "required": true
+      },
+      "postroute_power_report": {
+        "bytes": 41741,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778641484.7942894,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_phase2_full_20260513_r28_export_from_routing_sdf_waived/innovus/reports/postRoute_power.rpt",
+        "required": true
+      },
+      "postroute_timing_report": {
+        "bytes": 89199,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778641335.1915944,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_phase2_full_20260513_r28_export_from_routing_sdf_waived/innovus/reports/postRoute_timing/timing.rpt",
+        "required": true
+      },
+      "routed_def": {
+        "bytes": 508540521,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778687835.347109,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_phase2_full_20260513_r28_export_from_routing_sdf_waived/innovus/data/Gemmini.routed.def",
+        "required": true
+      },
+      "routed_sdf_waiver": {
+        "bytes": 950,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778688154.4690075,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_phase2_full_20260513_r28_export_from_routing_sdf_waived/innovus/reports/routed_sdf_waiver.md",
+        "required": true
+      },
+      "routed_verilog": {
+        "bytes": 97095778,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778687836.1051223,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_phase2_full_20260513_r28_export_from_routing_sdf_waived/innovus/data/Gemmini.routed.v",
+        "required": true
+      },
+      "routing_checkpoint": {
+        "bytes": 790,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778640857.0793016,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_phase2_full_20260513_r28_export_from_routing_sdf_waived/innovus/data/routing.enc",
+        "required": true
+      },
+      "spef": {
+        "bytes": 489835435,
+        "exists": true,
+        "is_dir": false,
+        "is_file": true,
+        "mtime": 1778688102.1753309,
+        "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_phase2_full_20260513_r28_export_from_routing_sdf_waived/innovus/data/Gemmini.routed.spef",
+        "required": true
+      }
+    },
+    "phase2_r28_run": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_phase2_full_20260513_r28_export_from_routing_sdf_waived",
+    "replay_summary": {
+      "cycles_run": 300939,
+      "elapsed_sec": 62837.4,
+      "first_trace_time_ps": 66877000,
+      "last_trace_time_ps": 601879000,
+      "rows_seen": 300940,
+      "run_returncode": 0,
+      "saif_bytes": 457660905,
+      "trace_enabled_cycles": 267502
+    },
+    "run_root": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff"
+  },
+  "next_step_if_passes": "Develop Cadence read_saif scope mapping and annotation coverage under the same output root.",
+  "output_root": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/power/mvin_mvout",
+  "policy": {
+    "do_not_interrupt_running_replays": true,
+    "no_cadence_launched": true,
+    "non_signoff_label": "PG-open / DRC-open / routed-SDF-waived thermal proxy; Phase1b SAIF is Verilator zero-delay activity",
+    "phase3_activity_source_rule": "consume only completed non-empty formal mainline SAIF with phase3_consumable=true",
+    "scope": "single-workload mvin_mvout bring-up"
+  },
+  "schema": "phase3_mvin_mvout_preflight_manifest_v1",
+  "stage": "Stage 3 Cadence activity-aware power",
+  "status": "pass_with_warnings",
+  "tools": {
+    "innovus": "/opt/eda/Cadence_DDI_23.14/bin/innovus",
+    "python": "/home/lisihang/miniconda3/envs/thermal_placement/bin/python"
+  },
+  "warnings": [
+    "global Phase1b handoff manifest has no formal_workloads; using per-workload mvin_mvout manifest for preflight"
+  ],
+  "workload": "mvin_mvout"
+}

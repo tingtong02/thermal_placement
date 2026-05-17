@@ -1,0 +1,35 @@
+{
+  "created_utc": "2026-05-15T09:02:56.896595+00:00",
+  "fixed_policy": {
+    "cflags": "-O0 -g0",
+    "compare": false,
+    "hierarchical": false,
+    "jobs": 192,
+    "no_timing": true,
+    "output_split": 200,
+    "output_split_cfuncs": 20,
+    "output_split_ctrace": 20,
+    "trace_depth": 9,
+    "trace_saif": true,
+    "verilate_jobs": 192,
+    "verilator_threads": 16
+  },
+  "formal_workloads": [
+    {
+      "name": "mvin_mvout",
+      "rtl_vcd": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/sim/mvin_mvout/waves/mvin_mvout-baremetal.stage1_mvin_mvout_signoff_20260429_r1.vcd",
+      "trace_end_ps": 601879950,
+      "trace_start_ps": 66875550
+    }
+  ],
+  "gate_netlist": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_phase2_full_20260513_r28_export_from_routing_sdf_waived/innovus/data/Gemmini.routed.v",
+  "out_dir": "/home/lisihang/thermal_placement/runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515",
+  "smoke": {
+    "max_cycles": null,
+    "name": "smoke_mvin_mvout_100cyc",
+    "rtl_vcd": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/sim/mvin_mvout/waves/mvin_mvout-baremetal.stage1_mvin_mvout_signoff_20260429_r1.vcd",
+    "trace_end_ps": 67075550,
+    "trace_start_ps": 66875550,
+    "workload": "mvin_mvout"
+  }
+}

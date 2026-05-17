@@ -1,0 +1,49 @@
+{
+  "cadence_method": {
+    "activity_command": "read_activity_file <saif> -format SAIF -scope TOP -reset -zero_delay true",
+    "command_basis": "Local Innovus/Voltus 23.14 docs expose read_activity_file with -format SAIF; no local read_saif help entry was found.",
+    "reports_before_handoff": [
+      "get_activity -summary",
+      "get_activity -report_cell_group_activity_summary_report",
+      "dump_unannotated_nets -type saif",
+      "dump_unannotated_nets -type all",
+      "report_power -hierarchy all",
+      "report_power -instances {*}"
+    ],
+    "restore_command": "restoreDesign <export_routing.enc.dat> Gemmini"
+  },
+  "excluded": {
+    "accelerated_replays": "still not adopted as default Phase3 handoff method",
+    "smoke_and_old_compare": "not Phase3 handoff inputs",
+    "ws_os": "not in current user-confirmed Phase3 mvin-only bring-up scope"
+  },
+  "generated_at_utc": "2026-05-16T11:42:45.687958+00:00",
+  "inputs": {
+    "checkpoint_dat": {
+      "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_phase2_full_20260513_r28_export_from_routing_sdf_waived/innovus/data/export_routing.enc.dat",
+      "type": "directory"
+    },
+    "checkpoint_tcl": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/physical/gemmini_mesh16x16_tile1x1_dim16_asap7sc7p5t28_fake_sram_200mhz_phase2_full_20260513_r28_export_from_routing_sdf_waived/innovus/data/export_routing.enc",
+    "gate_activity_manifest": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/mvin_mvout/gate_activity_manifest.json",
+    "replay_summary": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/mvin_mvout/replay_summary.json",
+    "saif": {
+      "bytes": 457660905,
+      "path": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/gate_activity/phase1b_gate_saif_r28_20260515/mvin_mvout/mvin_mvout.gate.saif",
+      "scope": "TOP"
+    }
+  },
+  "no_cadence_launched": true,
+  "non_signoff_label": "PG-open / DRC-open / routed-SDF-waived thermal proxy; Phase1b SAIF is Verilator zero-delay activity",
+  "outputs": {
+    "cadence_dir": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/power/mvin_mvout/cadence",
+    "logs_dir_when_run": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/power/mvin_mvout/cadence/logs",
+    "readme": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/power/mvin_mvout/cadence/README.md",
+    "reports_dir_when_run": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/power/mvin_mvout/cadence/reports",
+    "runner": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/power/mvin_mvout/cadence/scripts/run_phase3_mvin_mvout_innovus_no_gui.sh",
+    "tcl": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/power/mvin_mvout/cadence/scripts/phase3_mvin_mvout_read_activity_power.tcl"
+  },
+  "preflight_manifest": "runs/GemminiRocketConfig__mesh16x16_tile1x1_dim16__signoff/power/mvin_mvout/phase3_mvin_mvout_preflight_manifest.json",
+  "schema": "phase3_mvin_mvout_cadence_script_manifest_v1",
+  "status": "script_only_generated",
+  "workload": "mvin_mvout"
+}
